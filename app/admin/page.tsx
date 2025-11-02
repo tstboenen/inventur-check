@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import '../admin.css';
+import '../globals.css'; // <-- globals.css explizit laden
 
 type Settings = { textVorStart: string; startZeit: string | null };
 
@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Settings laden
+  // Einstellungen laden
   useEffect(() => {
     (async () => {
       try {
@@ -37,8 +37,7 @@ export default function AdminPage() {
         const data = await res.json();
         setValues({
           textVorStart: data.textVorStart ?? 'Text vor Start',
-          // für datetime-local: YYYY-MM-DDTHH:mm
-          startZeit: data.startZeit ? data.startZeit.slice(0, 16) : ''
+          startZeit: data.startZeit ? String(data.startZeit).slice(0, 16) : ''
         });
       } catch {
         setStatus('Fehler beim Laden der Einstellungen.');
@@ -84,63 +83,94 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="admin-wrap">
-      <div className="admin-card fade-in">
-        {/* Logo oben, 200px */}
-        <div className="admin-logo">
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logistics"
-            width={200}
-            height={200}
-            priority
-          />
+    <>
+      {/* Poppins nur für diese Seite (bleibt unabhängig von globals.css) */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+        rel="stylesheet"
+      />
+
+      <main className="adm-wrap">
+        <div className="adm-card adm-fade">
+          {/* Logo oben */}
+          <div className="adm-logo">
+            <Image
+              src="/tst-logo.png"
+              alt="TST Logistics"
+              width={200}
+              height={200}
+              priority
+            />
+          </div>
+
+          {/* Titel */}
+          <h1 className="adm-title">Admin – Inventur Einstellungen</h1>
+
+          {loading ? (
+            <div className="adm-loading">Lade…</div>
+          ) : (
+            <form onSubmit={onSave} className="adm-form">
+              <label className="adm-label">
+                <span>Text vor Start</span>
+                <textarea
+                  rows={4}
+                  className="adm-textarea"
+                  value={values.textVorStart}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, textVorStart: e.target.value }))
+                  }
+                  placeholder="z. B. Die Inventur beginnt am 14.11. um 14:15 Uhr."
+                />
+              </label>
+
+              <label className="adm-label">
+                <span>Startzeit</span>
+                <input
+                  type="datetime-local"
+                  className="adm-input"
+                  value={values.startZeit ?? ''}
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, startZeit: e.target.value }))
+                  }
+                />
+                <small className="adm-hint">
+                  Wird als ISO mit Berlin-Offset gespeichert (z.&nbsp;B.
+                  2025-11-14T14:15:00+01:00).
+                </small>
+              </label>
+
+              <button type="submit" className="adm-button">
+                Speichern
+              </button>
+
+              {status && <p className="adm-status">{status}</p>}
+            </form>
+          )}
         </div>
+      </main>
 
-        {/* Titel */}
-        <h1 className="admin-title">Admin – Inventur Einstellungen</h1>
+      {/* Scoped Styles (styled-jsx) */}
+      <style jsx>{`
+        :root {
+          --pink: #d70080;
+          --text: #111;
+          --muted: #666;
+          --border: #e5e7eb;
+          --bg: #ffffff;
+          --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+          --radius: 16px;
+        }
 
-        {loading ? (
-          <div className="admin-loading">Lade…</div>
-        ) : (
-          <form onSubmit={onSave} className="admin-form">
-            <label className="admin-label">
-              <span>Text vor Start</span>
-              <textarea
-                rows={4}
-                className="admin-textarea"
-                value={values.textVorStart}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, textVorStart: e.target.value }))
-                }
-                placeholder="z. B. Die Inventur beginnt am 14.11. um 14:15 Uhr."
-              />
-            </label>
+        .adm-wrap {
+          min-height: 100dvh;
+          background: var(--bg);
+          display: grid;
+          place-items: center;
+          padding: 24px;
+          font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        }
 
-            <label className="admin-label">
-              <span>Startzeit</span>
-              <input
-                type="datetime-local"
-                className="admin-input"
-                value={values.startZeit ?? ''}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, startZeit: e.target.value }))
-                }
-              />
-              <small className="admin-hint">
-                Wird als ISO mit Berlin-Offset gespeichert (z.&nbsp;B.
-                2025-11-14T14:15:00+01:00).
-              </small>
-            </label>
-
-            <button type="submit" className="admin-button">
-              Speichern
-            </button>
-
-            {status && <p className="admin-status">{status}</p>}
-          </form>
-        )}
-      </div>
-    </main>
-  );
-}
+        .adm-card {
+          width
