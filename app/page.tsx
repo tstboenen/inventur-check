@@ -4,26 +4,35 @@ import Image from "next/image";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 type Cfg = {
+  live: boolean;
+  ended: boolean;
   start: string | null;
-  end: string | null;
+
+  headline: string;
   preText: string;
   liveText: string;
+  endText: string;
   info: string;
+  showCountdown: boolean;
 };
 
 export default function HomePage() {
   const [cfg, setCfg] = useState<Cfg>({
+    live: false,
+    ended: false,
     start: null,
-    end: null,
+    headline: "TST BÖNEN INVENTUR 2025",
     preText: "",
     liveText: "",
+    endText: "✅ Die Inventur ist beendet.",
     info: "",
+    showCountdown: false,
   });
   const [now, setNow] = useState<number>(Date.now());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Konfiguration laden
+  // Config laden
   useEffect(() => {
     (async () => {
       try {
@@ -38,21 +47,13 @@ export default function HomePage() {
     })();
   }, []);
 
-  // Zeit aktualisieren (Countdown)
+  // Ticker für Countdown (nur relevant, wenn live=false && Termin gesetzt)
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
-  const endMs = useMemo(() => (cfg.end ? new Date(cfg.end).getTime() : null), [cfg.end]);
-
-  const status: "before" | "live" | "ended" | "unset" = useMemo(() => {
-    if (!startMs) return "unset";
-    if (now < startMs) return "before";
-    if (endMs && now >= endMs) return "ended";
-    return "live";
-  }, [now, startMs, endMs]);
 
   const formatDiff = (diffMs: number) => {
     if (diffMs <= 0) return "00:00:00";
@@ -77,42 +78,36 @@ export default function HomePage() {
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     textAlign: "center",
   };
-
   const title: CSSProperties = {
     marginTop: 30,
     fontSize: 36,
     fontWeight: 800,
     letterSpacing: 0.8,
   };
-
   const sub: CSSProperties = {
     marginTop: 30,
     fontSize: 28,
     fontWeight: 600,
     color: "#111",
   };
-
   const countdown: CSSProperties = {
     marginTop: 10,
     fontSize: 64,
     fontWeight: 800,
     letterSpacing: 1.2,
   };
-
   const live: CSSProperties = {
     marginTop: 20,
     fontSize: 44,
     fontWeight: 800,
     color: "#d70080",
   };
-
   const ended: CSSProperties = {
     marginTop: 20,
     fontSize: 40,
     fontWeight: 700,
     color: "#16a34a",
   };
-
   const info: CSSProperties = {
     marginTop: 24,
     fontSize: 20,
@@ -136,33 +131,26 @@ export default function HomePage() {
       </div>
 
       {/* Überschrift */}
-      <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
+      <h1 style={title}>{cfg.headline || "TST BÖNEN INVENTUR 2025"}</h1>
 
-      {/* Hauptinhalt */}
+      {/* Inhalt über Slider-Logik */}
       {loading ? (
         <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
       ) : err ? (
         <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
-      ) : status === "unset" ? (
-        <p style={sub}>{cfg.preText || "Startzeit folgt."}</p>
-      ) : status === "before" ? (
-        <>
-          <p style={sub}>{cfg.preText || "Die Inventur startet in:"}</p>
-          <div style={countdown}>
-            {startMs ? formatDiff(startMs - now) : "—"}
-          </div>
-        </>
-      ) : status === "live" ? (
+      ) : cfg.ended ? (
+        <div style={ended}>{cfg.endText || "✅ Die Inventur ist beendet."}</div>
+      ) : cfg.live ? (
         <>
           <div style={live}>{cfg.liveText || "✅ Die Inventur ist gestartet."}</div>
-          {endMs ? (
-            <div style={{ marginTop: 8, color: "#6b7280", fontSize: 18 }}>
-              Bis Ende: {formatDiff(endMs - now)}
-            </div>
-          ) : null}
         </>
       ) : (
-        <div style={ended}>✅ Die Inventur ist beendet.</div>
+        <>
+          <p style={sub}>{cfg.preText || "Die Inventur startet in:"}</p>
+          {cfg.showCountdown && startMs ? (
+            <div style={countdown}>{formatDiff(startMs - now)}</div>
+          ) : null}
+        </>
       )}
 
       {cfg.info ? <div style={info}>{cfg.info}</div> : null}
