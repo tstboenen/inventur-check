@@ -1,10 +1,10 @@
-// app/layout.tsx
-import localFont from "next/font/local";
+import "./globals.css";
+import { Poppins } from "next/font/google";
 
-const tstFont = localFont({
-  src: "/fonts/tst.woff2", // <— deine Datei im /public/fonts/
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
   display: "swap",
-  weight: "400",
 });
 
 export const metadata = {
@@ -12,12 +12,24 @@ export const metadata = {
   description: "Inventur-Status & Admin",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="de">
       <body
-        className={tstFont.className}
-        style={{ background: "#ffffff", color: "#111827", minHeight: "100vh", margin: 0 }}
+        className={poppins.className}
+        style={{
+          background: "#ffffff",
+          color: "#111827",
+          minHeight: "100vh",
+          margin: 0,
+          fontSmooth: "always",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+        }}
       >
         {children}
       </body>
