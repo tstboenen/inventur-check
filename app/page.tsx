@@ -15,6 +15,8 @@ export default function Page() {
         priority
         className="main-logo"
       />
+
+      <h1 className="main-title">TST BÖNEN INVENTUR 2025</h1>
     </main>
   );
 }
