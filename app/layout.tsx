@@ -26,7 +26,6 @@ export default function RootLayout({
           color: "#111827",
           minHeight: "100vh",
           margin: 0,
-          fontSmooth: "always",
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
         }}
