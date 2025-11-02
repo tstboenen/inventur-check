@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useState, useEffect, type CSSProperties } from "react";
 
-// ---------- Admin Panel Unterkomponente ----------
+/* ---------- Admin Panel Unterkomponente ---------- */
 function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,7 +47,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         setPreText(cfg.preText || "");
         setLiveText(cfg.liveText || "");
         setInfo(cfg.info || "");
-      } catch (e) {
+      } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
       } finally {
         setLoading(false);
@@ -84,15 +84,15 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  const row: React.CSSProperties = {
+  const row: CSSProperties = {
     display: "grid",
     gridTemplateColumns: "160px 1fr",
     gap: 12,
     alignItems: "center",
     marginBottom: 12,
   };
-  const lbl: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: "#374151" };
-  const input: React.CSSProperties = {
+  const lbl: CSSProperties = { fontSize: 13, fontWeight: 600, color: "#374151" };
+  const input: CSSProperties = {
     width: "100%",
     padding: "10px 12px",
     border: "1px solid #d1d5db",
@@ -100,16 +100,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     fontSize: 14,
     boxSizing: "border-box",
   };
-  const textarea: React.CSSProperties = { ...input, height: 72, resize: "vertical" as const };
-  const bar: React.CSSProperties = { display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 };
-  const btn: React.CSSProperties = {
+  const textarea: CSSProperties = { ...input, height: 72, resize: "vertical" as const };
+  const bar: CSSProperties = { display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 };
+  const btn: CSSProperties = {
     padding: "10px 14px",
     borderRadius: 10,
     border: "1px solid #e5e7eb",
     background: "#fff",
     cursor: "pointer",
   };
-  const primary: React.CSSProperties = {
+  const primary: CSSProperties = {
     ...btn,
     background: "#d70080",
     color: "#fff",
@@ -132,15 +132,32 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       </div>
       <div style={row}>
         <label style={lbl}>Text vor Start</label>
-        <input type="text" value={preText} onChange={(e) => setPreText(e.target.value)} style={input} placeholder="z. B. Start am 14.11. 14:15 Uhr" />
+        <input
+          type="text"
+          value={preText}
+          onChange={(e) => setPreText(e.target.value)}
+          style={input}
+          placeholder="z. B. Start am 14.11. 14:15 Uhr"
+        />
       </div>
       <div style={row}>
         <label style={lbl}>Text während</label>
-        <input type="text" value={liveText} onChange={(e) => setLiveText(e.target.value)} style={input} placeholder="z. B. Die Inventur ist gestartet." />
+        <input
+          type="text"
+          value={liveText}
+          onChange={(e) => setLiveText(e.target.value)}
+          style={input}
+          placeholder="z. B. Die Inventur ist gestartet."
+        />
       </div>
       <div style={row}>
         <label style={lbl}>Info</label>
-        <textarea value={info} onChange={(e) => setInfo(e.target.value)} style={textarea} placeholder="Hinweise an die Mitarbeiter (optional)" />
+        <textarea
+          value={info}
+          onChange={(e) => setInfo(e.target.value)}
+          style={textarea}
+          placeholder="Hinweise an die Mitarbeiter (optional)"
+        />
       </div>
 
       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
@@ -157,117 +174,122 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-// ---------- Seite (Login + Panel) ----------
+/* ---------- Seite (Login + Panel) ---------- */
 export default function AdminPage() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
-@@ -13,8 +169,8 @@
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [error, setError] = useState("");
+  const [fadeIn, setFadeIn] = useState(false);
   const [hover, setHover] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setFadeIn(true), 80);
-    return () => clearTimeout(timer);
     const t = setTimeout(() => setFadeIn(true), 80);
     return () => clearTimeout(t);
   }, []);
 
   async function handleLogin(e: React.FormEvent) {
-@@ -39,7 +195,6 @@
-    setLoggedIn(false);
+    e.preventDefault();
+    setError("");
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user, password: pass }),
+      });
+      if (!r.ok) {
+        setError("Falsche Zugangsdaten");
+        return;
+      }
+      setLoggedIn(true);
+    } catch {
+      setError("Login fehlgeschlagen");
+    }
   }
 
-  // ---------- Styles ----------
-  const page: React.CSSProperties = {
+  async function handleLogout() {
+    try {
+      // optional: Cookie löschen, falls Route existiert
+      await fetch("/api/logout", { method: "POST" }).catch(() => {});
+    } finally {
+      setLoggedIn(false);
+    }
+  }
+
+  /* ---------- Styles ---------- */
+  const page: CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
-@@ -55,7 +210,7 @@
+    display: "grid",
+    placeItems: "center",
+    padding: "24px",
+  };
 
-  const card: React.CSSProperties = {
+  const card: CSSProperties = {
     width: "100%",
-    maxWidth: 420,
-    maxWidth: 640,
+    maxWidth: 640, // Panel breiter, Login schmäler (unten überschrieben)
     background: "rgba(255, 255, 255, 0.75)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
-@@ -70,22 +225,7 @@
+    border: "1px solid #e5e7eb",
+    borderRadius: 18,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+    padding: 24,
+    transition: "opacity 0.35s ease, transform 0.35s ease",
+    opacity: fadeIn ? 1 : 0,
     transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
 
-  const h1: React.CSSProperties = {
-    fontSize: 22,
-    fontWeight: 600,
-    margin: "16px 0 20px",
-  };
+  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px" };
+  const inputWrap: CSSProperties = { marginBottom: 14 };
+  const label: CSSProperties = { display: "block", textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
 
-  const label: React.CSSProperties = {
-    display: "block",
-    textAlign: "left",
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#374151",
-    marginBottom: 6,
-  };
-
-  const inputWrap: React.CSSProperties = { marginBottom: 14 };
-  const h1: React.CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px" };
-
-  const input: React.CSSProperties = {
+  const input: CSSProperties = {
     width: "100%",
-@@ -97,6 +237,8 @@
-    lineHeight: "20px",
+    padding: "10px 12px",
+    border: "1px solid #d1d5db",
+    borderRadius: 10,
+    fontSize: 14,
     boxSizing: "border-box",
+    outline: "none",
+    transition: "box-shadow .15s ease, border-color .15s ease",
+    boxShadow: "none",
+    lineHeight: "20px",
   };
-  const inputWrap: React.CSSProperties = { marginBottom: 14 };
-  const label: React.CSSProperties = { display: "block", textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
 
-  const button: React.CSSProperties = {
+  const button: CSSProperties = {
     width: "100%",
-@@ -110,67 +252,36 @@
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "none",
+    cursor: "pointer",
+    fontWeight: 700,
+    background: "#d70080",
+    color: "#fff",
     boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
     transition: "background 0.2s ease, transform 0.15s ease",
   };
 
-  const buttonHover: React.CSSProperties = {
-    background: "#b00068",
-    transform: "translateY(-1px)",
-  };
+  const buttonHover: CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
 
-  const note: React.CSSProperties = {
-    marginTop: 10,
-    fontSize: 12,
-    color: "#6b7280",
-  };
-
-  const errorText: React.CSSProperties = {
-    color: "#dc2626",
-    fontSize: 13,
-    marginTop: 4,
-    textAlign: "left",
-  };
-  const buttonHover: React.CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
-
-  // ---------- Login ----------
+  /* ---------- Login ---------- */
   if (!loggedIn) {
     return (
       <main style={page}>
-        <div style={card}>
         <div style={{ ...card, maxWidth: 420 }}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={200} // 👈 jetzt 200 px
               width={200}
               height={200}
               priority
-              style={{ opacity: 0.95, transition: "opacity 0.5s ease" }}
               style={{ opacity: 0.95 }}
             />
           </div>
 
           <h1 style={h1}>Admin Login</h1>
 
-          <form onSubmit={handleLogin}>
           <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
             <div style={inputWrap}>
               <label style={label}>Benutzername</label>
@@ -278,7 +300,6 @@ export default function AdminPage() {
                 onChange={(e) => setUser(e.target.value)}
                 autoComplete="username"
               />
-              <input type="text" style={input} value={user} onChange={(e) => setUser(e.target.value)} autoComplete="username" />
             </div>
 
             <div style={inputWrap}>
@@ -290,52 +311,45 @@ export default function AdminPage() {
                 onChange={(e) => setPass(e.target.value)}
                 autoComplete="current-password"
               />
-              {error && <div style={errorText}>{error}</div>}
-              <input type="password" style={input} value={pass} onChange={(e) => setPass(e.target.value)} autoComplete="current-password" />
               {error && <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>}
             </div>
 
             <button
               type="submit"
               style={hover ? { ...button, ...buttonHover } : button}
-@@ -181,7 +292,9 @@
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}
+            >
+              Login
             </button>
           </form>
 
-          <div style={note}>Zugriff nur für autorisierte Mitarbeiter.</div>
           <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280" }}>
             Zugriff nur für autorisierte Mitarbeiter.
           </div>
         </div>
       </main>
     );
-@@ -190,7 +303,7 @@
-  // ---------- Panel ----------
+  }
+
+  /* ---------- Panel ---------- */
   return (
     <main style={page}>
-      <div style={{ ...card, maxWidth: 520 }}>
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Image
             src="/tst-logo.png"
-@@ -201,18 +314,8 @@
+            alt="TST Logo"
+            width={200}
+            height={200}
+            priority
             style={{ opacity: 0.95 }}
           />
         </div>
 
-        <h2 style={h1}>Willkommen im Adminbereich</h2>
-        <p style={{ color: "#6b7280", marginBottom: 18 }}>✅ Erfolgreich eingeloggt.</p>
-
-        <button
-          onClick={handleLogout}
-          style={hover ? { ...button, ...buttonHover } : button}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-        >
-          Logout
-        </button>
         <h2 style={{ ...h1, marginTop: 8, textAlign: "center" }}>Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
       </div>
     </main>
   );
+}
