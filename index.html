@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventur-Check – Früh/Spät/Nacht</title>
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    :root{
+      --ok:#16a34a; /* green-600 */
+      --ok-ink:#ffffff;
+      --no:#dc2626; /* red-600 */
+      --no-ink:#ffffff;
+      --warn:#f59e0b; /* amber-500 */
+      --bg:#0b1020;
+      --card:#111827; /* gray-900 */
+      --ink:#e5e7eb; /* gray-200 */
+      --muted:#9ca3af; /* gray-400 */
+      --ring:#374151; /* gray-700 */
+      --focus:#60a5fa;
+      --banner-bg:#0f172a; /* slate-900 */
+      --banner-ring:#334155; /* slate-700 */
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f8fafc; --card:#ffffff; --ink:#111827; --muted:#6b7280; --ring:#e5e7eb; --banner-bg:#ffffff; --banner-ring:#e5e7eb; }
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;background:var(--bg);color:var(--ink);}
+    a{color:inherit}
+    .wrap{max-width:1080px;margin-inline:auto;padding:24px;}
+    h1{font-size:clamp(1.4rem,1rem+2vw,2.2rem);margin:0 0 8px}
+    .sub{color:var(--muted);margin:0 0 24px}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+    .card{border:1px solid var(--ring);background:var(--card);border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    .card h2{margin:0 0 10px;font-size:1.25rem}
+    .badge{display:inline-flex;align-items:center;gap:10px;border-radius:12px;padding:14px 16px;font-weight:700;letter-spacing:.3px}
+    .ok{background:var(--ok);color:var(--ok-ink)}
+    .no{background:var(--no);color:var(--no-ink)}
+    .warn{background:var(--warn);color:#111827}
+    .hint{margin-top:14px;color:var(--muted);font-size:.95rem}
+    .footer{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+    .pill{border:1px dashed var(--ring);padding:10px 12px;border-radius:999px;color:var(--muted);font-size:.9rem}
+    .legend{display:flex;gap:10px;flex-wrap:wrap}
+    .legend span{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 10px;border:1px solid var(--ring);}
+    .legend i{display:inline-block;width:12px;height:12px;border-radius:3px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .topbar{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:14px}
+    .btn{cursor:pointer;border:1px solid var(--ring);background:transparent;color:inherit;border-radius:10px;padding:10px 12px}
+    .btn:hover{box-shadow:0 1px 0 rgba(255,255,255,.12) inset}
+    .note{font-size:.9rem;color:var(--muted)}
+
+    /* Banner */
+    .banner{position:sticky;top:0;z-index:5;margin-bottom:16px;border:1px solid var(--banner-ring);background:var(--banner-bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .banner strong{letter-spacing:.2px}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    /* Admin */
+    .admin{margin-top:8px}
+    .admin h2{margin:16px 0 10px}
+    .admin .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .admin label{display:flex;flex-direction:column;gap:6px}
+    .admin input[type="text"],
+    .admin input[type="date"],
+    .admin textarea{border:1px solid var(--ring);background:transparent;color:inherit;border-radius:10px;padding:10px}
+    .admin input:focus,
+    .admin textarea:focus{outline:2px solid var(--focus);outline-offset:2px}
+    .sw{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    .table tr{background:var(--card)}
+    .table td,.table th{padding:10px;border-top:1px solid var(--ring);border-bottom:1px solid var(--ring)}
+    .table th{color:var(--muted);text-align:left}
+    .table tr td:first-child,.table tr th:first-child{border-left:1px solid var(--ring);border-top-left-radius:10px;border-bottom-left-radius:10px}
+    .table tr td:last-child,.table tr th:last-child{border-right:1px solid var(--ring);border-top-right-radius:10px;border-bottom-right-radius:10px}
+    .btn-sm{padding:6px 8px;border-radius:8px}
+    .gap-8{display:flex;gap:8px;flex-wrap:wrap}
+  
+    /* --- Mobile & Touch Enhancements (zusätzlich) --- */
+    @media (max-width:640px){
+      .wrap{padding:16px}
+      .grid{grid-template-columns:1fr;gap:12px}
+      .topbar h1{font-size:1.25rem}
+      .topbar .sub{display:none}
+      .admin .row{grid-template-columns:1fr}
+    }
+    #countdown{font-size:clamp(1.1rem, 2vw + 1rem, 2rem);line-height:1}
+    .btn{min-height:44px;min-width:44px;padding:12px 14px}
+    .admin input[type="text"], .admin input[type="date"], .admin textarea{min-height:44px;padding:12px}
+    .btn-sm{min-height:36px}
+    .table{display:block;overflow:auto;-webkit-overflow-scrolling:touch}
+  </style>
+</head>
+<body>
+  <a class="sr-only" href="#main">Zum Inhalt springen</a>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Inventur‑Check</h1>
+        <p class="sub">Zeigt sofort, ob <strong>Früh‑</strong>, <strong>Spät‑</strong> und <strong>Nachtschicht</strong> zur Inventur erscheinen müssen.</p>
+      </div>
+      <div class="gap-8">
+        <a class="btn" id="btnAdmin" href="?admin=1" title="Admin‑Seite">⚙️ Admin</a>
+        <button class="btn" id="btnRefresh" title="Seite neu laden">↻ Aktualisieren</button>
+      </div>
+    </div>
+
+    <div id="view-public">
+      <div id="banner" class="banner" role="status" aria-live="polite">
+        <span id="bannerLeft"><strong>Inventur‑Countdown</strong></span>
+        <span class="mono" id="countdown">–:–:–</span>
+      </div>
+
+      <main id="main" class="grid" aria-live="polite" aria-busy="true"></main>
+
+      <div class="footer">
+        <div class="pill" id="ts">Stand: –</div>
+        <div class="legend">
+          <span><i style="background:var(--ok)"></i> Muss erscheinen</span>
+          <span><i style="background:var(--no)"></i> Muss <strong>nicht</strong> erscheinen</span>
+          <span><i style="background:var(--warn)"></i> Info</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-admin" class="admin" hidden>
+      <h2>⚙️ Admin – Plan verwalten</h2>
+      <p class="note">Hier legst du Regeln fest (Datumsbereich + Schichten). Gespeichert wird lokal im Browser (<code>localStorage</code>). Optionaler PIN‑Schutz möglich.</p>
+
+      <section class="card">
+        <h3>Neue Regel anlegen</h3>
+        <div class="row">
+          <label>Start‑Datum
+            <input id="rStart" type="date" required>
+          </label>
+          <label>End‑Datum (optional)
+            <input id="rEnd" type="date" placeholder="leer = nur Starttag">
+          </label>
+        </div>
+        <div class="sw" style="margin-top:10px">
+          <label><input id="rFrueh" type="checkbox"> Frühschicht muss kommen</label>
+          <label><input id="rSpaet" type="checkbox"> Spätschicht muss kommen</label>
+          <label><input id="rNacht" type="checkbox"> Nachtschicht muss kommen</label>
+        </div>
+        <label style="margin-top:10px">Notiz (optional)
+          <textarea id="rNote" rows="2" placeholder="z. B. Jahresinventur, Aufräumtage…"></textarea>
+        </label>
+        <div class="gap-8" style="margin-top:12px">
+          <button class="btn" id="btnAdd">➕ Regel hinzufügen</button>
+          <button class="btn" id="btnClear">🗑️ Alle Regeln löschen</button>
+          <button class="btn" id="btnSeed">🌱 Beispielregeln</button>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:14px">
+        <h3>Regeln</h3>
+        <table class="table" id="ruleTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Start</th>
+              <th>Ende</th>
+              <th>Früh</th>
+              <th>Spät</th>
+              <th>Nacht</th>
+              <th>Notiz</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card" style="margin-top:14px">
+        <h3>Import / Export</h3>
+        <div class="gap-8">
+          <button class="btn" id="btnExport">⬇️ Export JSON</button>
+          <label class="btn" for="fileImport" style="display:inline-block">⬆️ Import JSON</label>
+          <input id="fileImport" type="file" accept="application/json" style="display:none">
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:14px">
+        <h3>PIN‑Schutz (optional)</h3>
+        <div class="row">
+          <label>PIN setzen/ändern
+            <input id="pinInput" type="text" placeholder="z. B. 4927">
+          </label>
+          <div style="display:flex;align-items:flex-end;gap:8px">
+            <button class="btn" id="btnSetPin">🔐 PIN speichern</button>
+            <button class="btn" id="btnRemovePin">❌ PIN entfernen</button>
+          </div>
+        </div>
+        <p class="note">Aufruf Admin: <code>?admin=1</code>. Wenn PIN gesetzt, wird er beim Öffnen abgefragt.</p>
+      </section>
+
+      <div style="margin-top:16px">
+        <a class="btn" href="?">← Zur öffentlichen Ansicht</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ======= STORAGE‑HELPER =======
+    const STORE = {
+      keyRules: 'INVENTUR_RULES_V2',
+      keyPin:   'INVENTUR_ADMIN_PIN',
+      loadRules(){
+        try{ return JSON.parse(localStorage.getItem(this.keyRules) || '[]'); }catch{ return [] }
+      },
+      saveRules(rules){ localStorage.setItem(this.keyRules, JSON.stringify(rules)); },
+      loadPin(){ return localStorage.getItem(this.keyPin) || '' },
+      savePin(pin){ if(pin){ localStorage.setItem(this.keyPin, pin) } },
+      clearPin(){ localStorage.removeItem(this.keyPin) }
+    }
+
+    // ======= VORGABE: FESTER INVENTURPLAN (falls noch nichts gespeichert) =======
+    const DEFAULT_RULES = [
+      { start:'2025-11-14', end:'2025-11-14', frueh:false, spaet:true,  nacht:true,  note:'Inventurbeginn: Spät 14:15, Nacht 20:45' },
+      { start:'2025-11-15', end:'2025-11-15', frueh:true,  spaet:true,  nacht:false, note:'Inventur: Früh 05:30; Spät garantiert' },
+      { start:'2025-11-16', end:'2025-11-16', frueh:false, spaet:false, nacht:false, note:'Kein Einsatz (Sonntag)' }
+    ];
+
+    (function ensureDefaults(){
+      const have = STORE.loadRules();
+      if(!Array.isArray(have) || have.length===0){ STORE.saveRules(DEFAULT_RULES); }
+    })();
+
+    // ======= KONFIGURATION =======
+    const CONFIG = {
+      timezone: 'Europe/Berlin',
+      shifts: {
+        frueh: { label: 'Frühschicht', start: '05:30', end: '14:00' }, // Startzeit angepasst
+        spaet: { label: 'Spätschicht', start: '14:15', end: '22:00' }, // Startzeit angepasst
+        nacht: { label: 'Nachtschicht', start: '20:45', end: '05:30' }  // Startzeit angepasst (Bezug: Starttag)
+      },
+      defaultStatus: { frueh: false, spaet: false, nacht: false },
+      autoRefreshMinutes: 5,
+      // Countdown‑Starttermin (Berlin‑Zeit). 14.11.2025 14:15 Uhr
+      inventoryStartISO: '2025-11-14T14:15:00+01:00'
+    };
+
+    // ======= UTIL =======
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+
+    function todayLocal(now){
+      const tz = CONFIG.timezone;
+      const d = new Date(now);
+      const y = new Intl.DateTimeFormat('de-DE',{timeZone:tz,year:'numeric'}).format(d);
+      const m = new Intl.DateTimeFormat('de-DE',{timeZone:tz,month:'2-digit'}).format(d);
+      const dd= new Intl.DateTimeFormat('de-DE',{timeZone:tz,day:'2-digit'}).format(d);
+      return `${y}-${m}-${dd}`;
+    }
+    function inRange(day, start, end){ if(!end) return day===start; return day>=start && day<=end; }
+
+    function getStatusForDay(day, rules){
+      const rule = rules.filter(r => inRange(day, r.start, r.end || r.start)).pop();
+      if(rule){
+        return { frueh: !!rule.frueh, spaet: !!rule.spaet, nacht: !!rule.nacht, note:  rule.note || null }
+      }
+      return { ...CONFIG.defaultStatus, note: null };
+    }
+    function formatStamp(d){
+      return new Intl.DateTimeFormat('de-DE',{ timeZone: CONFIG.timezone, dateStyle:'full', timeStyle:'short' }).format(d);
+    }
+    function buildCard({shiftKey, required, note}){
+      const s = CONFIG.shifts[shiftKey];
+      const cls = required ? 'ok' : 'no';
+      const icon = required ? '✅' : '❌';
+      const msg  = required ? `${s.label}: MUSS zur Inventur erscheinen` : `${s.label}: muss NICHT zur Inventur erscheinen`;
+      const t    = `${s.start} – ${s.end} Uhr` + (shiftKey==='nacht' ? ' (Bezug: Starttag)' : '');
+      const hint = note ? `<p class="hint">ℹ️ ${note}</p>` : '';
+      return `<section class="card">
+        <h2>${s.label} <span class="note">(${t})</span></h2>
+        <div class="badge ${cls}" role="status" aria-live="polite">${icon} ${msg}</div>
+        ${hint}
+      </section>`;
+    }
+
+    // ======= COUNTDOWN =======
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function formatDHMS(ms){
+      const s = Math.max(0, Math.floor(ms/1000));
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      const sec = s%60;
+      return (d>0? d+':':'') + `${pad(h)}:${pad(m)}:${pad(sec)}`;
+    }
+    function updateCountdown(now){
+      const target = new Date(CONFIG.inventoryStartISO);
+      const diff = target - now;
+      const el = $('#countdown');
+      const left = $('#bannerLeft');
+      if(diff > 0){
+        left.innerHTML = '<strong>Inventur‑Countdown</strong>';
+        el.textContent = formatDHMS(diff);
+      } else {
+        left.innerHTML = '✅ <strong>Die Inventur ist gestartet</strong>';
+        el.textContent = '';
+      }
+    }
+
+    function renderPublic(now){
+      const rules = STORE.loadRules();
+      const main = $('#main');
+      const day  = todayLocal(now);
+      const status = getStatusForDay(day, rules);
+
+      // Karten
+      main.innerHTML = [
+        buildCard({shiftKey:'frueh', required: status.frueh, note: status.note}),
+        buildCard({shiftKey:'spaet', required: status.spaet, note: status.note}),
+        buildCard({shiftKey:'nacht', required: status.nacht, note: status.note})
+      ].join('');
+
+      // Banner
+      updateCountdown(now);
+
+      // Fußzeile
+      $('#ts').textContent = `Stand: ${formatStamp(now)} (${CONFIG.timezone})`;
+      main.setAttribute('aria-busy','false');
+    }
+
+    // ======= ADMIN =======
+    function seedExamples(){
+      const sample = [
+        { start:'2025-11-30', end:'2025-12-02', frueh:true,  spaet:true,  nacht:false, note:'Stichprobe + Nacharbeiten' },
+        { start:'2025-12-27', end:'2025-12-30', frueh:true,  spaet:true,  nacht:true,  note:'Jahresinventur' },
+        { start:'2026-01-05', end:'2026-01-05', frueh:false, spaet:true,  nacht:false, note:'Aufräumtag Spät' }
+      ];
+      STORE.saveRules(sample); renderRuleTable(); alert('Beispielregeln angelegt.');
+    }
+
+    function renderRuleTable(){
+      const rules = STORE.loadRules();
+      const tb = $('#ruleTable tbody');
+      tb.innerHTML = '';
+      rules.forEach((r,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td>${r.start}</td>
+          <td>${r.end||''}</td>
+          <td>${r.frueh? '✅':'—'}</td>
+          <td>${r.spaet? '✅':'—'}</td>
+          <td>${r.nacht? '✅':'—'}</td>
+          <td>${r.note||''}</td>
+          <td class="gap-8">
+            <button class="btn btn-sm" data-act="up" data-idx="${i}">⬆️</button>
+            <button class="btn btn-sm" data-act="down" data-idx="${i}">⬇️</button>
+            <button class="btn btn-sm" data-act="del" data-idx="${i}">🗑️ Löschen</button>
+          </td>`;
+        tb.appendChild(tr);
+      });
+      tb.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-act]'); if(!btn) return;
+        const act = btn.dataset.act; const idx = +btn.dataset.idx; const rules = STORE.loadRules();
+        if(act==='del'){ rules.splice(idx,1); }
+        if(act==='up' && idx>0){ [rules[idx-1],rules[idx]] = [rules[idx],rules[idx-1]]; }
+        if(act==='down' && idx < rules.length-1){ [rules[idx+1],rules[idx]] = [rules[idx],rules[idx+1]]; }
+        STORE.saveRules(rules); renderRuleTable();
+      }, { once:true });
+    }
+
+    function addRuleFromForm(){
+      const start = $('#rStart').value; const end = $('#rEnd').value || null;
+      const frueh = $('#rFrueh').checked; const spaet = $('#rSpaet').checked; const nacht = $('#rNacht').checked;
+      const note  = $('#rNote').value.trim() || null;
+      if(!start) { alert('Bitte Start‑Datum wählen.'); return }
+      if(!frueh && !spaet && !nacht){ alert('Mindestens eine Schicht auswählen.'); return }
+      const rules = STORE.loadRules();
+      rules.push({ start, end, frueh, spaet, nacht, note });
+      rules.sort((a,b)=> (a.start||'').localeCompare(b.start) || (a.end||'').localeCompare(b.end||''));
+      STORE.saveRules(rules);
+      $('#rStart').value=''; $('#rEnd').value=''; $('#rFrueh').checked=false; $('#rSpaet').checked=false; $('#rNacht').checked=false; $('#rNote').value='';
+      renderRuleTable(); alert('Regel gespeichert.');
+    }
+
+    function exportRules(){
+      const data = { version:2, exportedAt:new Date().toISOString(), rules: STORE.loadRules() };
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'inventur-rules.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function importRules(file){
+      const r = new FileReader();
+      r.onload = () => {
+        try{
+          const obj = JSON.parse(r.result);
+          const rules = Array.isArray(obj) ? obj : (obj.rules||[]);
+          STORE.saveRules(rules); renderRuleTable(); alert('Import erfolgreich.');
+        }catch(err){ alert('Import fehlgeschlagen: ' + err.message) }
+      }
+      r.readAsText(file);
+    }
+
+    function ensureAdminAccess(){
+      const pin = STORE.loadPin();
+      if(!pin) return true; // kein Schutz gesetzt
+      const entered = prompt('Admin‑PIN eingeben:');
+      if(entered === pin) return true;
+      alert('Falscher PIN.');
+      location.href='?';
+      return false;
+    }
+
+    // ======= ROUTING / BOOT =======
+    (function(){
+      const url = new URL(location.href);
+      const isAdmin = url.searchParams.get('admin') === '1';
+
+      if(isAdmin){
+        if(!ensureAdminAccess()) return;
+        $('#view-public').hidden = true;
+        $('#view-admin').hidden = false;
+        renderRuleTable();
+
+        $('#btnAdd').addEventListener('click', addRuleFromForm);
+        $('#btnClear').addEventListener('click', ()=>{ if(confirm('Alle Regeln wirklich löschen?')){ STORE.saveRules([]); renderRuleTable(); }});
+        $('#btnSeed').addEventListener('click', seedExamples);
+        $('#btnExport').addEventListener('click', exportRules);
+        $('#fileImport').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(f) importRules(f); e.target.value=''; });
+        $('#btnSetPin').addEventListener('click', ()=>{ const p=$('#pinInput').value.trim(); if(!p){ alert('Bitte eine PIN eingeben.'); return } STORE.savePin(p); alert('PIN gespeichert.'); });
+        $('#btnRemovePin').addEventListener('click', ()=>{ STORE.clearPin(); alert('PIN entfernt.'); });
+      } else {
+        // Public view
+        const now = new Date();
+        renderPublic(now);
+        // Echtzeit‑Countdown
+        setInterval(()=>{ updateCountdown(new Date()); }, 1000);
+        if(CONFIG.autoRefreshMinutes && CONFIG.autoRefreshMinutes > 0){
+          setInterval(()=>location.reload(), CONFIG.autoRefreshMinutes * 60 * 1000);
+        }
+        $('#btnRefresh').addEventListener('click', ()=>location.reload());
+      }
+    })();
+  </script>
+</body>
+</html>
