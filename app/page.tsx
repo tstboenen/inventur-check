@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
-// Struktur wie in /api/config
 type Cfg = {
   start: string | null;
   end: string | null;
@@ -24,7 +23,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden
+  // Konfiguration laden
   useEffect(() => {
     (async () => {
       try {
@@ -39,17 +38,15 @@ export default function HomePage() {
     })();
   }, []);
 
-  // Ticker für Countdown
+  // Zeit aktualisieren (Countdown)
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Zeiten parsen
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
   const endMs = useMemo(() => (cfg.end ? new Date(cfg.end).getTime() : null), [cfg.end]);
 
-  // Status bestimmen
   const status: "before" | "live" | "ended" | "unset" = useMemo(() => {
     if (!startMs) return "unset";
     if (now < startMs) return "before";
@@ -57,131 +54,118 @@ export default function HomePage() {
     return "live";
   }, [now, startMs, endMs]);
 
-  // Countdown formatter
-  function formatDiff(diffMs: number) {
+  const formatDiff = (diffMs: number) => {
     if (diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
-    const days = Math.floor(totalSec / 86400);
-    const hours = Math.floor((totalSec % 86400) / 3600);
-    const minutes = Math.floor((totalSec % 3600) / 60);
-    const seconds = totalSec % 60;
-    const hh = String(hours).padStart(2, "0");
-    const mm = String(minutes).padStart(2, "0");
-    const ss = String(seconds).padStart(2, "0");
-    return days > 0 ? `${days}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
-    }
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return d > 0
+      ? `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
 
   const page: CSSProperties = {
     minHeight: "100vh",
-    display: "grid",
-    placeItems: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-start",
     background: "#ffffff",
-    padding: "24px",
-    textAlign: "center",
+    padding: "32px 24px",
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  };
-
-  const wrap: CSSProperties = {
-    width: "100%",
-    maxWidth: 900,
+    textAlign: "center",
   };
 
   const title: CSSProperties = {
-    marginTop: 10,
-    fontSize: 24,
-    fontWeight: 700,
-    letterSpacing: 0.6,
+    marginTop: 30,
+    fontSize: 36,
+    fontWeight: 800,
+    letterSpacing: 0.8,
   };
 
   const sub: CSSProperties = {
-    marginTop: 10,
-    fontSize: 18,
+    marginTop: 30,
+    fontSize: 28,
     fontWeight: 600,
     color: "#111",
   };
 
   const countdown: CSSProperties = {
-    marginTop: 8,
-    fontSize: 42,
+    marginTop: 10,
+    fontSize: 64,
     fontWeight: 800,
-    lineHeight: 1.2,
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   };
 
   const live: CSSProperties = {
-    marginTop: 12,
-    fontSize: 22,
-    fontWeight: 700,
-    color: "#0ea5e9",
+    marginTop: 20,
+    fontSize: 44,
+    fontWeight: 800,
+    color: "#d70080",
   };
 
   const ended: CSSProperties = {
-    marginTop: 12,
-    fontSize: 22,
+    marginTop: 20,
+    fontSize: 40,
     fontWeight: 700,
     color: "#16a34a",
   };
 
   const info: CSSProperties = {
-    marginTop: 18,
-    fontSize: 16,
+    marginTop: 24,
+    fontSize: 20,
     color: "#374151",
     whiteSpace: "pre-wrap",
+    maxWidth: 900,
   };
 
   return (
     <main style={page}>
-      <div style={wrap}>
-        {/* Logo 400px breit, nicht verzerrt */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={400}
-            height={400}
-            priority
-            style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
-          />
-        </div>
-
-        {/* Titel */}
-        <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
-
-        {/* Statusbereich */}
-        {loading ? (
-          <p style={{ marginTop: 14, color: "#6b7280" }}>…lädt</p>
-        ) : err ? (
-          <p style={{ marginTop: 14, color: "#dc2626" }}>{err}</p>
-        ) : status === "unset" ? (
-          <>
-            <p style={sub}>{cfg.preText || "Startzeit folgt."}</p>
-          </>
-        ) : status === "before" ? (
-          <>
-            <p style={sub}>{cfg.preText || "Die Inventur startet in:"}</p>
-            <div style={countdown}>
-              {startMs ? formatDiff(startMs - now) : "—"}
-            </div>
-          </>
-        ) : status === "live" ? (
-          <>
-            <div style={live}>{cfg.liveText || "✅ Die Inventur ist gestartet."}</div>
-            {/* Optional: Restzeit bis Ende anzeigen */}
-            {endMs ? (
-              <div style={{ marginTop: 6, color: "#6b7280", fontSize: 14 }}>
-                Bis Ende: {formatDiff(endMs - now)}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <div style={ended}>✅ Die Inventur ist beendet.</div>
-          </>
-        )}
-
-        {/* Info-Block (immer sichtbar, falls befüllt) */}
-        {cfg.info ? <div style={info}>{cfg.info}</div> : null}
+      {/* Logo oben */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+        <Image
+          src="/tst-logo.png"
+          alt="TST Logo"
+          width={400}
+          height={400}
+          priority
+          style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
+        />
       </div>
+
+      {/* Überschrift */}
+      <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
+
+      {/* Hauptinhalt */}
+      {loading ? (
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
+      ) : err ? (
+        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
+      ) : status === "unset" ? (
+        <p style={sub}>{cfg.preText || "Startzeit folgt."}</p>
+      ) : status === "before" ? (
+        <>
+          <p style={sub}>{cfg.preText || "Die Inventur startet in:"}</p>
+          <div style={countdown}>
+            {startMs ? formatDiff(startMs - now) : "—"}
+          </div>
+        </>
+      ) : status === "live" ? (
+        <>
+          <div style={live}>{cfg.liveText || "✅ Die Inventur ist gestartet."}</div>
+          {endMs ? (
+            <div style={{ marginTop: 8, color: "#6b7280", fontSize: 18 }}>
+              Bis Ende: {formatDiff(endMs - now)}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div style={ended}>✅ Die Inventur ist beendet.</div>
+      )}
+
+      {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
 }
