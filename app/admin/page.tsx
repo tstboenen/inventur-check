@@ -32,84 +32,152 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // ---------- Login-Ansicht ----------
+  // ---- gemeinsame Styles ----
+  const pageStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#ffffff",
+    color: "#111827",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "16px",
+  };
+
+  const cardStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 420,
+    background: "#ffffff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+    padding: 24,
+    textAlign: "center",
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: 22,
+    fontWeight: 600,
+    margin: "16px 0 20px",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    textAlign: "left",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#374151",
+    marginBottom: 6,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 14px",
+    border: "1px solid #d1d5db",
+    borderRadius: 10,
+    outline: "none",
+    fontSize: 14,
+    transition: "box-shadow .15s ease",
+  };
+
+  const inputWrapStyle: React.CSSProperties = { marginBottom: 14 };
+
+  const buttonStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 14px",
+    background: "#111827",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    fontWeight: 600,
+    cursor: "pointer",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+  };
+
+  const smallNote: React.CSSProperties = {
+    marginTop: 10,
+    fontSize: 12,
+    color: "#6b7280",
+  };
+
+  const errorStyle: React.CSSProperties = {
+    color: "#dc2626",
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: "left",
+  };
+
+  // -------- Login-Ansicht --------
   if (!loggedIn) {
     return (
-      <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm bg-white border border-gray-200 shadow-xl rounded-2xl p-6 sm:p-8">
-          <div className="flex flex-col items-center mb-6">
+      <main style={pageStyle}>
+        <div style={cardStyle}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={96}
-              height={96}
-              className="opacity-90"
+              width={90}
+              height={90}
               priority
+              style={{ opacity: 0.95 }}
             />
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight">Admin Login</h1>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Benutzername</label>
+          <h1 style={titleStyle}>Admin Login</h1>
+
+          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
+            <div style={inputWrapStyle}>
+              <label style={labelStyle}>Benutzername</label>
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                style={inputStyle}
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
                 autoComplete="username"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Passwort</label>
+            <div style={inputWrapStyle}>
+              <label style={labelStyle}>Passwort</label>
               <input
                 type="password"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                style={inputStyle}
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
                 autoComplete="current-password"
               />
+              {error ? <div style={errorStyle}>{error}</div> : null}
             </div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-gray-900 text-white font-semibold py-2.5 hover:bg-gray-800 transition"
-            >
+            <button type="submit" style={buttonStyle}>
               Login
             </button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-gray-500">
-            Zugriff nur für autorisierte Mitarbeiter.
-          </p>
+          <div style={smallNote}>Zugriff nur für autorisierte Mitarbeiter.</div>
         </div>
       </main>
     );
   }
 
-  // ---------- Panel-Ansicht (nach Login) ----------
+  // -------- Panel-Ansicht nach Login --------
   return (
-    <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white border border-gray-200 shadow-xl rounded-2xl p-6 sm:p-8 text-center">
-        <div className="flex flex-col items-center mb-4">
+    <main style={pageStyle}>
+      <div style={{ ...cardStyle, maxWidth: 520 }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <Image
             src="/tst-logo.png"
             alt="TST Logo"
-            width={96}
-            height={96}
-            className="opacity-90"
+            width={90}
+            height={90}
             priority
+            style={{ opacity: 0.95 }}
           />
         </div>
-        <h2 className="text-2xl font-semibold mb-2">Willkommen im Adminbereich</h2>
-        <p className="text-gray-600 mb-6">✅ Erfolgreich eingeloggt.</p>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg bg-gray-900 text-white font-semibold py-2.5 px-4 hover:bg-gray-800 transition"
-        >
+
+        <h2 style={titleStyle}>Willkommen im Adminbereich</h2>
+        <p style={{ color: "#6b7280", marginBottom: 18 }}>✅ Erfolgreich eingeloggt.</p>
+
+        <button onClick={handleLogout} style={buttonStyle}>
           Logout
         </button>
       </div>
