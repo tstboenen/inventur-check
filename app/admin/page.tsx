@@ -1,321 +1,150 @@
-"use client";
-import { useState, useEffect } from "react";
-import Image from "next/image";
+'use client';
 
-// ---------- Admin Panel Unterkomponente ----------
-function ConfigForm({ onLogout }: { onLogout: () => void }) {
+import { useEffect, useState } from 'react';
+
+type Settings = { textVorStart: string; startZeit: string | null };
+
+function toIsoWithBerlinOffset(input: string): string | null {
+  // Erwartet "YYYY-MM-DDTHH:mm" (vom <input type="datetime-local">)
+  if (!input) return null;
+  // Browser interpretiert ohne Offset als lokale Zeit:
+  const d = new Date(input);
+  if (isNaN(d.getTime())) return null;
+
+  // Offset in Minuten (z. B. Berlin: -60 im Winter, -120 im Sommer)
+  const offsetMin = -d.getTimezoneOffset(); // invertiert, damit +60 => +01:00
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const abs = Math.abs(offsetMin);
+  const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+  const mm = String(abs % 60).padStart(2, '0');
+
+  // input hat meist keine Sekunden – fügen wir ":00" an
+  const withSeconds = input.length === 16 ? `${input}:00` : input;
+
+  return `${withSeconds}${sign}${hh}:${mm}`;
+}
+
+export default function AdminPage() {
+  const [values, setValues] = useState<Settings>({
+    textVorStart: 'Text vor Start',
+    startZeit: ''
+  });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
 
-  const [start, setStart] = useState<string>(""); // datetime-local
-  const [end, setEnd] = useState<string>("");
-  const [preText, setPreText] = useState("");
-  const [liveText, setLiveText] = useState("");
-  const [info, setInfo] = useState("");
-
-  // helpers: ISO <-> datetime-local
-  const toLocalInput = (iso?: string) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return (
-      d.getFullYear() +
-      "-" +
-      pad(d.getMonth() + 1) +
-      "-" +
-      pad(d.getDate()) +
-      "T" +
-      pad(d.getHours()) +
-      ":" +
-      pad(d.getMinutes())
-    );
-  };
-  const toIso = (local?: string) => {
-    if (!local) return "";
-    const d = new Date(local);
-    return d.toISOString();
-  };
-
+  // Aktuelle Settings laden
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/config", { cache: "no-store" });
-        const cfg = await r.json();
-        setStart(toLocalInput(cfg.start));
-        setEnd(toLocalInput(cfg.end));
-        setPreText(cfg.preText || "");
-        setLiveText(cfg.liveText || "");
-        setInfo(cfg.info || "");
+        const res = await fetch('/api/settings', { cache: 'no-store' });
+        const data = await res.json();
+        setValues({
+          textVorStart: data.textVorStart ?? 'Text vor Start',
+          // Für das Input-Feld brauchen wir "YYYY-MM-DDTHH:mm"
+          startZeit: data.startZeit
+            ? data.startZeit.slice(0, 16) // ISO einkürzen (Sekunden/Offset ab)
+            : ''
+        });
       } catch (e) {
-        setMsg("Fehler beim Laden der Konfiguration.");
+        setStatus('Fehler beim Laden der Einstellungen.');
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  async function save() {
-    setSaving(true);
-    setMsg("");
-    try {
-      const body = {
-        start: start ? toIso(start) : null,
-        end: end ? toIso(end) : null,
-        preText,
-        liveText,
-        info,
-      };
-      const r = await fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j?.error || "Speichern fehlgeschlagen");
-      }
-      setMsg("✅ Gespeichert");
-    } catch (e: any) {
-      setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
-    } finally {
-      setSaving(false);
-      setTimeout(() => setMsg(""), 2500);
-    }
-  }
-
-  const row: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "160px 1fr",
-    gap: 12,
-    alignItems: "center",
-    marginBottom: 12,
-  };
-  const lbl: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: "#374151" };
-  const input: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #d1d5db",
-    borderRadius: 10,
-    fontSize: 14,
-    boxSizing: "border-box",
-  };
-  const textarea: React.CSSProperties = { ...input, height: 72, resize: "vertical" as const };
-  const bar: React.CSSProperties = { display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 };
-  const btn: React.CSSProperties = {
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    cursor: "pointer",
-  };
-  const primary: React.CSSProperties = {
-    ...btn,
-    background: "#d70080",
-    color: "#fff",
-    border: "none",
-    boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-    fontWeight: 600,
-  };
-
-  if (loading) return <p>…lädt</p>;
-
-  return (
-    <>
-      <div style={row}>
-        <label style={lbl}>Start</label>
-        <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} style={input} />
-      </div>
-      <div style={row}>
-        <label style={lbl}>Ende</label>
-        <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} style={input} />
-      </div>
-      <div style={row}>
-        <label style={lbl}>Text vor Start</label>
-        <input type="text" value={preText} onChange={(e) => setPreText(e.target.value)} style={input} placeholder="z. B. Start am 14.11. 14:15 Uhr" />
-      </div>
-      <div style={row}>
-        <label style={lbl}>Text während</label>
-        <input type="text" value={liveText} onChange={(e) => setLiveText(e.target.value)} style={input} placeholder="z. B. Die Inventur ist gestartet." />
-      </div>
-      <div style={row}>
-        <label style={lbl}>Info</label>
-        <textarea value={info} onChange={(e) => setInfo(e.target.value)} style={textarea} placeholder="Hinweise an die Mitarbeiter (optional)" />
-      </div>
-
-      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Zeiten werden als lokale Zeit eingegeben und als ISO gespeichert.
-      </div>
-
-      <div style={bar}>
-        <button onClick={onLogout} style={btn}>Logout</button>
-        <button onClick={save} style={primary} disabled={saving}>{saving ? "Speichert…" : "Speichern"}</button>
-      </div>
-
-      {msg && <p style={{ marginTop: 10 }}>{msg}</p>}
-    </>
-  );
-}
-
-// ---------- Seite (Login + Panel) ----------
-export default function AdminPage() {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState("");
-  const [loggedIn, setLoggedIn] = useState(
-    typeof window !== "undefined" && localStorage.getItem("isLoggedIn") === "true"
-  );
-  const [fadeIn, setFadeIn] = useState(false);
-  const [hover, setHover] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setFadeIn(true), 80);
-    return () => clearTimeout(t);
-  }, []);
-
-  async function handleLogin(e: React.FormEvent) {
+  async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, pass }),
-    });
-    if (res.ok) {
-      localStorage.setItem("isLoggedIn", "true");
-      setLoggedIn(true);
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setError(data?.error || "Falsche Zugangsdaten");
+    setStatus('Speichere …');
+
+    try {
+      const isoOrNull =
+        values.startZeit && values.startZeit.trim()
+          ? toIsoWithBerlinOffset(values.startZeit.trim())
+          : null;
+
+      if (values.startZeit && !isoOrNull) {
+        setStatus('Fehler ❌: Ungültige Startzeit. Bitte Datum/Uhrzeit prüfen.');
+        return;
+      }
+
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textVorStart: values.textVorStart,
+          startZeit: isoOrNull
+        })
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `HTTP ${res.status}`);
+      }
+
+      setStatus('Gespeichert ✅');
+      // Nach erfolgreichem Speichern nochmal frisch laden (Beweis, dass es "genommen" wurde)
+      const fresh = await fetch('/api/settings', { cache: 'no-store' }).then((r) => r.json());
+      // startZeit wieder für das Input normalisieren
+      setValues({
+        textVorStart: fresh.textVorStart ?? '',
+        startZeit: fresh.startZeit ? fresh.startZeit.slice(0, 16) : ''
+      });
+    } catch (err: any) {
+      setStatus(`Fehler ❌: ${err.message}`);
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem("isLoggedIn");
-    setLoggedIn(false);
-  }
+  if (loading) return <div style={{ padding: 24 }}>Lade…</div>;
 
-  const page: React.CSSProperties = {
-    minHeight: "100vh",
-    background: "#ffffff",
-    color: "#111827",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "16px",
-    transition: "opacity 0.4s ease, transform 0.4s ease",
-    opacity: fadeIn ? 1 : 0,
-    transform: fadeIn ? "translateY(0px)" : "translateY(10px)",
-  };
-
-  const card: React.CSSProperties = {
-    width: "100%",
-    maxWidth: 640,
-    background: "rgba(255, 255, 255, 0.75)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: "1px solid rgba(255, 255, 255, 0.4)",
-    borderRadius: 16,
-    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
-    padding: 28,
-    boxSizing: "border-box",
-    textAlign: "center",
-    transition: "opacity 0.4s ease, transform 0.4s ease",
-    opacity: fadeIn ? 1 : 0,
-    transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
-  };
-
-  const h1: React.CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px" };
-
-  const input: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 14px",
-    border: "1px solid #d1d5db",
-    borderRadius: 10,
-    outline: "none",
-    fontSize: 14,
-    lineHeight: "20px",
-    boxSizing: "border-box",
-  };
-  const inputWrap: React.CSSProperties = { marginBottom: 14 };
-  const label: React.CSSProperties = { display: "block", textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
-
-  const button: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 14px",
-    background: "#d70080",
-    color: "#fff",
-    border: "none",
-    borderRadius: 10,
-    fontWeight: 600,
-    cursor: "pointer",
-    boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-    transition: "background 0.2s ease, transform 0.15s ease",
-  };
-  const buttonHover: React.CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
-
-  // ---------- Login ----------
-  if (!loggedIn) {
-    return (
-      <main style={page}>
-        <div style={{ ...card, maxWidth: 420 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Image
-              src="/tst-logo.png"
-              alt="TST Logo"
-              width={200}
-              height={200}
-              priority
-              style={{ opacity: 0.95 }}
-            />
-          </div>
-
-          <h1 style={h1}>Admin Login</h1>
-
-          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
-            <div style={inputWrap}>
-              <label style={label}>Benutzername</label>
-              <input type="text" style={input} value={user} onChange={(e) => setUser(e.target.value)} autoComplete="username" />
-            </div>
-            <div style={inputWrap}>
-              <label style={label}>Passwort</label>
-              <input type="password" style={input} value={pass} onChange={(e) => setPass(e.target.value)} autoComplete="current-password" />
-              {error && <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>}
-            </div>
-            <button
-              type="submit"
-              style={hover ? { ...button, ...buttonHover } : button}
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-            >
-              Login
-            </button>
-          </form>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280" }}>
-            Zugriff nur für autorisierte Mitarbeiter.
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ---------- Panel ----------
   return (
-    <main style={page}>
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={200}
-            height={200}
-            priority
-            style={{ opacity: 0.95 }}
+    <main style={{ maxWidth: 720, margin: '48px auto', padding: '0 16px', fontFamily: 'Poppins, sans-serif' }}>
+      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Admin – Inventur Einstellungen</h1>
+
+      <form onSubmit={onSave} style={{ display: 'grid', gap: 14 }}>
+        <label style={{ display: 'grid', gap: 6 }}>
+          <span>Text vor Start</span>
+          <textarea
+            rows={4}
+            value={values.textVorStart}
+            onChange={(e) => setValues((v) => ({ ...v, textVorStart: e.target.value }))}
+            style={{ padding: 10, border: '1px solid #ccc', borderRadius: 8 }}
           />
-        </div>
-        <h2 style={{ ...h1, marginTop: 8, textAlign: "center" }}>Inventur-Einstellungen</h2>
-        <ConfigForm onLogout={handleLogout} />
+        </label>
+
+        <label style={{ display: 'grid', gap: 6 }}>
+          <span>Startzeit</span>
+          <input
+            type="datetime-local"
+            value={values.startZeit ?? ''}
+            onChange={(e) => setValues((v) => ({ ...v, startZeit: e.target.value }))}
+            style={{ padding: 10, border: '1px solid #ccc', borderRadius: 8 }}
+          />
+          <small style={{ color: '#666' }}>
+            Wird automatisch als ISO mit Berlin-Offset gespeichert (z.&nbsp;B. 2025-11-14T14:15:00+01:00).
+          </small>
+        </label>
+
+        <button
+          type="submit"
+          style={{
+            padding: '12px 16px',
+            borderRadius: 10,
+            border: 'none',
+            fontWeight: 700,
+            cursor: 'pointer',
+            background: '#d70080',
+            color: 'white'
+          }}
+        >
+          Speichern
+        </button>
+      </form>
+
+      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+
+      <div style={{ marginTop: 24, fontSize: 14, color: '#444' }}>
+        <div>Debug: <a href="/api/settings" target="_blank" rel="noreferrer">/api/settings</a> zeigt den aktuellen Stand.</div>
       </div>
     </main>
   );
