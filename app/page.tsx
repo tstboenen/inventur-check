@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import './home.css'; // <--- hier einbinden
+import './home.css';
 
 export default function Page() {
   return (
