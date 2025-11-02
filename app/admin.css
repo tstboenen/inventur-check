@@ -1,5 +1,4 @@
 /* app/admin.css */
-/* Wie bei home.css: eigener Stylescope nur für /admin */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
 :root {
@@ -8,7 +7,7 @@
   --muted: #666;
   --border: #e5e7eb;
   --bg: #ffffff;
-  --shadow: 0 10px 25px rgba(0,0,0,0.08);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   --radius: 16px;
 }
 
@@ -21,45 +20,57 @@
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+/* 🟡 Kleinere Box */
 .admin-card {
   width: 100%;
-  max-width: 720px;
+  max-width: 540px; /* vorher 720px */
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 24px;
-}
-
-@media (min-width: 640px) {
-  .admin-card { padding: 32px; }
+  padding: 24px 28px;
 }
 
 .fade-in {
-  animation: fadeIn 320ms ease-out both;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  animation: fadeIn 300ms ease-out both;
 }
 
-/* Header */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🟡 Logo fest auf 200px */
 .admin-logo {
   display: grid;
   place-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
+
+.admin-logo img {
+  width: 200px;
+  height: auto;
+}
+
 .admin-title {
   text-align: center;
   font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: .2px;
+  font-size: 1.4rem;
   color: var(--text);
-  margin: 0 0 12px 0;
+  margin-bottom: 16px;
 }
 
-/* Form */
-.admin-form { display: grid; gap: 14px; }
+/* 🟡 Form kompakter */
+.admin-form {
+  display: grid;
+  gap: 12px;
+}
 
 .admin-label {
   display: grid;
@@ -72,39 +83,58 @@
 .admin-textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 10px 12px;
   outline: none;
   font-size: 0.95rem;
-  transition: box-shadow .15s ease, border-color .15s ease;
   background: #fff;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.admin-textarea { resize: vertical; }
+
+.admin-textarea {
+  resize: vertical;
+}
 
 .admin-input:focus,
 .admin-textarea:focus {
   border-color: rgba(215, 0, 128, 0.25);
-  box-shadow: 0 0 0 4px rgba(215, 0, 128, 0.12);
+  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.12);
 }
 
-.admin-hint { color: var(--muted); font-size: 0.85rem; }
+.admin-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
 
-/* Button (TST Pink) */
+/* 🟡 Button */
 .admin-button {
-  appearance: none;
   border: none;
-  border-radius: 14px;
-  padding: 12px 16px;
+  border-radius: 12px;
+  padding: 10px 14px;
   font-weight: 700;
   cursor: pointer;
   background: var(--pink);
   color: #fff;
-  transition: transform .05s ease, filter .15s ease;
-  margin-top: 6px;
+  transition: transform 0.05s ease, filter 0.15s ease;
+  margin-top: 4px;
 }
-.admin-button:hover { filter: brightness(1.05); }
-.admin-button:active { transform: translateY(1px); }
+.admin-button:hover {
+  filter: brightness(1.05);
+}
+.admin-button:active {
+  transform: translateY(1px);
+}
 
-/* Status/Loading */
-.admin-status { margin-top: 10px; font-size: 0.95rem; color: var(--text); }
-.admin-loading { text-align: center; color: var(--muted); padding: 12px 0; }
+/* 🟡 Status & Loading */
+.admin-status {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-align: center;
+}
+
+.admin-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 12px 0;
+}
