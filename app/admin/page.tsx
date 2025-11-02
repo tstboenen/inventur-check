@@ -1,24 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import '../admin.css';
 
 type Settings = { textVorStart: string; startZeit: string | null };
 
 function toIsoWithBerlinOffset(input: string): string | null {
-  // Erwartet "YYYY-MM-DDTHH:mm" (vom <input type="datetime-local">)
-  if (!input) return null;
-  // Browser interpretiert ohne Offset als lokale Zeit:
+  if (!input) return null; // erwartet "YYYY-MM-DDTHH:mm"
   const d = new Date(input);
   if (isNaN(d.getTime())) return null;
 
-  // Offset in Minuten (z. B. Berlin: -60 im Winter, -120 im Sommer)
-  const offsetMin = -d.getTimezoneOffset(); // invertiert, damit +60 => +01:00
+  const offsetMin = -d.getTimezoneOffset(); // Berlin: +60 Winter / +120 Sommer
   const sign = offsetMin >= 0 ? '+' : '-';
   const abs = Math.abs(offsetMin);
   const hh = String(Math.floor(abs / 60)).padStart(2, '0');
   const mm = String(abs % 60).padStart(2, '0');
-
-  // input hat meist keine Sekunden – fügen wir ":00" an
   const withSeconds = input.length === 16 ? `${input}:00` : input;
 
   return `${withSeconds}${sign}${hh}:${mm}`;
@@ -32,7 +29,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Aktuelle Settings laden
+  // Settings laden
   useEffect(() => {
     (async () => {
       try {
@@ -40,12 +37,10 @@ export default function AdminPage() {
         const data = await res.json();
         setValues({
           textVorStart: data.textVorStart ?? 'Text vor Start',
-          // Für das Input-Feld brauchen wir "YYYY-MM-DDTHH:mm"
-          startZeit: data.startZeit
-            ? data.startZeit.slice(0, 16) // ISO einkürzen (Sekunden/Offset ab)
-            : ''
+          // für datetime-local: YYYY-MM-DDTHH:mm
+          startZeit: data.startZeit ? data.startZeit.slice(0, 16) : ''
         });
-      } catch (e) {
+      } catch {
         setStatus('Fehler beim Laden der Einstellungen.');
       } finally {
         setLoading(false);
@@ -83,68 +78,68 @@ export default function AdminPage() {
       }
 
       setStatus('Gespeichert ✅');
-      // Nach erfolgreichem Speichern nochmal frisch laden (Beweis, dass es "genommen" wurde)
-      const fresh = await fetch('/api/settings', { cache: 'no-store' }).then((r) => r.json());
-      // startZeit wieder für das Input normalisieren
-      setValues({
-        textVorStart: fresh.textVorStart ?? '',
-        startZeit: fresh.startZeit ? fresh.startZeit.slice(0, 16) : ''
-      });
     } catch (err: any) {
       setStatus(`Fehler ❌: ${err.message}`);
     }
   }
 
-  if (loading) return <div style={{ padding: 24 }}>Lade…</div>;
-
   return (
-    <main style={{ maxWidth: 720, margin: '48px auto', padding: '0 16px', fontFamily: 'Poppins, sans-serif' }}>
-      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Admin – Inventur Einstellungen</h1>
-
-      <form onSubmit={onSave} style={{ display: 'grid', gap: 14 }}>
-        <label style={{ display: 'grid', gap: 6 }}>
-          <span>Text vor Start</span>
-          <textarea
-            rows={4}
-            value={values.textVorStart}
-            onChange={(e) => setValues((v) => ({ ...v, textVorStart: e.target.value }))}
-            style={{ padding: 10, border: '1px solid #ccc', borderRadius: 8 }}
+    <main className="admin-wrap">
+      <div className="admin-card fade-in">
+        {/* Logo oben, 200px */}
+        <div className="admin-logo">
+          <Image
+            src="/tst-logo.png"
+            alt="TST Logistics"
+            width={200}
+            height={200}
+            priority
           />
-        </label>
+        </div>
 
-        <label style={{ display: 'grid', gap: 6 }}>
-          <span>Startzeit</span>
-          <input
-            type="datetime-local"
-            value={values.startZeit ?? ''}
-            onChange={(e) => setValues((v) => ({ ...v, startZeit: e.target.value }))}
-            style={{ padding: 10, border: '1px solid #ccc', borderRadius: 8 }}
-          />
-          <small style={{ color: '#666' }}>
-            Wird automatisch als ISO mit Berlin-Offset gespeichert (z.&nbsp;B. 2025-11-14T14:15:00+01:00).
-          </small>
-        </label>
+        {/* Titel */}
+        <h1 className="admin-title">Admin – Inventur Einstellungen</h1>
 
-        <button
-          type="submit"
-          style={{
-            padding: '12px 16px',
-            borderRadius: 10,
-            border: 'none',
-            fontWeight: 700,
-            cursor: 'pointer',
-            background: '#d70080',
-            color: 'white'
-          }}
-        >
-          Speichern
-        </button>
-      </form>
+        {loading ? (
+          <div className="admin-loading">Lade…</div>
+        ) : (
+          <form onSubmit={onSave} className="admin-form">
+            <label className="admin-label">
+              <span>Text vor Start</span>
+              <textarea
+                rows={4}
+                className="admin-textarea"
+                value={values.textVorStart}
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, textVorStart: e.target.value }))
+                }
+                placeholder="z. B. Die Inventur beginnt am 14.11. um 14:15 Uhr."
+              />
+            </label>
 
-      {status && <p style={{ marginTop: 12 }}>{status}</p>}
+            <label className="admin-label">
+              <span>Startzeit</span>
+              <input
+                type="datetime-local"
+                className="admin-input"
+                value={values.startZeit ?? ''}
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, startZeit: e.target.value }))
+                }
+              />
+              <small className="admin-hint">
+                Wird als ISO mit Berlin-Offset gespeichert (z.&nbsp;B.
+                2025-11-14T14:15:00+01:00).
+              </small>
+            </label>
 
-      <div style={{ marginTop: 24, fontSize: 14, color: '#444' }}>
-        <div>Debug: <a href="/api/settings" target="_blank" rel="noreferrer">/api/settings</a> zeigt den aktuellen Stand.</div>
+            <button type="submit" className="admin-button">
+              Speichern
+            </button>
+
+            {status && <p className="admin-status">{status}</p>}
+          </form>
+        )}
       </div>
     </main>
   );
