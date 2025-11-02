@@ -6,14 +6,8 @@ import { useState, useEffect, type CSSProperties } from "react";
 type Cfg = {
   live: boolean;
   ended: boolean;
-  start: string | null;
-
-  headline: string;
-  preText: string;
-  liveText: string;
-  endText: string;
+  start: string | null; // ISO
   info: string;
-  showCountdown: boolean;
 };
 
 /* ---------- Admin Panel ---------- */
@@ -26,13 +20,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [live, setLive] = useState(false);
   const [ended, setEnded] = useState(false);
   const [startLocal, setStartLocal] = useState<string>(""); // datetime-local
-
-  const [headline, setHeadline] = useState("TST BÖNEN INVENTUR 2025");
-  const [preText, setPreText] = useState("");
-  const [liveText, setLiveText] = useState("");
-  const [endText, setEndText] = useState("✅ Die Inventur ist beendet.");
   const [info, setInfo] = useState("");
-  const [showCountdown, setShowCountdown] = useState(false);
 
   // helpers: ISO <-> datetime-local
   const toLocalInput = (iso?: string | null) => {
@@ -58,13 +46,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         setLive(!!cfg.live);
         setEnded(!!cfg.ended);
         setStartLocal(toLocalInput(cfg.start));
-
-        setHeadline(cfg.headline || "TST BÖNEN INVENTUR 2025");
-        setPreText(cfg.preText || "");
-        setLiveText(cfg.liveText || "");
-        setEndText(cfg.endText || "✅ Die Inventur ist beendet.");
         setInfo(cfg.info || "");
-        setShowCountdown(!!cfg.showCountdown);
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
       } finally {
@@ -74,17 +56,15 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   }, []);
 
   // Slider-Logik:
-  // - Wenn "Live" aktiviert wird → Termin-Eingabe wird ausgeblendet.
-  // - "Ende" erscheint nur, wenn Live aktiv ist.
-  // - Wenn "Ende" aktiviert wird, bleibt Live automatisch aktiv.
+  // - "Live" ein -> Termin-Eingabe verschwindet
+  // - "Ende" sichtbar nur wenn Live = true
+  // - "Ende" ein -> Live bleibt automatisch an
   function onToggleLive(next: boolean) {
-    if (!next) {
-      setEnded(false); // Ende zurücksetzen, wenn Live ausgeschaltet
-    }
+    if (!next) setEnded(false);
     setLive(next);
   }
   function onToggleEnded(next: boolean) {
-    if (next) setLive(true); // Ende impliziert Live
+    if (next) setLive(true);
     setEnded(next);
   }
 
@@ -95,13 +75,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       const body: Partial<Cfg> = {
         live,
         ended,
-        start: !live && startLocal ? toIso(startLocal) : null, // nur senden, wenn Live AUS ist
-        headline,
-        preText,
-        liveText,
-        endText,
+        start: !live && startLocal ? toIso(startLocal) : null, // Termin nur wenn Live aus
         info,
-        showCountdown,
       };
 
       const r = await fetch("/api/config", {
@@ -170,7 +145,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </label>
       </div>
 
-      {/* Termin-Eingabe (nur sichtbar, wenn Live AUS ist) */}
+      {/* Termin (nur wenn Live aus) */}
       {!live && (
         <div style={gridRow}>
           <label style={lbl}>Termin (Start)</label>
@@ -183,7 +158,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* Ende-Slider (nur sichtbar, wenn Live AN ist) */}
+      {/* Ende-Slider (nur wenn Live an) */}
       {live && (
         <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
           <label style={lbl}>Ende</label>
@@ -194,38 +169,14 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* Texte */}
-      <div style={gridRow}>
-        <label style={lbl}>Überschrift</label>
-        <input type="text" value={headline} onChange={(e) => setHeadline(e.target.value)} style={input} placeholder="TST BÖNEN INVENTUR 2025" />
-      </div>
-      <div style={gridRow}>
-        <label style={lbl}>Text vor Start</label>
-        <input type="text" value={preText} onChange={(e) => setPreText(e.target.value)} style={input} placeholder="z. B. Start am 14.11. 14:15 Uhr" />
-      </div>
-      <div style={gridRow}>
-        <label style={lbl}>Text während</label>
-        <input type="text" value={liveText} onChange={(e) => setLiveText(e.target.value)} style={input} placeholder="z. B. Die Inventur ist gestartet." />
-      </div>
-      <div style={gridRow}>
-        <label style={lbl}>Text nach Ende</label>
-        <input type="text" value={endText} onChange={(e) => setEndText(e.target.value)} style={input} placeholder="z. B. ✅ Die Inventur ist beendet." />
-      </div>
+      {/* Info */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
         <textarea value={info} onChange={(e) => setInfo(e.target.value)} style={textarea} placeholder="Hinweise an die Mitarbeiter (optional)" />
       </div>
 
-      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
-        <label style={lbl}>Countdown anzeigen</label>
-        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-          <input type="checkbox" checked={showCountdown} onChange={(e) => setShowCountdown(e.target.checked)} />
-          <span style={{ fontSize: 14, color: "#374151" }}>ja</span>
-        </label>
-      </div>
-
       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Wenn „Live“ aktiv ist, wird der Termin ausgeblendet. „Ende“ ist nur unter „Live“ verfügbar.
+        Countdown wird automatisch angezeigt, sobald ein Termin eingetragen ist und „Live“ aus ist.
       </div>
 
       <div style={bar}>
