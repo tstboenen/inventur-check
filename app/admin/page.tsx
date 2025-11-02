@@ -45,7 +45,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
         setLive(!!cfg.live);
         setEnded(!!cfg.ended);
-        setStartLocal(toLocalInput(cfg.start));
+        setStartLocal(toLocalInput(cfg.start)); // wird ggf. ausgeblendet, bleibt aber im State
         setInfo(cfg.info || "");
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
@@ -55,16 +55,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  // Slider-Logik:
-  // - "Live" ein -> Termin-Eingabe verschwindet
-  // - "Ende" sichtbar nur wenn Live = true
-  // - "Ende" ein -> Live bleibt automatisch an
+  // Logik:
+  // - Live & Ende immer sichtbar
+  // - Termin wird ausgeblendet, sobald (live || ended) aktiv ist
+  // - Ende => Live automatisch an
   function onToggleLive(next: boolean) {
-    if (!next) setEnded(false);
+    if (!next) setEnded(false); // Ende zurücksetzen, wenn Live aus
     setLive(next);
   }
   function onToggleEnded(next: boolean) {
-    if (next) setLive(true);
+    if (next) setLive(true); // Ende impliziert Live
     setEnded(next);
   }
 
@@ -75,7 +75,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       const body: Partial<Cfg> = {
         live,
         ended,
-        start: !live && startLocal ? toIso(startLocal) : null, // Termin nur wenn Live aus
+        // Termin nur senden, wenn Live und Ende AUS sind
+        start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
       };
 
@@ -136,17 +137,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      {/* Live-Slider */}
-      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
-        <label style={lbl}>Live</label>
-        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-          <input type="checkbox" checked={live} onChange={(e) => onToggleLive(e.target.checked)} />
-          <span style={{ fontSize: 14, color: "#374151" }}>{live ? "an" : "aus"}</span>
-        </label>
-      </div>
-
-      {/* Termin (nur wenn Live aus) */}
-      {!live && (
+      {/* 1) Termin (immer an erster Stelle, aber ausgeblendet wenn live || ended) */}
+      {!live && !ended && (
         <div style={gridRow}>
           <label style={lbl}>Termin (Start)</label>
           <input
@@ -158,25 +150,37 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* Ende-Slider (nur wenn Live an) */}
-      {live && (
-        <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
-          <label style={lbl}>Ende</label>
-          <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-            <input type="checkbox" checked={ended} onChange={(e) => onToggleEnded(e.target.checked)} />
-            <span style={{ fontSize: 14, color: "#374151" }}>{ended ? "aktiv" : "inaktiv"}</span>
-          </label>
-        </div>
-      )}
+      {/* 2) Live (immer sichtbar) */}
+      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
+        <label style={lbl}>Live</label>
+        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
+          <input type="checkbox" checked={live} onChange={(e) => onToggleLive(e.target.checked)} />
+          <span style={{ fontSize: 14, color: "#374151" }}>{live ? "an" : "aus"}</span>
+        </label>
+      </div>
+
+      {/* 3) Ende (immer sichtbar) */}
+      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
+        <label style={lbl}>Ende</label>
+        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
+          <input type="checkbox" checked={ended} onChange={(e) => onToggleEnded(e.target.checked)} />
+          <span style={{ fontSize: 14, color: "#374151" }}>{ended ? "aktiv" : "inaktiv"}</span>
+        </label>
+      </div>
 
       {/* Info */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
-        <textarea value={info} onChange={(e) => setInfo(e.target.value)} style={textarea} placeholder="Hinweise an die Mitarbeiter (optional)" />
+        <textarea
+          value={info}
+          onChange={(e) => setInfo(e.target.value)}
+          style={textarea}
+          placeholder="Hinweise an die Mitarbeiter (optional)"
+        />
       </div>
 
       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Countdown wird automatisch angezeigt, sobald ein Termin eingetragen ist und „Live“ aus ist.
+        Countdown wird automatisch angezeigt, sobald ein Termin eingetragen ist und „Live“ sowie „Ende“ aus sind.
       </div>
 
       <div style={bar}>
