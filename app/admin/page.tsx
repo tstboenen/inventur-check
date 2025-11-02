@@ -19,7 +19,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   // State
   const [live, setLive] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [startLocal, setStartLocal] = useState<string>(""); // datetime-local
+  const [startLocal, setStartLocal] = useState<string>("");
   const [info, setInfo] = useState("");
 
   // helpers: ISO <-> datetime-local
@@ -45,7 +45,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
         setLive(!!cfg.live);
         setEnded(!!cfg.ended);
-        setStartLocal(toLocalInput(cfg.start)); // wird ggf. ausgeblendet, bleibt aber im State
+        setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
@@ -55,16 +55,13 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  // Logik:
-  // - Live & Ende immer sichtbar
-  // - Termin wird ausgeblendet, sobald (live || ended) aktiv ist
-  // - Ende => Live automatisch an
   function onToggleLive(next: boolean) {
-    if (!next) setEnded(false); // Ende zurücksetzen, wenn Live aus
+    if (!next) setEnded(false);
     setLive(next);
   }
+
   function onToggleEnded(next: boolean) {
-    if (next) setLive(true); // Ende impliziert Live
+    if (next) setLive(true);
     setEnded(next);
   }
 
@@ -75,7 +72,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       const body: Partial<Cfg> = {
         live,
         ended,
-        // Termin nur senden, wenn Live und Ende AUS sind
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
       };
@@ -98,7 +94,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  /* ---------- Styles ---------- */
   const gridRow: CSSProperties = {
     display: "grid",
     gridTemplateColumns: "160px 1fr",
@@ -137,20 +132,18 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      {/* 1) Termin (immer an erster Stelle, aber ausgeblendet wenn live || ended) */}
-      {!live && !ended && (
-        <div style={gridRow}>
-          <label style={lbl}>Termin (Start)</label>
-          <input
-            type="datetime-local"
-            value={startLocal}
-            onChange={(e) => setStartLocal(e.target.value)}
-            style={input}
-          />
-        </div>
-      )}
+      {/* 1️⃣ Termin */}
+      <div style={{ ...gridRow, display: live || ended ? "none" : "grid" }}>
+        <label style={lbl}>Termin (Start)</label>
+        <input
+          type="datetime-local"
+          value={startLocal}
+          onChange={(e) => setStartLocal(e.target.value)}
+          style={input}
+        />
+      </div>
 
-      {/* 2) Live (immer sichtbar) */}
+      {/* 2️⃣ Live */}
       <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
         <label style={lbl}>Live</label>
         <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
@@ -159,7 +152,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </label>
       </div>
 
-      {/* 3) Ende (immer sichtbar) */}
+      {/* 3️⃣ Ende */}
       <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
         <label style={lbl}>Ende</label>
         <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
@@ -168,7 +161,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </label>
       </div>
 
-      {/* Info */}
+      {/* Info-Feld bleibt */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
         <textarea
@@ -177,10 +170,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
           style={textarea}
           placeholder="Hinweise an die Mitarbeiter (optional)"
         />
-      </div>
-
-      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-        Countdown wird automatisch angezeigt, sobald ein Termin eingetragen ist und „Live“ sowie „Ende“ aus sind.
       </div>
 
       <div style={bar}>
@@ -231,7 +220,6 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  /* Styles */
   const page: CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
@@ -280,7 +268,6 @@ export default function AdminPage() {
   };
   const buttonHover: CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
 
-  /* Login */
   if (!loggedIn) {
     return (
       <main style={page}>
@@ -328,7 +315,6 @@ export default function AdminPage() {
     );
   }
 
-  /* Panel */
   return (
     <main style={page}>
       <div style={card}>
