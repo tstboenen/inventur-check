@@ -32,8 +32,8 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // ---- gemeinsame Styles ----
-  const pageStyle: React.CSSProperties = {
+  // gemeinsame Styles
+  const page: React.CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
     color: "#111827",
@@ -42,46 +42,30 @@ export default function AdminPage() {
     justifyContent: "center",
     padding: "16px",
   };
-
-  const cardStyle: React.CSSProperties = {
+  const card: React.CSSProperties = {
     width: "100%",
-    maxWidth: 420,
-    background: "#ffffff",
+    maxWidth: 420,                 // schmale, saubere Card
+    background: "#fff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+    boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
     padding: 24,
-    textAlign: "center",
+    boxSizing: "border-box",
   };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: 22,
-    fontWeight: 600,
-    margin: "16px 0 20px",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    textAlign: "left",
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#374151",
-    marginBottom: 6,
-  };
-
-  const inputStyle: React.CSSProperties = {
+  const h1: React.CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
+  const label: React.CSSProperties = { display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
+  const fieldWrap: React.CSSProperties = { marginBottom: 14 };
+  const input: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
     border: "1px solid #d1d5db",
     borderRadius: 10,
     outline: "none",
     fontSize: 14,
-    transition: "box-shadow .15s ease",
+    lineHeight: "20px",
+    boxSizing: "border-box",       // <<< verhindert Überlauf
   };
-
-  const inputWrapStyle: React.CSSProperties = { marginBottom: 14 };
-
-  const buttonStyle: React.CSSProperties = {
+  const btn: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
     background: "#111827",
@@ -92,94 +76,70 @@ export default function AdminPage() {
     cursor: "pointer",
     boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
   };
+  const err: React.CSSProperties = { color: "#dc2626", fontSize: 13, marginTop: 4 };
+  const note: React.CSSProperties = { marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" };
 
-  const smallNote: React.CSSProperties = {
-    marginTop: 10,
-    fontSize: 12,
-    color: "#6b7280",
-  };
-
-  const errorStyle: React.CSSProperties = {
-    color: "#dc2626",
-    fontSize: 13,
-    marginTop: 4,
-    textAlign: "left",
-  };
-
-  // -------- Login-Ansicht --------
+  // Login
   if (!loggedIn) {
     return (
-      <main style={pageStyle}>
-        <div style={cardStyle}>
+      <main style={page}>
+        <div style={card}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={90}
-              height={90}
+              width={120}              // <<< größer & dezent
+              height={120}
               priority
               style={{ opacity: 0.95 }}
             />
           </div>
 
-          <h1 style={titleStyle}>Admin Login</h1>
+          <h1 style={h1}>Admin Login</h1>
 
-          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
-            <div style={inputWrapStyle}>
-              <label style={labelStyle}>Benutzername</label>
+          <form onSubmit={handleLogin}>
+            <div style={fieldWrap}>
+              <label style={label}>Benutzername</label>
               <input
                 type="text"
-                style={inputStyle}
+                style={input}
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
                 autoComplete="username"
               />
             </div>
 
-            <div style={inputWrapStyle}>
-              <label style={labelStyle}>Passwort</label>
+            <div style={fieldWrap}>
+              <label style={label}>Passwort</label>
               <input
                 type="password"
-                style={inputStyle}
+                style={input}
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
                 autoComplete="current-password"
               />
-              {error ? <div style={errorStyle}>{error}</div> : null}
+              {error ? <div style={err}>{error}</div> : null}
             </div>
 
-            <button type="submit" style={buttonStyle}>
-              Login
-            </button>
+            <button type="submit" style={btn}>Login</button>
           </form>
 
-          <div style={smallNote}>Zugriff nur für autorisierte Mitarbeiter.</div>
+          <div style={note}>Zugriff nur für autorisierte Mitarbeiter.</div>
         </div>
       </main>
     );
   }
 
-  // -------- Panel-Ansicht nach Login --------
+  // Panel nach Login
   return (
-    <main style={pageStyle}>
-      <div style={{ ...cardStyle, maxWidth: 520 }}>
+    <main style={page}>
+      <div style={{ ...card, maxWidth: 520, textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={90}
-            height={90}
-            priority
-            style={{ opacity: 0.95 }}
-          />
+          <Image src="/tst-logo.png" alt="TST Logo" width={120} height={120} priority style={{ opacity: 0.95 }} />
         </div>
-
-        <h2 style={titleStyle}>Willkommen im Adminbereich</h2>
-        <p style={{ color: "#6b7280", marginBottom: 18 }}>✅ Erfolgreich eingeloggt.</p>
-
-        <button onClick={handleLogout} style={buttonStyle}>
-          Logout
-        </button>
+        <h2 style={{ ...h1, marginTop: 12 }}>Willkommen im Adminbereich</h2>
+        <p style={{ color: "#6b7280", margin: "0 0 18px" }}>✅ Erfolgreich eingeloggt.</p>
+        <button onClick={handleLogout} style={btn}>Logout</button>
       </div>
     </main>
   );
