@@ -8,13 +8,13 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const [start, setStart] = useState<string>(""); // datetime-local
+  const [start, setStart] = useState<string>("");
   const [end, setEnd] = useState<string>("");
   const [preText, setPreText] = useState("");
   const [liveText, setLiveText] = useState("");
   const [info, setInfo] = useState("");
 
-  // helpers: ISO <-> datetime-local
+  // Helpers: ISO <-> datetime-local
   const toLocalInput = (iso?: string) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -208,12 +208,8 @@ export default function AdminPage() {
   }
 
   async function handleLogout() {
-    try {
-      // optional: Cookie löschen, falls Route existiert
-      await fetch("/api/logout", { method: "POST" }).catch(() => {});
-    } finally {
-      setLoggedIn(false);
-    }
+    await fetch("/api/logout", { method: "POST" }).catch(() => {});
+    setLoggedIn(false);
   }
 
   /* ---------- Styles ---------- */
@@ -223,11 +219,12 @@ export default function AdminPage() {
     display: "grid",
     placeItems: "center",
     padding: "24px",
+    fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   };
 
   const card: CSSProperties = {
     width: "100%",
-    maxWidth: 640, // Panel breiter, Login schmäler (unten überschrieben)
+    maxWidth: 640,
     background: "rgba(255, 255, 255, 0.75)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
@@ -240,10 +237,9 @@ export default function AdminPage() {
     transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
 
-  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px" };
+  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
   const inputWrap: CSSProperties = { marginBottom: 14 };
   const label: CSSProperties = { display: "block", textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
-
   const input: CSSProperties = {
     width: "100%",
     padding: "10px 12px",
@@ -252,9 +248,6 @@ export default function AdminPage() {
     fontSize: 14,
     boxSizing: "border-box",
     outline: "none",
-    transition: "box-shadow .15s ease, border-color .15s ease",
-    boxShadow: "none",
-    lineHeight: "20px",
   };
 
   const button: CSSProperties = {
@@ -269,7 +262,6 @@ export default function AdminPage() {
     boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
     transition: "background 0.2s ease, transform 0.15s ease",
   };
-
   const buttonHover: CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
 
   /* ---------- Login ---------- */
@@ -284,7 +276,12 @@ export default function AdminPage() {
               width={200}
               height={200}
               priority
-              style={{ opacity: 0.95 }}
+              style={{
+                width: "200px",
+                height: "auto",
+                objectFit: "contain",
+                opacity: 0.95,
+              }}
             />
           </div>
 
@@ -293,24 +290,12 @@ export default function AdminPage() {
           <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
             <div style={inputWrap}>
               <label style={label}>Benutzername</label>
-              <input
-                type="text"
-                style={input}
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                autoComplete="username"
-              />
+              <input type="text" style={input} value={user} onChange={(e) => setUser(e.target.value)} autoComplete="username" />
             </div>
 
             <div style={inputWrap}>
               <label style={label}>Passwort</label>
-              <input
-                type="password"
-                style={input}
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                autoComplete="current-password"
-              />
+              <input type="password" style={input} value={pass} onChange={(e) => setPass(e.target.value)} autoComplete="current-password" />
               {error && <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>}
             </div>
 
@@ -324,7 +309,7 @@ export default function AdminPage() {
             </button>
           </form>
 
-          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280" }}>
+          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
             Zugriff nur für autorisierte Mitarbeiter.
           </div>
         </div>
@@ -343,11 +328,16 @@ export default function AdminPage() {
             width={200}
             height={200}
             priority
-            style={{ opacity: 0.95 }}
+            style={{
+              width: "200px",
+              height: "auto",
+              objectFit: "contain",
+              opacity: 0.95,
+            }}
           />
         </div>
 
-        <h2 style={{ ...h1, marginTop: 8, textAlign: "center" }}>Inventur-Einstellungen</h2>
+        <h2 style={{ ...h1, marginTop: 8 }}>Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
       </div>
     </main>
