@@ -1,382 +1,313 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Inventur-Check – Admin</title>
-<meta name="color-scheme" content="light dark" />
-<style>
-  :root{
-    --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --ring:#374151;
-    --brand:#00aeef; --brand-ink:#fff; --ok:#16a34a; --err:#dc2626;
-  }
-  @media (prefers-color-scheme: light){
-    :root{--bg:#f8fafc;--card:#ffffff;--ink:#111827;--muted:#6b7280;--ring:#e5e7eb;}
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;background:var(--bg);color:var(--ink)}
-  .wrap{max-width:1000px;margin:auto;padding:24px}
-  h1{margin:0 0 12px}
-  .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.08);margin-bottom:16px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:720px){.row{grid-template-columns:1fr}}
-  label{display:flex;flex-direction:column;gap:6px}
-  input,textarea{background:transparent;color:var(--ink);border:1px solid var(--ring);border-radius:10px;padding:12px;min-height:44px}
-  textarea{min-height:80px}
-  .btn{cursor:pointer;border:1px solid var(--ring);background:transparent;color:var(--ink);border-radius:10px;padding:12px 14px;min-height:44px}
-  .btn.primary{background:var(--brand);color:var(--brand-ink);border-color:transparent}
-  .btn.ghost{background:transparent;border-color:var(--ring)}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .status-box{position:sticky;top:8px;z-index:10;background:var(--brand);color:var(--brand-ink);border-radius:12px;padding:12px 16px;box-shadow:0 2px 6px rgba(0,0,0,.15);margin-bottom:16px}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
-  .note{color:var(--muted);font-size:.95rem}
-  .msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.95rem}
-  .msg.ok{background:rgba(22,163,74,.15);border:1px solid rgba(22,163,74,.4)}
-  .msg.err{background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.4)}
-  .table{width:100%;border-collapse:separate;border-spacing:0 8px}
-  .table th,.table td{padding:10px;border-top:1px solid var(--ring);border-bottom:1px solid var(--ring)}
-  .table thead th{color:var(--muted);text-align:left}
-  .table tr td:first-child,.table tr th:first-child{border-left:1px solid var(--ring);border-top-left-radius:10px;border-bottom-left-radius:10px}
-  .table tr td:last-child,.table tr th:last-child{border-right:1px solid var(--ring);border-top-right-radius:10px;border-bottom-right-radius:10px}
-  .gap{display:flex;gap:10px;flex-wrap:wrap}
-  .top-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
-  a.link{color:var(--brand)}
-  .hidden{display:none !important}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventur‑Check · Admin</title>
+  <style>
+    :root{
+      --bg:#0b1220;--card:#111a2b;--muted:#8aa0c7;--text:#e6eeff;--accent:#64b5f6;--ok:#22c55e;--warn:#eab308;--danger:#ef4444;
+      --ring:#1d4ed8
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 800px at 20% -10%,#173057 0%,transparent 60%),
+               radial-gradient(1000px 700px at 120% 10%,#10213d 0%,transparent 50%),
+               var(--bg);
+         color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;}
+    .container{max-width:980px;margin:0 auto;padding:24px}
+    .grid{display:grid;gap:16px}
+    @media(min-width:768px){.grid-cols-2{grid-template-columns:1fr 1fr}}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+          border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:18px}
+    .title{font-size:28px;font-weight:800;line-height:1.1;margin:8px 0 2px}
+    .subtitle{color:var(--muted);margin:0 0 18px}
+    label{font-weight:600;font-size:14px;display:block;margin:8px 0 6px}
+    input[type="text"], input[type="datetime-local"], textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(148,163,184,.26);background:#0d1424;color:var(--text);outline:none}
+    textarea{min-height:88px;resize:vertical}
+    input:focus, textarea:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(29,78,216,.35)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid rgba(148,163,184,.26);background:#111a2b;color:var(--text);
+         padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+    .btn:hover{filter:brightness(1.1)}
+    .btn.primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);border-color:#1e40af}
+    .btn.ghost{background:transparent}
+    .btn.success{background:linear-gradient(180deg,#16a34a,#15803d);border-color:#166534}
+    .btn.warn{background:linear-gradient(180deg,#f59e0b,#d97706);border-color:#b45309;color:#111}
+    .btn.danger{background:linear-gradient(180deg,#ef4444,#dc2626)}
+    .muted{color:var(--muted);font-size:13px}
+    .preview{font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .pill{padding:6px 10px;border-radius:999px;background:#0e1628;border:1px solid rgba(148,163,184,.18)}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(148,163,184,.25),transparent);margin:12px 0}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .kbd{border:1px solid rgba(148,163,184,.35);padding:2px 6px;border-radius:6px;background:#0b1322}
+    .footer{opacity:.8;font-size:12px}
+    .link{color:var(--accent);text-decoration:none}
+    .link:hover{text-decoration:underline}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top-actions">
-      <h1>⚙️ Admin – Inventur-Check</h1>
-      <a class="link" href="./">← Zur Hauptseite</a>
+  <div class="container">
+    <div class="title">Inventur‑Check · Admin</div>
+    <p class="subtitle">Verwalte Startzeit, Texte und teile die Konfiguration mit dem Team. Alle Daten werden lokal im Browser gespeichert (localStorage). Optional kannst du eine <span class="mono">config</span>‑URL erzeugen.</p>
+
+    <div class="grid grid-cols-2">
+      <section class="card">
+        <h2>🔧 Einstellungen</h2>
+        <div class="divider"></div>
+        <label for="start">Start (Datum & Uhrzeit)</label>
+        <input id="start" type="datetime-local" />
+        <p class="muted">Zeitzone: <strong>Europe/Berlin</strong>. Beispiel aus eurer Vorgabe: <em>14.11. 14:15 Uhr</em>.</p>
+
+        <label for="end">Ende (optional)</label>
+        <input id="end" type="datetime-local" />
+        <p class="muted">Nur für Info/Countdown‑Anzeige bis Ende. Lass frei, wenn nicht benötigt.</p>
+
+        <label for="preText">Text vor Start</label>
+        <textarea id="preText" placeholder="Die Inventur beginnt am 14.11. um 14:15 Uhr."></textarea>
+
+        <label for="liveText">Text nach Start</label>
+        <textarea id="liveText" placeholder="Die Inventur ist gestartet."></textarea>
+
+        <label for="info">Zusatzinfo (optional)</label>
+        <textarea id="info" placeholder="Die Inventur findet garantiert statt bis zur Spätschicht am 15.11.; Nachtschicht 15./16. entfällt. Sonntag Früh 16.11. nicht."></textarea>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="saveBtn">Speichern</button>
+          <button class="btn ghost" id="loadBtn" title="Zuletzt gespeicherte Daten laden">Laden</button>
+          <button class="btn warn" id="resetBtn" title="Formular zurücksetzen">Zurücksetzen</button>
+        </div>
+
+        <div class="divider"></div>
+        <h3>📦 Import/Export</h3>
+        <div class="row">
+          <button class="btn" id="exportBtn">Export JSON</button>
+          <button class="btn" id="importBtn">Import JSON</button>
+          <input id="fileInput" type="file" accept="application/json" style="display:none" />
+        </div>
+
+        <p class="muted" style="margin-top:8px">Ablage‑Schlüssel: <span class="mono" id="storageKey">inventurCheckConfigV2</span></p>
+      </section>
+
+      <section class="card">
+        <h2>👀 Vorschau</h2>
+        <div class="divider"></div>
+        <div id="status" class="pill">Status: –</div>
+        <div style="height:8px"></div>
+        <div id="countdown" class="preview mono">–</div>
+        <div style="height:8px"></div>
+        <div id="previewText" class="mono"></div>
+        <div style="height:8px"></div>
+        <div id="previewInfo" class="muted"></div>
+
+        <div class="divider"></div>
+        <h3>🔗 Public Link</h3>
+        <p class="muted">Erzeuge eine URL mit Query‑Param <span class="mono">?config=...</span> (Base64‑JSON). Deine <span class="mono">index.html</span> muss diese optional auslesen.</p>
+        <div class="row">
+          <button class="btn success" id="linkBtn">Link erzeugen & kopieren</button>
+          <a class="btn" id="openBtn" href="#" target="_blank" rel="noopener">Öffnen</a>
+        </div>
+        <p class="muted" id="linkOut" style="word-break:break-all"></p>
+      </section>
     </div>
 
-    <!-- GitHub Status-Leiste -->
-    <section id="ghStatus" class="status-box">
-      <strong>🔄 Verbindung wird geprüft …</strong><br>
-      <span class="mono" id="repoInfo">tstboenen/inventur-check (main/rules.json)</span><br>
-      💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.
+    <section class="card" style="margin-top:16px">
+      <h2>ℹ️ Hinweise</h2>
+      <div class="divider"></div>
+      <ul>
+        <li>Speichern legt die Daten lokal im Browser ab. Deployment über GitHub Pages: einfach diese <span class="mono">admin.html</span> in dein Repo legen.</li>
+        <li>Die Vorschau zeigt live, was Besucher auf der Startseite sehen könnten. Nach Startzeit wechselt der Status automatisch auf <em>gestartet</em>.</li>
+        <li>Optional: Erzeuge den Public‑Link und verteile ihn im Team‑Chat.</li>
+      </ul>
     </section>
 
-    <!-- Token Setup (einmal pro Session) -->
-    <section id="tokenBox" class="card hidden">
-      <h3>GitHub-Verbindung</h3>
-      <p class="note">Der Admin-Zugriff braucht ein GitHub-Token mit <em>Contents: Read &amp; Write</em>. Das Token wird nur in dieser Browser-Session gehalten.</p>
-      <div class="row">
-        <label>GitHub Token
-          <input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off">
-        </label>
-      </div>
-      <div class="gap" style="margin-top:12px">
-        <button class="btn primary" id="btnSaveToken">🔗 Token einrichten</button>
-        <button class="btn ghost" id="btnClearToken">❌ Token löschen</button>
-      </div>
-      <div id="tokenMsg" class="msg hidden"></div>
-    </section>
-
-    <!-- Login -->
-    <section class="card" id="authBox">
-      <h3>Admin-Anmeldung</h3>
-      <div class="row">
-        <label>PIN
-          <input id="pinLogin" type="password" inputmode="numeric" placeholder="z. B. 4927" autocomplete="off">
-        </label>
-      </div>
-      <div class="gap" style="margin-top:12px">
-        <button class="btn primary" id="btnLogin">🔐 Anmelden</button>
-        <button class="btn" id="btnCreatePin">🆕 PIN anlegen (falls noch keine)</button>
-        <button class="btn ghost" id="btnShowToken">⚙️ Token ändern</button>
-      </div>
-      <div id="authMsg" class="msg hidden"></div>
-      <p class="note" id="authHint" style="margin-top:10px">
-        Erster Start: Wunsch-PIN angeben → <strong>PIN anlegen</strong>. Danach mit der PIN anmelden.
-      </p>
-    </section>
-
-    <!-- Admin Core -->
-    <section class="card" id="adminCore" style="display:none">
-      <div class="top-actions">
-        <h3 style="margin:0">Regelverwaltung</h3>
-        <div class="gap">
-          <button class="btn" id="btnLogout">🚪 Abmelden</button>
-          <button class="btn primary" id="btnSave">💾 Regeln speichern (GitHub)</button>
-        </div>
-      </div>
-
-      <div class="row">
-        <label>Start-Datum
-          <input id="rStart" type="date">
-        </label>
-        <label>End-Datum (optional)
-          <input id="rEnd" type="date" placeholder="leer = nur Starttag">
-        </label>
-      </div>
-      <div class="gap" style="margin-top:10px">
-        <label><input id="rFrueh" type="checkbox"> Frühschicht muss kommen</label>
-        <label><input id="rSpaet" type="checkbox"> Spätschicht muss kommen</label>
-        <label><input id="rNacht" type="checkbox"> Nachtschicht muss kommen</label>
-      </div>
-      <label style="margin-top:10px">Notiz (optional)
-        <textarea id="rNote" rows="2" placeholder="z. B. Jahresinventur, Aufräumtage…"></textarea>
-      </label>
-      <div class="gap" style="margin-top:12px">
-        <button class="btn" id="btnAdd">➕ Regel hinzufügen</button>
-        <button class="btn" id="btnSeed">🌱 Beispielregeln</button>
-        <button class="btn" id="btnClear">🗑️ Alle Regeln löschen</button>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <h3 style="margin-top:0">Regeln</h3>
-        <table class="table" id="ruleTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Start</th>
-              <th>Ende</th>
-              <th>Früh</th>
-              <th>Spät</th>
-              <th>Nacht</th>
-              <th>Notiz</th>
-              <th>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div id="coreMsg" class="msg hidden"></div>
-    </section>
+    <p class="footer">Made for Kevin · Admin Oberfläche für den Inventur‑Check. Shortcut: <span class="kbd">Ctrl</span> + <span class="kbd">S</span> speichert.</p>
   </div>
 
-<script>
-/* ======= Fest verdrahtetes Ziel ======= */
-const TARGET = {
-  owner:'tstboenen',
-  repo:'inventur-check',
-  branch:'main',
-  path:'rules.json'
-};
-const API_URL = `https://api.github.com/repos/${TARGET.owner}/${TARGET.repo}/contents/${TARGET.path}?ref=${TARGET.branch}`;
-const RAW_URL = `https://raw.githubusercontent.com/${TARGET.owner}/${TARGET.repo}/${TARGET.branch}/${TARGET.path}`;
+  <script>
+    const $ = (q)=>document.querySelector(q);
+    const els = {
+      start: $('#start'), end: $('#end'), preText: $('#preText'), liveText: $('#liveText'), info: $('#info'),
+      saveBtn: $('#saveBtn'), loadBtn: $('#loadBtn'), resetBtn: $('#resetBtn'),
+      exportBtn: $('#exportBtn'), importBtn: $('#importBtn'), fileInput: $('#fileInput'),
+      status: $('#status'), countdown: $('#countdown'), previewText: $('#previewText'), previewInfo: $('#previewInfo'),
+      linkBtn: $('#linkBtn'), linkOut: $('#linkOut'), openBtn: $('#openBtn'), storageKey: $('#storageKey')
+    };
 
-const $ = (s,root=document)=>root.querySelector(s);
-const ghStatus = $('#ghStatus'), repoInfo = $('#repoInfo');
-repoInfo.textContent = `${TARGET.owner}/${TARGET.repo} (${TARGET.branch}/${TARGET.path})`;
+    const STORAGE_KEY = 'inventurCheckConfigV2';
 
-function setMsg(el, type, text){
-  el.classList.remove('hidden','ok','err');
-  el.classList.add(type==='ok'?'ok':'err','msg');
-  el.textContent = text;
-}
-function hide(el){ el.classList.add('hidden'); }
-function show(el){ el.classList.remove('hidden'); }
-
-/* ======= Token-Handling (Session) ======= */
-function getToken(){ return sessionStorage.getItem('INV_TOKEN') || ''; }
-function setToken(t){ sessionStorage.setItem('INV_TOKEN', t); }
-function clearToken(){ sessionStorage.removeItem('INV_TOKEN'); }
-
-/* ======= GitHub Status ======= */
-async function checkGitHub(){
-  ghStatus.innerHTML = `<strong>🔄 Verbindung wird geprüft …</strong><br><span class="mono">${TARGET.owner}/${TARGET.repo} (${TARGET.branch}/${TARGET.path})</span><br>💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.`;
-  try{
-    const r=await fetch(API_URL,{cache:'no-store'});
-    if(r.ok){
-      ghStatus.innerHTML = `<strong>✅ Verbunden mit GitHub</strong><br><span class="mono">${TARGET.owner}/${TARGET.repo} (${TARGET.branch}/${TARGET.path})</span><br>💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.`;
-    }else{
-      ghStatus.innerHTML = `<strong>❌ Keine Verbindung (${r.status})</strong><br>Prüfe Repository oder Datei.`;
+    function toISOLocal(dt){
+      if(!dt) return '';
+      const pad = (n)=>String(n).padStart(2,'0');
+      return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
     }
-  }catch(e){
-    ghStatus.innerHTML = `<strong>❌ Keine Verbindung</strong><br>Prüfe Internet/GitHub.`;
-  }
-}
-setInterval(checkGitHub, 60000);
 
-/* ======= Daten ======= */
-const DEFAULT_DATA = {
-  version:3,
-  pinHash:null,
-  rules:[
-    { start:'2025-11-14', end:'2025-11-14', frueh:false, spaet:true,  nacht:true,  note:'Inventurbeginn: Spät 14:15, Nacht 20:45' },
-    { start:'2025-11-15', end:'2025-11-15', frueh:true,  spaet:true,  nacht:false, note:'Inventur: Früh 05:30; Spät garantiert' },
-    { start:'2025-11-16', end:'2025-11-16', frueh:false, spaet:false, nacht:false, note:'Kein Einsatz (Sonntag)' }
-  ]
-};
-let CURRENT = structuredClone(DEFAULT_DATA);
+    function fromInput(v){
+      if(!v) return null;
+      // Treat as local time Europe/Berlin
+      const t = v.trim();
+      const [dPart, hPart] = t.split('T');
+      const [y,m,d] = dPart.split('-').map(Number);
+      const [hh,min] = (hPart||'00:00').split(':').map(Number);
+      return new Date(y, m-1, d, hh, min, 0, 0);
+    }
 
-async function sha256Hex(text){
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+    function load(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      try{
+        const cfg = JSON.parse(raw);
+        els.start.value = cfg.start ? toISOLocal(new Date(cfg.start)) : '';
+        els.end.value = cfg.end ? toISOLocal(new Date(cfg.end)) : '';
+        els.preText.value = cfg.preText||'';
+        els.liveText.value = cfg.liveText||'';
+        els.info.value = cfg.info||'';
+        render();
+      }catch(e){ console.error('LOAD', e); }
+    }
 
-async function loadRemote(){
-  try{
-    const r = await fetch(RAW_URL,{cache:'no-store'});
-    if(r.status===404){ CURRENT = structuredClone(DEFAULT_DATA); return; }
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    CURRENT = await r.json();
-  }catch(e){
-    CURRENT = structuredClone(DEFAULT_DATA);
-  }
-}
+    function save(){
+      const cfg = currentConfig();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+      toast('Gespeichert.');
+    }
 
-async function fetchMeta(){
-  const r = await fetch(API_URL,{cache:'no-store'});
-  if(r.status===404) return null;
-  if(!r.ok) throw new Error('Meta '+r.status);
-  return await r.json(); // contains sha
-}
+    function resetForm(){
+      els.start.value = '';
+      els.end.value = '';
+      els.preText.value = '';
+      els.liveText.value = '';
+      els.info.value = '';
+      render();
+    }
 
-async function saveRemote(obj, message='Update Inventur-Regeln'){
-  const token = getToken();
-  if(!token) throw new Error('Kein Token vorhanden.');
-  const meta = await fetchMeta();
-  const body = {
-    message,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2)))),
-    branch: TARGET.branch
-  };
-  if(meta && meta.sha) body.sha = meta.sha;
-  const r = await fetch(API_URL,{
-    method:'PUT',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
-  if(!r.ok){
-    const t = await r.text();
-    throw new Error('Speichern fehlgeschlagen: '+r.status+' '+t);
-  }
-  return await r.json();
-}
+    function currentConfig(){
+      return {
+        start: els.start.value ? fromInput(els.start.value).toISOString() : null,
+        end: els.end.value ? fromInput(els.end.value).toISOString() : null,
+        preText: els.preText.value.trim(),
+        liveText: els.liveText.value.trim(),
+        info: els.info.value.trim(),
+        tz: 'Europe/Berlin',
+        v: 2
+      };
+    }
 
-/* ======= UI: Regeln ======= */
-function renderRuleTable(){
-  const tb = $('#ruleTable tbody');
-  tb.innerHTML = '';
-  CURRENT.rules.forEach((r,i)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${r.start}</td>
-      <td>${r.end||''}</td>
-      <td>${r.frueh?'✅':'—'}</td>
-      <td>${r.spaet?'✅':'—'}</td>
-      <td>${r.nacht?'✅':'—'}</td>
-      <td>${r.note||''}</td>
-      <td class="gap">
-        <button class="btn" data-act="up" data-idx="${i}">⬆️</button>
-        <button class="btn" data-act="down" data-idx="${i}">⬇️</button>
-        <button class="btn" data-act="del" data-idx="${i}">🗑️</button>
-      </td>`;
-    tb.appendChild(tr);
-  });
-  tb.onclick = (e)=>{
-    const b = e.target.closest('button[data-act]'); if(!b) return;
-    const a = b.dataset.act, idx = +b.dataset.idx;
-    if(a==='del'){ CURRENT.rules.splice(idx,1); }
-    if(a==='up' && idx>0){ [CURRENT.rules[idx-1],CURRENT.rules[idx]]=[CURRENT.rules[idx],CURRENT.rules[idx-1]]; }
-    if(a==='down' && idx<CURRENT.rules.length-1){ [CURRENT.rules[idx+1],CURRENT.rules[idx]]=[CURRENT.rules[idx],CURRENT.rules[idx+1]]; }
-    renderRuleTable();
-  };
-}
-function addRule(){
-  const start = $('#rStart').value;
-  const end   = $('#rEnd').value || null;
-  const frueh = $('#rFrueh').checked;
-  const spaet = $('#rSpaet').checked;
-  const nacht = $('#rNacht').checked;
-  const note  = $('#rNote').value.trim() || null;
-  if(!start) return setMsg($('#coreMsg'),'err','Bitte Start-Datum wählen.');
-  if(!frueh && !spaet && !nacht) return setMsg($('#coreMsg'),'err','Mindestens eine Schicht auswählen.');
-  CURRENT.rules.push({start,end,frueh,spaet,nacht,note});
-  CURRENT.rules.sort((a,b)=> (a.start||'').localeCompare(b.start) || (a.end||'').localeCompare(b.end||''));
-  $('#rStart').value=''; $('#rEnd').value=''; $('#rFrueh').checked=false; $('#rSpaet').checked=false; $('#rNacht').checked=false; $('#rNote').value='';
-  renderRuleTable();
-  setMsg($('#coreMsg'),'ok','Regel hinzugefügt (noch nicht gespeichert).');
-}
-function seedRules(){ CURRENT.rules = structuredClone(DEFAULT_DATA.rules); renderRuleTable(); setMsg($('#coreMsg'),'ok','Beispielregeln geladen (noch nicht gespeichert).'); }
-function clearRules(){ CURRENT.rules = []; renderRuleTable(); setMsg($('#coreMsg'),'ok','Alle Regeln entfernt (noch nicht gespeichert).'); }
-async function saveRules(){
-  try{
-    await saveRemote({version:CURRENT.version||3,pinHash:CURRENT.pinHash||null,rules:CURRENT.rules}, 'Update Regeln');
-    setMsg($('#coreMsg'),'ok','Regeln erfolgreich in GitHub gespeichert.');
-    checkGitHub();
-  }catch(e){
-    setMsg($('#coreMsg'),'err',e.message);
-  }
-}
+    function exportJSON(){
+      const cfg = currentConfig();
+      const blob = new Blob([JSON.stringify(cfg,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'inventur-config.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
 
-/* ======= PIN ======= */
-async function createPin(){
-  $('#authMsg').classList.add('hidden');
-  await loadRemote();
-  if(CURRENT.pinHash) return setMsg($('#authMsg'),'err','PIN existiert bereits.');
-  const pin = $('#pinLogin').value.trim();
-  if(!pin) return setMsg($('#authMsg'),'err','Bitte eine PIN eingeben.');
-  try{
-    CURRENT.pinHash = await sha256Hex(pin);
-    await saveRemote(CURRENT, 'Set admin PIN');
-    setMsg($('#authMsg'),'ok','PIN angelegt. Bitte jetzt anmelden.');
-    checkGitHub();
-  }catch(e){
-    setMsg($('#authMsg'),'err',e.message);
-  }
-}
-async function login(){
-  $('#authMsg').classList.add('hidden');
-  await loadRemote();
-  if(!CURRENT.pinHash) return setMsg($('#authMsg'),'err','Es ist noch keine PIN gesetzt. Bitte zuerst „PIN anlegen“.');
-  const pin = $('#pinLogin').value.trim();
-  if(!pin) return setMsg($('#authMsg'),'err','Bitte PIN eingeben.');
-  const hash = await sha256Hex(pin);
-  if(hash === CURRENT.pinHash){
-    $('#authBox').style.display='none';
-    $('#adminCore').style.display='block';
-    renderRuleTable();
-    setMsg($('#coreMsg'),'ok','Erfolgreich angemeldet.');
-    checkGitHub();
-  } else {
-    setMsg($('#authMsg'),'err','Falsche PIN.');
-  }
-}
-function logout(){ location.reload(); }
+    function importJSON(){ els.fileInput.click(); }
 
-/* ======= Boot ======= */
-document.getElementById('btnLogin').addEventListener('click', login);
-document.getElementById('btnCreatePin').addEventListener('click', createPin);
-document.getElementById('btnSave').addEventListener('click', saveRules);
-document.getElementById('btnAdd').addEventListener('click', addRule);
-document.getElementById('btnSeed').addEventListener('click', seedRules);
-document.getElementById('btnClear').addEventListener('click', clearRules);
-document.getElementById('btnLogout').addEventListener('click', logout);
+    els.fileInput.addEventListener('change', async (e)=>{
+      const f = e.target.files?.[0];
+      if(!f) return;
+      try{
+        const text = await f.text();
+        const cfg = JSON.parse(text);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+        load();
+        toast('Importiert.');
+      }catch(err){ toast('Import fehlgeschlagen.', true); }
+      finally{ e.target.value = '' }
+    });
 
-document.getElementById('btnShowToken').addEventListener('click', ()=>{
-  const box = document.getElementById('tokenBox');
-  box.classList.toggle('hidden');
-});
-document.getElementById('btnSaveToken').addEventListener('click', ()=>{
-  const t = document.getElementById('ghToken').value.trim();
-  if(!t){ setMsg($('#tokenMsg'),'err','Bitte Token eintragen.'); return; }
-  setToken(t);
-  setMsg($('#tokenMsg'),'ok','Token gespeichert (gilt für diese Session).');
-  setTimeout(()=>hide($('#tokenMsg')),2000);
-});
-document.getElementById('btnClearToken').addEventListener('click', ()=>{
-  clearToken();
-  setMsg($('#tokenMsg'),'ok','Token entfernt.');
-  setTimeout(()=>hide($('#tokenMsg')),2000);
-});
+    let timer = null;
+    function render(){
+      if(timer) { clearInterval(timer); timer = null; }
+      const cfg = currentConfig();
+      const now = new Date();
+      const start = cfg.start ? new Date(cfg.start) : null;
+      const end = cfg.end ? new Date(cfg.end) : null;
 
-/* Auto: Token-Box ausblenden, wenn Token vorhanden */
-(function init(){
-  checkGitHub();
-  if(getToken()){
-    hide($('#tokenBox'));
-  }else{
-    show($('#tokenBox'));
-  }
-})();
-</script>
+      const status = (!start) ? 'fehlende Startzeit' : (now < start ? 'wartet' : 'gestartet');
+      els.status.textContent = `Status: ${status}`;
+      els.status.style.background = status === 'gestartet' ? 'linear-gradient(180deg,#16a34a,#15803d)' : '#0e1628';
+
+      function fmt(ms){
+        const sec = Math.max(0, Math.floor(ms/1000));
+        const d = Math.floor(sec/86400);
+        const h = Math.floor((sec%86400)/3600);
+        const m = Math.floor((sec%3600)/60);
+        const s = sec%60;
+        return `${String(d).padStart(2,'0')}d : ${String(h).padStart(2,'0')}h : ${String(m).padStart(2,'0')}m : ${String(s).padStart(2,'0')}s`;
+      }
+
+      function updateCountdown(){
+        const now = new Date();
+        if(start && now < start){
+          els.countdown.textContent = `Countdown bis Start: ${fmt(start-now)}`;
+          els.previewText.textContent = cfg.preText || '—';
+        } else if(end && now < end){
+          els.countdown.textContent = `Läuft… Restzeit bis Ende: ${fmt(end-now)}`;
+          els.previewText.textContent = cfg.liveText || 'Die Inventur ist gestartet.';
+        } else if(end && now >= end){
+          els.countdown.textContent = 'Beendet';
+          els.previewText.textContent = cfg.liveText || 'Die Inventur ist gestartet.';
+        } else {
+          els.countdown.textContent = start ? 'Gestartet' : '—';
+          els.previewText.textContent = (start ? (cfg.liveText||'Die Inventur ist gestartet.') : (cfg.preText||'—'));
+        }
+        els.previewInfo.textContent = cfg.info || '';
+      }
+
+      updateCountdown();
+      timer = setInterval(updateCountdown, 1000);
+    }
+
+    function toast(msg, isErr){
+      const t = document.createElement('div');
+      t.textContent = msg; t.style.position='fixed'; t.style.bottom='18px'; t.style.left='50%'; t.style.transform='translateX(-50%)';
+      t.style.padding='10px 14px'; t.style.borderRadius='10px'; t.style.zIndex='9999';
+      t.style.background = isErr ? 'linear-gradient(180deg,#ef4444,#dc2626)' : 'linear-gradient(180deg,#2563eb,#1d4ed8)';
+      t.style.border='1px solid rgba(255,255,255,.2)';
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 1800);
+    }
+
+    function makeLink(){
+      const cfg = currentConfig();
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+      const url = new URL(window.location.href);
+      // Replace filename with index.html if present
+      const parts = url.pathname.split('/');
+      parts[parts.length-1] = 'index.html';
+      url.pathname = parts.join('/');
+      url.search = `?config=${b64}`;
+      return url.toString();
+    }
+
+    // Events
+    [els.start, els.end, els.preText, els.liveText, els.info].forEach(el=>{
+      el.addEventListener('input', render);
+    });
+
+    els.saveBtn.addEventListener('click', save);
+    els.loadBtn.addEventListener('click', load);
+    els.resetBtn.addEventListener('click', ()=>{ resetForm(); toast('Zurückgesetzt.'); });
+    els.exportBtn.addEventListener('click', exportJSON);
+    els.importBtn.addEventListener('click', importJSON);
+
+    els.linkBtn.addEventListener('click', ()=>{
+      const link = makeLink();
+      els.linkOut.textContent = link;
+      navigator.clipboard?.writeText(link).then(()=>toast('Link kopiert.')).catch(()=>toast('Konnte nicht kopieren', true));
+      els.openBtn.href = link;
+    });
+
+    document.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); save(); }
+    });
+
+    // Initial
+    load();
+    render();
+  </script>
 </body>
 </html>
