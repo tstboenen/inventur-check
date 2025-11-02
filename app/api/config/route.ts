@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import kv from "@/lib/kv";
 import { z } from "zod";
 
-// wichtig für Vercel: Route darf NICHT statisch generiert werden
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // wichtig: nicht statisch bauen
 
 const schema = z.object({
   start: z.string().datetime().nullable(),
@@ -17,7 +16,6 @@ const schema = z.object({
 
 const KEY = "inventur:config";
 
-// 📥 GET – holt aktuelle Config aus Vercel KV
 export async function GET() {
   const cfg = (await kv.get(KEY)) as unknown;
   if (!cfg) {
@@ -34,16 +32,11 @@ export async function GET() {
   return NextResponse.json(cfg);
 }
 
-// 📤 POST – speichert Config (nur mit PIN erlaubt)
 export async function POST(req: Request) {
   const pin = process.env.ADMIN_PIN;
   const sent =
     new URL(req.url).searchParams.get("pin") ||
-    (await req
-      .clone()
-      .formData()
-      .then((f) => f.get("pin")?.toString())
-      .catch(() => null));
+    null;
 
   if (!pin || sent !== pin) {
     return new NextResponse("Unauthorized", { status: 401 });
@@ -55,9 +48,12 @@ export async function POST(req: Request) {
   if (contentType.includes("application/json")) {
     data = await req.json();
   } else if (contentType.includes("application/x-www-form-urlencoded")) {
-    const fd = await req.formData();
-    data = Object.fromEntries(fd.entries());
+    // ✅ URLSearchParams statt FormData: TS- und Runtime-sicher
+    const text = await req.text();
+    const params = new URLSearchParams(text);
+    data = Object.fromEntries(params.entries());
   } else {
+    // Fallback
     data = await req.json().catch(() => ({}));
   }
 
