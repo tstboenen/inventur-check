@@ -1,17 +1,35 @@
 /* app/home.css */
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
 .main-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Logo nach oben */
+  justify-content: flex-start;
   min-height: 100dvh;
   background-color: white;
-  padding-top: 60px; /* Abstand von oben */
+  padding-top: 60px;
+  font-family: 'Poppins', sans-serif;
 }
 
 .main-logo {
   width: 400px;
   height: auto;
   display: block;
+  margin-bottom: 20px;
+}
+
+.main-title {
+  font-size: 2rem;           /* Basisgröße */
+  font-weight: 700;          /* Fett für den Titel */
+  text-align: center;
+  color: #111;               /* Dunkles Grau/Schwarz */
+  letter-spacing: 0.5px;
+}
+
+@media (min-width: 768px) {
+  .main-title {
+    font-size: 2.5rem;       /* Größer auf Desktop */
+  }
 }
