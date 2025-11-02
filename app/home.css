@@ -21,15 +21,46 @@
 }
 
 .main-title {
-  font-size: 2rem;           /* Basisgröße */
-  font-weight: 700;          /* Fett für den Titel */
+  font-size: 2rem;
+  font-weight: 700;
   text-align: center;
-  color: #111;               /* Dunkles Grau/Schwarz */
+  color: #111;
   letter-spacing: 0.5px;
+  margin-bottom: 12px;
 }
 
 @media (min-width: 768px) {
   .main-title {
-    font-size: 2.5rem;       /* Größer auf Desktop */
+    font-size: 2.5rem;
   }
+}
+
+.main-line {
+  max-width: 960px;
+  text-align: center;
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0 16px;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.countdown {
+  font-weight: 600;
+  margin-left: 8px; /* „dahinter“ – direkt hinter dem Admin-Text */
+  white-space: nowrap;
+}
+
+.countdown-started {
+  font-weight: 700;
+  color: #0a7a0a; /* grünlicher Hinweis, dass es gestartet ist */
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.help-note {
+  color: #777;
+  font-size: 0.9rem;
+  margin-top: 4px;
 }
