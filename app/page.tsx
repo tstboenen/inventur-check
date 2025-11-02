@@ -2,17 +2,18 @@
 'use client';
 
 import Image from 'next/image';
+import './home.css'; // <--- hier einbinden
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center">
+    <main className="main-container">
       <Image
-        src="/tst-logo.png" // Datei in /public/tst-logo.png ablegen
+        src="/tst-logo.png"
         alt="TST Logistics"
         width={400}
         height={400}
         priority
-        className="h-auto"
+        className="main-logo"
       />
     </main>
   );
