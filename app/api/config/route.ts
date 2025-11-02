@@ -41,8 +41,14 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
   const _live = typeof body.live === "boolean" ? body.live : false;
   const _ended = typeof body.ended === "boolean" ? body.ended : false;
 
+  // Regel: Ende impliziert Live
+  const live = _ended ? true : _live;
+  const ended = _ended && live;
+
+  // Termin nur zulassen, wenn weder live noch ended aktiv ist
   let start: string | null = null;
-  if (!_live) {
+  const allowStart = !live && !ended;
+  if (allowStart) {
     if (body.start === null || body.start === "" || body.start === undefined) {
       start = null;
     } else if (isIso(body.start)) {
@@ -51,13 +57,8 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
       throw new Error("Ungültiger Termin (ISO erwartet).");
     }
   } else {
-    // wenn live aktiv ist, spielt der Termin für die Anzeige keine Rolle
     start = null;
   }
-
-  // Regel: Ende impliziert Live
-  const live = _ended ? true : _live;
-  const ended = _ended && live;
 
   return {
     live,
