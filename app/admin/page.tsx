@@ -32,7 +32,7 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // gemeinsame Styles
+  // ---- gemeinsame Styles ----
   const page: React.CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
@@ -42,19 +42,38 @@ export default function AdminPage() {
     justifyContent: "center",
     padding: "16px",
   };
+
   const card: React.CSSProperties = {
     width: "100%",
-    maxWidth: 420,                 // schmale, saubere Card
-    background: "#fff",
-    border: "1px solid #e5e7eb",
+    maxWidth: 420,
+    background: "rgba(255, 255, 255, 0.75)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    border: "1px solid rgba(255, 255, 255, 0.4)",
     borderRadius: 16,
-    boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-    padding: 24,
+    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+    padding: 28,
     boxSizing: "border-box",
+    textAlign: "center",
   };
-  const h1: React.CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
-  const label: React.CSSProperties = { display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
-  const fieldWrap: React.CSSProperties = { marginBottom: 14 };
+
+  const h1: React.CSSProperties = {
+    fontSize: 22,
+    fontWeight: 600,
+    margin: "16px 0 20px",
+  };
+
+  const label: React.CSSProperties = {
+    display: "block",
+    textAlign: "left",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#374151",
+    marginBottom: 6,
+  };
+
+  const inputWrap: React.CSSProperties = { marginBottom: 14 };
+
   const input: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
@@ -63,23 +82,44 @@ export default function AdminPage() {
     outline: "none",
     fontSize: 14,
     lineHeight: "20px",
-    boxSizing: "border-box",       // <<< verhindert Überlauf
+    boxSizing: "border-box",
   };
-  const btn: React.CSSProperties = {
+
+  const button: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
-    background: "#111827",
+    background: "#d70080", // <<< TST-Pink
     color: "#fff",
     border: "none",
     borderRadius: 10,
     fontWeight: 600,
     cursor: "pointer",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+    boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
+    transition: "background 0.2s ease, transform 0.15s ease",
   };
-  const err: React.CSSProperties = { color: "#dc2626", fontSize: 13, marginTop: 4 };
-  const note: React.CSSProperties = { marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" };
 
-  // Login
+  const buttonHover: React.CSSProperties = {
+    background: "#b00068",
+    transform: "translateY(-1px)",
+  };
+
+  const note: React.CSSProperties = {
+    marginTop: 10,
+    fontSize: 12,
+    color: "#6b7280",
+  };
+
+  const errorText: React.CSSProperties = {
+    color: "#dc2626",
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: "left",
+  };
+
+  // Button Hover-State Handling
+  const [hover, setHover] = useState(false);
+
+  // -------- Login --------
   if (!loggedIn) {
     return (
       <main style={page}>
@@ -88,8 +128,8 @@ export default function AdminPage() {
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={120}              // <<< größer & dezent
-              height={120}
+              width={140} // <<< größer
+              height={140}
               priority
               style={{ opacity: 0.95 }}
             />
@@ -98,7 +138,7 @@ export default function AdminPage() {
           <h1 style={h1}>Admin Login</h1>
 
           <form onSubmit={handleLogin}>
-            <div style={fieldWrap}>
+            <div style={inputWrap}>
               <label style={label}>Benutzername</label>
               <input
                 type="text"
@@ -109,7 +149,7 @@ export default function AdminPage() {
               />
             </div>
 
-            <div style={fieldWrap}>
+            <div style={inputWrap}>
               <label style={label}>Passwort</label>
               <input
                 type="password"
@@ -118,10 +158,17 @@ export default function AdminPage() {
                 onChange={(e) => setPass(e.target.value)}
                 autoComplete="current-password"
               />
-              {error ? <div style={err}>{error}</div> : null}
+              {error && <div style={errorText}>{error}</div>}
             </div>
 
-            <button type="submit" style={btn}>Login</button>
+            <button
+              type="submit"
+              style={hover ? { ...button, ...buttonHover } : button}
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => setHover(false)}
+            >
+              Login
+            </button>
           </form>
 
           <div style={note}>Zugriff nur für autorisierte Mitarbeiter.</div>
@@ -130,16 +177,32 @@ export default function AdminPage() {
     );
   }
 
-  // Panel nach Login
+  // -------- Panel nach Login --------
   return (
     <main style={page}>
-      <div style={{ ...card, maxWidth: 520, textAlign: "center" }}>
+      <div style={{ ...card, maxWidth: 520 }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image src="/tst-logo.png" alt="TST Logo" width={120} height={120} priority style={{ opacity: 0.95 }} />
+          <Image
+            src="/tst-logo.png"
+            alt="TST Logo"
+            width={140}
+            height={140}
+            priority
+            style={{ opacity: 0.95 }}
+          />
         </div>
-        <h2 style={{ ...h1, marginTop: 12 }}>Willkommen im Adminbereich</h2>
-        <p style={{ color: "#6b7280", margin: "0 0 18px" }}>✅ Erfolgreich eingeloggt.</p>
-        <button onClick={handleLogout} style={btn}>Logout</button>
+
+        <h2 style={h1}>Willkommen im Adminbereich</h2>
+        <p style={{ color: "#6b7280", marginBottom: 18 }}>✅ Erfolgreich eingeloggt.</p>
+
+        <button
+          onClick={handleLogout}
+          style={hover ? { ...button, ...buttonHover } : button}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+        >
+          Logout
+        </button>
       </div>
     </main>
   );
