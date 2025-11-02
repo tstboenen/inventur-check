@@ -1,0 +1,30 @@
+{
+  "version": 3,
+  "pinHash": "453402caa96cf71bda2490249ed29289f6661860a8fc081ec29c6af91c4e8c9c",
+  "rules": [
+    {
+      "start": "2025-11-14",
+      "end": "2025-11-14",
+      "frueh": false,
+      "spaet": true,
+      "nacht": true,
+      "note": "Inventurbeginn: Spät 14:15, Nacht 20:45"
+    },
+    {
+      "start": "2025-11-15",
+      "end": "2025-11-15",
+      "frueh": true,
+      "spaet": true,
+      "nacht": false,
+      "note": "Inventur: Früh 05:30; Spät garantiert"
+    },
+    {
+      "start": "2025-11-16",
+      "end": "2025-11-16",
+      "frueh": false,
+      "spaet": false,
+      "nacht": false,
+      "note": "Kein Einsatz (Sonntag)"
+    }
+  ]
+}
