@@ -35,14 +35,15 @@ export default function AdminPage() {
 
   if (!loggedIn) {
     return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-[#00aeef] text-gray-800">
-        <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-80 flex flex-col items-center">
-          <img
-            src="/tst-logo.png"
-            alt="TST Logo"
-            className="w-40 mb-6 object-contain"
-          />
-          <h1 className="text-xl font-bold mb-4 text-[#d70080]">
+      <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-800">
+        <img
+          src="/tst-logo.png"
+          alt="TST Logo"
+          className="w-32 mb-6 object-contain"
+        />
+
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-8 w-80 flex flex-col items-center">
+          <h1 className="text-2xl font-bold mb-6 text-[#00aeef]">
             Admin Login
           </h1>
 
@@ -75,14 +76,15 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-[#00aeef] text-gray-800">
-      <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-96 text-center">
-        <img
-          src="/tst-logo.png"
-          alt="TST Logo"
-          className="w-40 mb-6 object-contain"
-        />
-        <h1 className="text-2xl font-bold mb-4 text-[#d70080]">
+    <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-800">
+      <img
+        src="/tst-logo.png"
+        alt="TST Logo"
+        className="w-32 mb-6 object-contain"
+      />
+
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-8 w-96 text-center">
+        <h1 className="text-2xl font-bold mb-4 text-[#00aeef]">
           Willkommen im Adminbereich
         </h1>
         <p className="mb-6 text-gray-600">✅ Erfolgreich eingeloggt.</p>
