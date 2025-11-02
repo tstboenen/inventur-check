@@ -1,0 +1,14 @@
+/* app/home.css */
+
+.main-container {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;       /* volle Bildschirmhöhe, auch mobil korrekt */
+  background-color: white;  /* Hintergrund */
+}
+
+.main-logo {
+  width: 400px;
+  height: auto;
+  display: block;
+}
