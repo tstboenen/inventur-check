@@ -1,5 +1,4 @@
 /* app/home.css */
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
 .main-container {
@@ -26,7 +25,7 @@
   text-align: center;
   color: #111;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 @media (min-width: 768px) {
@@ -48,13 +47,13 @@
 
 .countdown {
   font-weight: 600;
-  margin-left: 8px; /* „dahinter“ – direkt hinter dem Admin-Text */
+  margin-left: 8px;
   white-space: nowrap;
 }
 
 .countdown-started {
   font-weight: 700;
-  color: #0a7a0a; /* grünlicher Hinweis, dass es gestartet ist */
+  color: #0a7a0a;
   margin-left: 8px;
   white-space: nowrap;
 }
@@ -62,5 +61,5 @@
 .help-note {
   color: #777;
   font-size: 0.9rem;
-  margin-top: 4px;
+  margin-top: 6px;
 }
