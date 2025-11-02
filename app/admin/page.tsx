@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function AdminPage() {
@@ -9,6 +9,14 @@ export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(
     typeof window !== "undefined" && localStorage.getItem("isLoggedIn") === "true"
   );
+  const [fadeIn, setFadeIn] = useState(false);
+  const [hover, setHover] = useState(false);
+
+  useEffect(() => {
+    // sanft einblenden
+    const timer = setTimeout(() => setFadeIn(true), 80);
+    return () => clearTimeout(timer);
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +40,7 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // ---- gemeinsame Styles ----
+  // ---------- gemeinsame Styles ----------
   const page: React.CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
@@ -41,6 +49,9 @@ export default function AdminPage() {
     alignItems: "center",
     justifyContent: "center",
     padding: "16px",
+    transition: "opacity 0.4s ease, transform 0.4s ease",
+    opacity: fadeIn ? 1 : 0,
+    transform: fadeIn ? "translateY(0px)" : "translateY(10px)",
   };
 
   const card: React.CSSProperties = {
@@ -55,6 +66,9 @@ export default function AdminPage() {
     padding: 28,
     boxSizing: "border-box",
     textAlign: "center",
+    transition: "opacity 0.4s ease, transform 0.4s ease",
+    opacity: fadeIn ? 1 : 0,
+    transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
 
   const h1: React.CSSProperties = {
@@ -88,7 +102,7 @@ export default function AdminPage() {
   const button: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
-    background: "#d70080", // <<< TST-Pink
+    background: "#d70080", // TST Pink
     color: "#fff",
     border: "none",
     borderRadius: 10,
@@ -116,10 +130,7 @@ export default function AdminPage() {
     textAlign: "left",
   };
 
-  // Button Hover-State Handling
-  const [hover, setHover] = useState(false);
-
-  // -------- Login --------
+  // ---------- Login-Ansicht ----------
   if (!loggedIn) {
     return (
       <main style={page}>
@@ -128,10 +139,10 @@ export default function AdminPage() {
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={140} // <<< größer
-              height={140}
+              width={150} // leicht größer
+              height={150}
               priority
-              style={{ opacity: 0.95 }}
+              style={{ opacity: 0.95, transition: "opacity 0.5s ease" }}
             />
           </div>
 
@@ -177,7 +188,7 @@ export default function AdminPage() {
     );
   }
 
-  // -------- Panel nach Login --------
+  // ---------- Panel nach Login ----------
   return (
     <main style={page}>
       <div style={{ ...card, maxWidth: 520 }}>
@@ -185,8 +196,8 @@ export default function AdminPage() {
           <Image
             src="/tst-logo.png"
             alt="TST Logo"
-            width={140}
-            height={140}
+            width={150}
+            height={150}
             priority
             style={{ opacity: 0.95 }}
           />
