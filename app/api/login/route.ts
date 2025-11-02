@@ -7,12 +7,18 @@ export async function POST(req: Request) {
     const validPass = process.env.ADMIN_PASS;
 
     if (user === validUser && pass === validPass) {
-      // einfache Session-Bestätigung
+      // Simple OK – Frontend hält eine LocalStorage-Flag
       return NextResponse.json({ ok: true });
     } else {
-      return NextResponse.json({ ok: false, error: "Falsche Zugangsdaten" }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, error: "Falsche Zugangsdaten" },
+        { status: 401 }
+      );
     }
   } catch {
-    return NextResponse.json({ ok: false, error: "Ungültige Anfrage" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "Ungültige Anfrage" },
+      { status: 400 }
+    );
   }
 }
