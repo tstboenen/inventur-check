@@ -1,24 +1,32 @@
 import { NextResponse } from "next/server";
 
+const deny = (msg = "Unauthorized") =>
+  NextResponse.json({ error: msg }, { status: 401 });
+
 export async function POST(req: Request) {
   try {
-    const { user, pass } = await req.json();
-    const validUser = process.env.ADMIN_USER;
-    const validPass = process.env.ADMIN_PASS;
+    const { username, password } = (await req.json()) as {
+      username?: string;
+      password?: string;
+    };
 
-    if (user === validUser && pass === validPass) {
-      // Simple OK – Frontend hält eine LocalStorage-Flag
-      return NextResponse.json({ ok: true });
-    } else {
-      return NextResponse.json(
-        { ok: false, error: "Falsche Zugangsdaten" },
-        { status: 401 }
-      );
-    }
+    const ENV_USER = process.env.ADMIN_USER || "";
+    const ENV_PASS = process.env.ADMIN_PASS || "";
+
+    if (!ENV_USER || !ENV_PASS) return deny("Login nicht konfiguriert (ENV fehlt)");
+    if (!username || !password) return deny("Benutzername/Passwort fehlt");
+    if (username !== ENV_USER || password !== ENV_PASS) return deny("Falsche Zugangsdaten");
+
+    const res = NextResponse.json({ ok: true });
+    res.cookies.set("admin_session", "ok", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,        // Vercel = HTTPS
+      maxAge: 60 * 60 * 6, // 6 Stunden
+    });
+    return res;
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "Ungültige Anfrage" },
-      { status: 400 }
-    );
+    return deny();
   }
 }
