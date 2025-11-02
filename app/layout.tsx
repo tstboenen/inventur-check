@@ -1,37 +1,15 @@
-import "./globals.css";
-import { Poppins } from "next/font/google";
-
-const poppins = Poppins({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
+// app/layout.tsx
+import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: "Inventur-Check",
-  description: "Inventur-Status & Admin",
+  title: 'TST Bönen Inventur 2025',
+  description: 'Inventur-Status und Admin-Verwaltung',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="de">
-      <body
-        className={poppins.className}
-        style={{
-          background: "#ffffff",
-          color: "#111827",
-          minHeight: "100vh",
-          margin: 0,
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale",
-        }}
-      >
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
