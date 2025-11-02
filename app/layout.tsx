@@ -1,3 +1,5 @@
+import "./globals.css";
+
 // app/layout.tsx
 export const metadata = {
   title: "Inventur-Check",
