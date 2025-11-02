@@ -12,20 +12,9 @@ body {
   height: 100%;
   width: 100%;
   background-color: #ffffff; /* weißer Hintergrund */
-  color: #111827; /* dunkler Text */
+  color: #111827;            /* dunkler Text */
   font-size: 16px;
   line-height: 1.5;
-}
-
-/* Entfernt unerwünschte Scrollbars oder Blitzer */
-body {
-  overflow-x: hidden;
-}
-
-/* Standardlinks */
-a {
-  color: inherit;
-  text-decoration: none;
 }
 
 /* Bilder reagieren auf Bildschirmgröße */
@@ -35,16 +24,16 @@ img {
   height: auto;
 }
 
-/* Buttons & Inputs Standard */
+/* Form Controls sauber */
 button,
 input,
 textarea {
   font-family: inherit;
 }
 
-/* Fokus-Styling (dezenter Apple-Stil) */
 input:focus,
-button:focus {
+button:focus,
+textarea:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.15);
 }
