@@ -2,18 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import '../globals.css'; // nutzt dein bestehendes Styling
+import '../admin.css'; // <-- eigenes CSS für /admin
 
 type Settings = { textVorStart: string; startZeit: string | null };
 
-// Wandelt value aus <input type="datetime-local"> in ISO mit lokalem Offset um (z. B. +01:00 / +02:00)
 function toIsoWithLocalOffset(input: string): string | null {
-  if (!input) return null; // erwartet "YYYY-MM-DDTHH:mm" (optional mit :ss)
-  const withSeconds = input.length === 16 ? `${input}:00` : input; // Sekunden ergänzen
+  if (!input) return null; // "YYYY-MM-DDTHH:mm"
+  const withSeconds = input.length === 16 ? `${input}:00` : input;
   const d = new Date(withSeconds);
   if (isNaN(d.getTime())) return null;
 
-  const offsetMin = -d.getTimezoneOffset(); // lokale Zeitzone
+  const offsetMin = -d.getTimezoneOffset();
   const sign = offsetMin >= 0 ? '+' : '-';
   const abs = Math.abs(offsetMin);
   const hh = String(Math.floor(abs / 60)).padStart(2, '0');
@@ -29,7 +28,6 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Aktuelle Werte laden
   useEffect(() => {
     (async () => {
       try {
@@ -37,7 +35,6 @@ export default function AdminPage() {
         const data = await res.json();
         setValues({
           textVorStart: data.textVorStart ?? 'Text vor Start',
-          // Für datetime-local brauchen wir YYYY-MM-DDTHH:mm
           startZeit: data.startZeit ? String(data.startZeit).slice(0, 16) : ''
         });
       } catch {
@@ -51,7 +48,6 @@ export default function AdminPage() {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setStatus('Speichere …');
-
     try {
       const isoOrNull =
         values.startZeit && values.startZeit.trim()
@@ -59,7 +55,7 @@ export default function AdminPage() {
           : null;
 
       if (values.startZeit && !isoOrNull) {
-        setStatus('Fehler ❌: Ungültige Startzeit. Bitte Datum/Uhrzeit prüfen.');
+        setStatus('Fehler ❌: Ungültige Startzeit.');
         return;
       }
 
@@ -76,7 +72,6 @@ export default function AdminPage() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${res.status}`);
       }
-
       setStatus('Gespeichert ✅');
     } catch (err: any) {
       setStatus(`Fehler ❌: ${err.message}`);
@@ -86,7 +81,6 @@ export default function AdminPage() {
   return (
     <main className="admin-wrap">
       <div className="admin-card fade-in">
-        {/* Logo oben (wie vorher) */}
         <div className="admin-logo">
           <Image
             src="/tst-logo.png"
@@ -97,7 +91,6 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* Titel */}
         <h1 className="admin-title">Admin – Inventur Einstellungen</h1>
 
         {loading ? (
@@ -128,15 +121,12 @@ export default function AdminPage() {
                 }
               />
               <small className="admin-hint">
-                Wird als ISO mit lokalem Offset gespeichert
-                (z.&nbsp;B. 2025-11-14T14:15:00+01:00).
+                Wird als ISO mit lokalem Offset gespeichert (z.&nbsp;B.
+                2025-11-14T14:15:00+01:00).
               </small>
             </label>
 
-            <button type="submit" className="admin-button">
-              Speichern
-            </button>
-
+            <button type="submit" className="admin-button">Speichern</button>
             {status && <p className="admin-status">{status}</p>}
           </form>
         )}
