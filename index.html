@@ -1,502 +1,77 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <title>Inventur-Check – Früh/Spät/Nacht</title>
-  <meta name="color-scheme" content="light dark" />
-  <style>
-    :root{
-      --ok:#16a34a; --ok-ink:#ffffff;
-      --no:#dc2626; --no-ink:#ffffff;
-      --warn:#f59e0b;
-      --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --ring:#374151; --focus:#60a5fa;
-      --banner-bg:#0f172a; --banner-ring:#334155;
-    }
-    @media (prefers-color-scheme: light){ :root{ --bg:#f8fafc; --card:#ffffff; --ink:#111827; --muted:#6b7280; --ring:#e5e7eb; --banner-bg:#ffffff; --banner-ring:#e5e7eb; } }
-    *{box-sizing:border-box}
-    html,body{-webkit-text-size-adjust:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-    a{color:inherit}
-    .wrap{max-width:1080px;margin-inline:auto;padding:24px;}
-    @media (max-width:640px){.wrap{padding:16px}}
-    @supports(padding:max(0px)){.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));}}
-    h1{font-size:clamp(1.4rem,1rem+2vw,2.2rem);margin:0 0 8px}
-    .sub{color:var(--muted);margin:0 0 24px}
-    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
-    @media (max-width:640px){.grid{grid-template-columns:1fr;gap:12px}}
-    .card{border:1px solid var(--ring);background:var(--card);border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
-    .card h2{margin:0 0 10px;font-size:1.25rem}
-    .badge{display:inline-flex;align-items:center;gap:10px;border-radius:12px;padding:14px 16px;font-weight:700;letter-spacing:.3px}
-    .ok{background:var(--ok);color:var(--ok-ink)}
-    .no{background:var(--no);color:var(--no-ink)}
-    .warn{background:var(--warn);color:#111827}
-    .hint{margin-top:14px;color:var(--muted);font-size:.95rem}
-    .footer{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-    .pill{border:1px dashed var(--ring);padding:10px 12px;border-radius:999px;color:var(--muted);font-size:.9rem}
-    .legend{display:flex;gap:10px;flex-wrap:wrap}
-    .legend span{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 10px;border:1px solid var(--ring);}
-    .legend i{display:inline-block;width:12px;height:12px;border-radius:3px}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:14px;background:var(--bg);padding-bottom:8px}
-    .btn{cursor:pointer;border:1px solid var(--ring);background:transparent;color:inherit;border-radius:10px;padding:12px 14px;min-height:44px;min-width:44px}
-    .btn:hover{box-shadow:0 1px 0 rgba(255,255,255,.12) inset}
-    .note{font-size:.9rem;color:var(--muted)}
-
-    .banner{position:sticky;top:56px;z-index:5;margin-bottom:16px;border:1px solid var(--banner-ring);background:var(--banner-bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    #countdown{font-size:clamp(1.1rem, 2vw + 1rem, 2rem);line-height:1}
-    @media (max-width:640px){#banner{flex-direction:column;align-items:flex-start;gap:6px}}
-
-    /* Admin */
-    .admin{margin-top:8px}
-    .admin .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:640px){.admin .row{grid-template-columns:1fr}}
-    .admin label{display:flex;flex-direction:column;gap:6px}
-    .admin input[type="text"], .admin input[type="password"], .admin input[type="date"], .admin textarea{border:1px solid var(--ring);background:transparent;color:inherit;border-radius:10px;padding:12px;min-height:44px}
-    .admin input:focus, .admin textarea:focus{outline:2px solid var(--focus);outline-offset:2px}
-    .table{width:100%;border-collapse:separate;border-spacing:0 8px;display:block;overflow:auto;-webkit-overflow-scrolling:touch}
-    .btn-sm{padding:8px 10px;border-radius:8px;min-height:36px}
-    .gap-8{display:flex;gap:8px;flex-wrap:wrap}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inventur‑Check Admin</title>
+<style>
+body{font-family:system-ui,Roboto,Arial,sans-serif;margin:0;background:#f8fafc;color:#111827}
+.wrap{max-width:900px;margin:0 auto;padding:24px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.btn{cursor:pointer;background:#00aeef;color:#fff;border:none;padding:12px 18px;border-radius:10px;font-weight:600}
+.btn:hover{opacity:.9}
+.status-box{background:#00aeef;color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.95rem;box-shadow:0 2px 6px rgba(0,0,0,0.15);position:sticky;top:10px;z-index:9}
+.status-box strong{font-weight:700}
+.repo-info{font-family:monospace}
+.note{font-size:.9rem;color:#444}
+.admin .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin label{display:flex;flex-direction:column;gap:6px}
+.admin input{border:1px solid #ccc;border-radius:8px;padding:10px}
+.table{width:100%;border-collapse:collapse;margin-top:16px}
+.table th,.table td{border:1px solid #ddd;padding:6px 8px;text-align:left}
+</style>
 </head>
 <body>
-  <a class="sr-only" href="#main">Zum Inhalt springen</a>
-  <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h1>Inventur‑Check</h1>
-        <p class="sub">Zeigt sofort, ob <strong>Früh‑</strong>, <strong>Spät‑</strong> und <strong>Nachtschicht</strong> zur Inventur erscheinen müssen.</p>
-      </div>
-      <div class="gap-8">
-        <a class="btn" id="btnAdmin" href="?admin=1" title="Admin‑Seite">⚙️ Admin</a>
-        <button class="btn" id="btnRefresh" title="Seite neu laden">↻ Aktualisieren</button>
-      </div>
+<div class="wrap">
+  <h1>⚙️ Admin – Plan verwalten</h1>
+  <section class="status-box" id="ghStatus">
+    <strong>🔄 Verbindung wird geprüft …</strong><br>
+    <span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>
+    💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.
+  </section>
+
+  <section class="card admin">
+    <div class="row">
+      <label>PIN<input id="pinLogin" type="password" placeholder="z. B. 4927"/></label>
+      <label>GitHub Token<input id="ghToken" type="password" placeholder="github_pat_…"/></label>
     </div>
-
-    <div id="view-public">
-      <div id="banner" class="banner" role="status" aria-live="polite">
-        <span id="bannerLeft"><strong>Inventur‑Countdown</strong></span>
-        <span class="mono" id="countdown">–:–:–</span>
-      </div>
-
-      <main id="main" class="grid" aria-live="polite" aria-busy="true"></main>
-
-      <div class="footer">
-        <div class="pill" id="ts">Stand: –</div>
-        <div class="legend">
-          <span><i style="background:var(--ok)"></i> Muss erscheinen</span>
-          <span><i style="background:var(--no)"></i> Muss <strong>nicht</strong> erscheinen</span>
-          <span><i style="background:var(--warn)"></i> Info</span>
-        </div>
-      </div>
+    <div class="row">
+      <label>Owner<input id="ghOwner" type="text" value="tstboenen"/></label>
+      <label>Repo<input id="ghRepo" type="text" value="inventur-check"/></label>
     </div>
-
-    <div id="view-admin" class="admin" hidden>
-      <h2>⚙️ Admin – Plan verwalten</h2>
-      <p class="note">Zentrale Speicherung im GitHub‑Repo. Du benötigst einen **GitHub‑Token** mit <em>Contents: Read & Write</em> und meldest dich hier mit **Admin‑PIN** an.</p>
-
-      <section class="card" id="authBox">
-        <h3>Admin‑Anmeldung</h3>
-        <div class="row">
-          <label>PIN
-            <input id="pinLogin" type="password" inputmode="numeric" placeholder="z. B. 4927" autocomplete="off">
-          </label>
-          <label>GitHub Token (wird nur für diese Sitzung genutzt)
-            <input id="ghToken" type="password" placeholder="ghp_…" autocomplete="off">
-          </label>
-        </div>
-        <div class="row">
-          <label>Owner (GitHub Benutzer/Org)
-            <input id="ghOwner" type="text" placeholder="z. B. tstboenen">
-          </label>
-          <label>Repo
-            <input id="ghRepo" type="text" placeholder="z. B. inventur-check">
-          </label>
-        </div>
-        <div class="row">
-          <label>Branch
-            <input id="ghBranch" type="text" placeholder="main" value="main">
-          </label>
-          <label>Pfad (Datei)
-            <input id="ghPath" type="text" placeholder="rules.json" value="rules.json">
-          </label>
-        </div>
-        <div class="gap-8" style="margin-top:12px">
-          <button class="btn" id="btnLogin">🔐 Anmelden</button>
-          <button class="btn" id="btnCreatePin">🆕 PIN anlegen (falls noch keine)</button>
-        </div>
-        <p class="note" id="authHint">Erster Start: Lege eine PIN an und speichere, dann wieder hier anmelden.</p>
-        <p class="note" id="lockMsg" style="display:none"></p>
-      </section>
-
-      <section class="card" id="adminCore" style="display:none">
-        <div class="gap-8" style="justify-content:space-between;align-items:center">
-          <h3 style="margin:0">Regelverwaltung</h3>
-          <div class="gap-8">
-            <button class="btn" id="btnLogout">🚪 Abmelden</button>
-          </div>
-        </div>
-
-        <h4 style="margin-top:16px">Neue Regel anlegen</h4>
-        <div class="row">
-          <label>Start‑Datum
-            <input id="rStart" type="date" required>
-          </label>
-          <label>End‑Datum (optional)
-            <input id="rEnd" type="date" placeholder="leer = nur Starttag">
-          </label>
-        </div>
-        <div class="sw" style="margin-top:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-          <label><input id="rFrueh" type="checkbox"> Frühschicht muss kommen</label>
-          <label><input id="rSpaet" type="checkbox"> Spätschicht muss kommen</label>
-          <label><input id="rNacht" type="checkbox"> Nachtschicht muss kommen</label>
-        </div>
-        <label style="margin-top:10px">Notiz (optional)
-          <textarea id="rNote" rows="2" placeholder="z. B. Jahresinventur, Aufräumtage…"></textarea>
-        </label>
-        <div class="gap-8" style="margin-top:12px">
-          <button class="btn" id="btnAdd">➕ Regel hinzufügen</button>
-          <button class="btn" id="btnClear">🗑️ Alle Regeln löschen</button>
-          <button class="btn" id="btnSeed">🌱 Beispielregeln</button>
-          <button class="btn" id="btnSave">💾 Regeln speichern (GitHub)</button>
-        </div>
-
-        <section class="card" style="margin-top:14px">
-          <h3>Regeln</h3>
-          <table class="table" id="ruleTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Start</th>
-                <th>Ende</th>
-                <th>Früh</th>
-                <th>Spät</th>
-                <th>Nacht</th>
-                <th>Notiz</th>
-                <th>Aktionen</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </section>
-
-        <section class="card" style="margin-top:14px">
-          <h3>Import / Export (lokal)</h3>
-          <div class="gap-8">
-            <button class="btn" id="btnExport">⬇️ Export JSON</button>
-            <label class="btn" for="fileImport" style="display:inline-block">⬆️ Import JSON</label>
-            <input id="fileImport" type="file" accept="application/json" style="display:none">
-          </div>
-        </section>
-
-        <section class="card" style="margin-top:14px">
-          <h3>PIN verwalten</h3>
-          <div class="row">
-            <label>Neue PIN
-              <input id="pinNew" type="password" inputmode="numeric" placeholder="z. B. 4927" autocomplete="off">
-            </label>
-            <label>Bestätigen
-              <input id="pinNew2" type="password" inputmode="numeric" placeholder="wiederholen" autocomplete="off">
-            </label>
-            <div style="display:flex;align-items:flex-end;gap:8px">
-              <button class="btn" id="btnChangePin">🔄 PIN ändern (GitHub speichern)</button>
-            </div>
-          </div>
-          <p class="note">PIN‑Hash wird zusammen mit den Regeln in <code>rules.json</code> gespeichert.</p>
-        </section>
-      </section>
-
-      <div style="margin-top:16px">
-        <a class="btn" href="?">← Zur öffentlichen Ansicht</a>
-      </div>
+    <div class="row">
+      <label>Branch<input id="ghBranch" type="text" value="main"/></label>
+      <label>Pfad<input id="ghPath" type="text" value="rules.json"/></label>
     </div>
-  </div>
-
-  <script>
-    // ======= BACKEND (GitHub‑Repo) =======
-    const BACKEND = {
-      owner: 'tstboenen',
-      repo: 'inventur-check',
-      branch: 'main',
-      path: 'rules.json',
-      setFromInputs(){
-        this.owner = document.getElementById('ghOwner')?.value || this.owner;
-        this.repo  = document.getElementById('ghRepo')?.value || this.repo;
-        this.branch= document.getElementById('ghBranch')?.value || this.branch;
-        this.path  = document.getElementById('ghPath')?.value || this.path;
-      },
-      rawUrl(){ return `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.branch}/${this.path}` },
-      apiGetUrl(){ return `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${this.path}?ref=${this.branch}` },
-      async fetchRemote(){
-        const res = await fetch(this.rawUrl(), {cache:'no-store'});
-        if(res.status===404) return null; // noch nicht vorhanden
-        if(!res.ok) throw new Error('Laden fehlgeschlagen: '+res.status);
-        return await res.json();
-      },
-      async fetchMeta(){
-        const res = await fetch(this.apiGetUrl(), {cache:'no-store'});
-        if(res.status===404) return null;
-        if(!res.ok) throw new Error('API-Lesen fehlgeschlagen: '+res.status);
-        return await res.json(); // enthält sha
-      },
-      async saveRemote(dataObj, token, message='Update Inventur-Regeln'){
-        if(!token) throw new Error('Kein GitHub-Token angegeben.');
-        const meta = await this.fetchMeta();
-        const body = {
-          message,
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(dataObj, null, 2)))),
-          branch: this.branch
-        };
-        if(meta && meta.sha) body.sha = meta.sha;
-        const res = await fetch(this.apiGetUrl(), {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer '+token, 'Content-Type':'application/json' },
-          body: JSON.stringify(body)
-        });
-        if(!res.ok){
-          const t = await res.text();
-          throw new Error('Speichern fehlgeschlagen: '+res.status+' '+t);
-        }
-        return await res.json();
-      }
-    };
-
-    // ======= KONFIG =======
-    const CONFIG = {
-      timezone: 'Europe/Berlin',
-      shifts: {
-        frueh: { label: 'Frühschicht', start: '05:30', end: '14:00' },
-        spaet: { label: 'Spätschicht', start: '14:15', end: '22:00' },
-        nacht: { label: 'Nachtschicht', start: '20:45', end: '05:30' }
-      },
-      defaultStatus: { frueh: false, spaet: false, nacht: false },
-      autoRefreshMinutes: 5,
-      inventoryStartISO: '2025-11-14T14:15:00+01:00',
-      security: { sessionMinutes: 60 }
-    };
-
-    // ======= DEFAULT RULES (falls remote leer) =======
-    const DEFAULT_DATA = {
-      version: 3,
-      pinHash: null, // wird nach erster Einrichtung gesetzt
-      rules: [
-        { start:'2025-11-14', end:'2025-11-14', frueh:false, spaet:true,  nacht:true,  note:'Inventurbeginn: Spät 14:15, Nacht 20:45' },
-        { start:'2025-11-15', end:'2025-11-15', frueh:true,  spaet:true,  nacht:false, note:'Inventur: Früh 05:30; Spät garantiert' },
-        { start:'2025-11-16', end:'2025-11-16', frueh:false, spaet:false, nacht:false, note:'Kein Einsatz (Sonntag)' }
-      ]
-    };
-
-    // ======= UTIL =======
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
-    function todayLocal(now){
-      const tz = CONFIG.timezone;
-      const d = new Date(now);
-      const y = new Intl.DateTimeFormat('de-DE',{timeZone:tz,year:'numeric'}).format(d);
-      const m = new Intl.DateTimeFormat('de-DE',{timeZone:tz,month:'2-digit'}).format(d);
-      const dd= new Intl.DateTimeFormat('de-DE',{timeZone:tz,day:'2-digit'}).format(d);
-      return `${y}-${m}-${dd}`;
+    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn" id="btnLogin">🔐 Anmelden</button>
+      <button class="btn" id="btnCreatePin">🆕 PIN anlegen</button>
+      <button class="btn" id="btnSave">💾 Regeln speichern (GitHub)</button>
+    </div>
+    <p class="note">Hier verwaltst du die Inventur‑Regeln (Datumsbereich + Schichten). Alle Änderungen werden direkt in <code>rules.json</code> im GitHub‑Repository gespeichert.</p>
+    <table class="table" id="ruleTable">
+      <thead><tr><th>#</th><th>Start</th><th>Ende</th><th>Früh</th><th>Spät</th><th>Nacht</th><th>Notiz</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</div>
+<script>
+const statusBox=document.getElementById('ghStatus');
+async function checkGitHub(){
+  statusBox.innerHTML='<strong>🔄 Verbindung wird geprüft …</strong><br><span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.';
+  try{
+    const r=await fetch('https://api.github.com/repos/tstboenen/inventur-check/contents/rules.json?ref=main',{cache:'no-store'});
+    if(r.ok){
+      statusBox.innerHTML='<strong>✅ Verbunden mit GitHub</strong><br><span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.';
+    }else{
+      statusBox.innerHTML='<strong>❌ Keine Verbindung! ('+(r.status)+')</strong><br>Prüfe Token oder Repository Zugriff.';
     }
-    function inRange(day, start, end){ if(!end) return day===start; return day>=start && day<=end; }
-    function formatStamp(d){ return new Intl.DateTimeFormat('de-DE',{ timeZone: CONFIG.timezone, dateStyle:'full', timeStyle:'short' }).format(d); }
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function formatDHMS(ms){ const s = Math.max(0, Math.floor(ms/1000)); const d = Math.floor(s/86400); const h = Math.floor((s%86400)/3600); const m = Math.floor((s%3600)/60); const sec = s%60; return (d>0? d+':':'') + `${pad(h)}:${pad(m)}:${pad(sec)}`; }
-    async function sha256Hex(text){ const enc = new TextEncoder().encode(text); const buf = await crypto.subtle.digest('SHA-256', enc); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-
-    // ======= COUNTDOWN =======
-    function updateCountdown(now){
-      const target = new Date(CONFIG.inventoryStartISO);
-      const diff = target - now;
-      const el = $('#countdown');
-      const left = $('#bannerLeft');
-      if(diff > 0){ left.innerHTML = '<strong>Inventur‑Countdown</strong>'; el.textContent = formatDHMS(diff); }
-      else { left.innerHTML = '✅ <strong>Die Inventur ist gestartet</strong>'; el.textContent = ''; }
-    }
-
-    // ======= CORE LOGIK =======
-    let CURRENT = structuredClone(DEFAULT_DATA);
-
-    function getStatusForDay(day){
-      const rule = CURRENT.rules.filter(r => inRange(day, r.start, r.end || r.start)).pop();
-      if(rule){ return { frueh: !!rule.frueh, spaet: !!rule.spaet, nacht: !!rule.nacht, note: rule.note||null } }
-      return { ...CONFIG.defaultStatus, note: null };
-    }
-    function buildCard({shiftKey, required, note}){
-      const s = CONFIG.shifts[shiftKey];
-      const cls = required ? 'ok' : 'no';
-      const icon = required ? '✅' : '❌';
-      const msg  = required ? `${s.label}: MUSS zur Inventur erscheinen` : `${s.label}: muss NICHT zur Inventur erscheinen`;
-      const t    = `${s.start} – ${s.end} Uhr` + (shiftKey==='nacht' ? ' (Bezug: Starttag)' : '');
-      const hint = note ? `<p class="hint">ℹ️ ${note}</p>` : '';
-      return `<section class="card">
-        <h2>${s.label} <span class="note">(${t})</span></h2>
-        <div class="badge ${cls}" role="status" aria-live="polite">${icon} ${msg}</div>
-        ${hint}
-      </section>`;
-    }
-    function renderPublic(now){
-      const main = $('#main');
-      const day  = todayLocal(now);
-      const status = getStatusForDay(day);
-      main.innerHTML = [
-        buildCard({shiftKey:'frueh', required: status.frueh, note: status.note}),
-        buildCard({shiftKey:'spaet', required: status.spaet, note: status.note}),
-        buildCard({shiftKey:'nacht', required: status.nacht, note: status.note})
-      ].join('');
-      updateCountdown(now);
-      $('#ts').textContent = `Stand: ${formatStamp(now)} (${CONFIG.timezone})`;
-      main.setAttribute('aria-busy','false');
-    }
-
-    // ======= ADMIN UI =======
-    function renderRuleTable(){
-      const tb = $('#ruleTable tbody');
-      tb.innerHTML = '';
-      CURRENT.rules.forEach((r,i)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${i+1}</td>
-          <td>${r.start}</td>
-          <td>${r.end||''}</td>
-          <td>${r.frueh? '✅':'—'}</td>
-          <td>${r.spaet? '✅':'—'}</td>
-          <td>${r.nacht? '✅':'—'}</td>
-          <td>${r.note||''}</td>
-          <td class="gap-8">
-            <button class="btn btn-sm" data-act="up" data-idx="${i}">⬆️</button>
-            <button class="btn btn-sm" data-act="down" data-idx="${i}">⬇️</button>
-            <button class="btn btn-sm" data-act="del" data-idx="${i}">🗑️ Löschen</button>
-          </td>`;
-        tb.appendChild(tr);
-      });
-      tb.onclick = (e)=>{
-        const btn = e.target.closest('button[data-act]'); if(!btn) return;
-        const act = btn.dataset.act; const idx = +btn.dataset.idx;
-        if(act==='del'){ CURRENT.rules.splice(idx,1); }
-        if(act==='up' && idx>0){ [CURRENT.rules[idx-1],CURRENT.rules[idx]] = [CURRENT.rules[idx],CURRENT.rules[idx-1]]; }
-        if(act==='down' && idx < CURRENT.rules.length-1){ [CURRENT.rules[idx+1],CURRENT.rules[idx]] = [CURRENT.rules[idx],CURRENT.rules[idx+1]]; }
-        renderRuleTable();
-      };
-    }
-
-    function addRuleFromForm(){
-      const start = $('#rStart').value; const end = $('#rEnd').value || null;
-      const frueh = $('#rFrueh').checked; const spaet = $('#rSpaet').checked; const nacht = $('#rNacht').checked;
-      const note  = $('#rNote').value.trim() || null;
-      if(!start) { alert('Bitte Start‑Datum wählen.'); return }
-      if(!frueh && !spaet && !nacht){ alert('Mindestens eine Schicht auswählen.'); return }
-      CURRENT.rules.push({ start, end, frueh, spaet, nacht, note });
-      CURRENT.rules.sort((a,b)=> (a.start||'').localeCompare(b.start) || (a.end||'').localeCompare(b.end||''));
-      $('#rStart').value=''; $('#rEnd').value=''; $('#rFrueh').checked=false; $('#rSpaet').checked=false; $('#rNacht').checked=false; $('#rNote').value='';
-      renderRuleTable();
-    }
-
-    function exportRules(){
-      const data = { version: CURRENT.version, pinHash: CURRENT.pinHash||null, rules: CURRENT.rules };
-      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='inventur-rules.json'; a.click(); URL.revokeObjectURL(url);
-    }
-    function importRules(file){
-      const r = new FileReader();
-      r.onload = () => { try{ const obj = JSON.parse(r.result); CURRENT.rules = obj.rules||[]; CURRENT.pinHash = obj.pinHash||CURRENT.pinHash||null; renderRuleTable(); alert('Import erfolgreich.'); }catch(err){ alert('Import fehlgeschlagen: '+err.message) } };
-      r.readAsText(file);
-    }
-
-    async function saveToGitHub(commitMsg){
-      BACKEND.setFromInputs();
-      const token = document.getElementById('ghToken').value.trim();
-      const payload = { version: CURRENT.version||3, pinHash: CURRENT.pinHash||null, rules: CURRENT.rules };
-      await BACKEND.saveRemote(payload, token, commitMsg||'Update Inventur-Regeln');
-      alert('Erfolgreich in GitHub gespeichert.');
-    }
-
-    // ======= AUTH (PIN in rules.json) =======
-    function scheduleAutoLogout(){ const mins = CONFIG.security.sessionMinutes; if(mins>0){ setTimeout(()=>{ sessionStorage.removeItem('ADMIN'); location.href='?'; }, mins*60*1000); } }
-
-    async function ensureDataLoaded(){
-      BACKEND.setFromInputs();
-      try{
-        const remote = await BACKEND.fetchRemote();
-        CURRENT = remote ? remote : structuredClone(DEFAULT_DATA);
-      } catch(err){ console.warn('Remote laden fehlgeschlagen, nutze Defaults:', err); CURRENT = structuredClone(DEFAULT_DATA); }
-    }
-
-    async function handleCreatePin(){
-      await ensureDataLoaded();
-      if(CURRENT.pinHash){ alert('PIN existiert bereits.'); return }
-      const pin = (document.getElementById('pinLogin').value||'').trim();
-      const token = document.getElementById('ghToken').value.trim();
-      if(!pin){ alert('Bitte eine PIN eingeben.'); return }
-      if(!token){ alert('GitHub‑Token ist erforderlich, um die PIN zu speichern.'); return }
-      CURRENT.pinHash = await sha256Hex(pin);
-      await saveToGitHub('Set admin PIN');
-      alert('PIN angelegt. Bitte jetzt anmelden.');
-    }
-
-    async function handleLogin(){
-      await ensureDataLoaded();
-      if(!CURRENT.pinHash){ alert('Es ist noch keine PIN gesetzt. Bitte zuerst „PIN anlegen“.'); return }
-      const pin = (document.getElementById('pinLogin').value||'').trim();
-      if(!pin){ alert('Bitte PIN eingeben.'); return }
-      const hash = await sha256Hex(pin);
-      if(hash === CURRENT.pinHash){
-        sessionStorage.setItem('ADMIN','1');
-        document.getElementById('authBox').style.display='none';
-        document.getElementById('adminCore').style.display='block';
-        renderRuleTable();
-        scheduleAutoLogout();
-      } else { alert('Falsche PIN.'); }
-    }
-
-    async function handleChangePin(){
-      const p1 = (document.getElementById('pinNew').value||'').trim();
-      const p2 = (document.getElementById('pinNew2').value||'').trim();
-      if(!p1||!p2){ alert('Bitte neue PIN zweimal eingeben.'); return }
-      if(p1!==p2){ alert('PIN stimmt nicht überein.'); return }
-      CURRENT.pinHash = await sha256Hex(p1);
-      await saveToGitHub('Change admin PIN');
-      alert('PIN geändert.');
-      document.getElementById('pinNew').value=''; document.getElementById('pinNew2').value='';
-    }
-
-    // ======= BOOTSTRAP =======
-    (async function(){
-      const url = new URL(location.href);
-      const isAdmin = url.searchParams.get('admin') === '1';
-
-      if(isAdmin){
-        $('#view-public').hidden = true; $('#view-admin').hidden = false;
-        // Voreinstellungen für Backend Felder
-        document.getElementById('ghOwner').value = BACKEND.owner;
-        document.getElementById('ghRepo').value  = BACKEND.repo;
-        document.getElementById('ghBranch').value= BACKEND.branch;
-        document.getElementById('ghPath').value  = BACKEND.path;
-
-        document.getElementById('btnLogin').addEventListener('click', handleLogin);
-        document.getElementById('btnCreatePin').addEventListener('click', handleCreatePin);
-        document.getElementById('btnChangePin').addEventListener('click', handleChangePin);
-        document.getElementById('btnLogout').addEventListener('click', ()=>{ sessionStorage.removeItem('ADMIN'); location.href='?'; });
-        document.getElementById('btnAdd').addEventListener('click', addRuleFromForm);
-        document.getElementById('btnClear').addEventListener('click', ()=>{ if(confirm('Alle Regeln wirklich löschen?')){ CURRENT.rules = []; renderRuleTable(); }});
-        document.getElementById('btnSeed').addEventListener('click', ()=>{ CURRENT.rules = structuredClone(DEFAULT_DATA.rules); renderRuleTable(); });
-        document.getElementById('btnExport').addEventListener('click', exportRules);
-        document.getElementById('fileImport').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(f) importRules(f); e.target.value=''; });
-        document.getElementById('btnSave').addEventListener('click', ()=> saveToGitHub('Update Regeln'));
-
-        // Falls bereits eingeloggt (gleiche Tab‑Session)
-        if(sessionStorage.getItem('ADMIN')==='1'){ await ensureDataLoaded(); document.getElementById('authBox').style.display='none'; document.getElementById('adminCore').style.display='block'; renderRuleTable(); scheduleAutoLogout(); }
-      } else {
-        await ensureDataLoaded();
-        const now = new Date();
-        renderPublic(now);
-        setInterval(()=>{ updateCountdown(new Date()); }, 1000);
-        if(CONFIG.autoRefreshMinutes && CONFIG.autoRefreshMinutes > 0){ setInterval(()=>location.reload(), CONFIG.autoRefreshMinutes * 60 * 1000); }
-        document.getElementById('btnRefresh').addEventListener('click', ()=>location.reload());
-      }
-    })();
-  </script>
+  }catch(e){
+    statusBox.innerHTML='<strong>❌ Keine Verbindung!</strong><br>Prüfe Internet oder GitHub‑Zugriff.';
+  }
+}
+checkGitHub();
+setInterval(checkGitHub,60000);
+</script>
 </body>
 </html>
