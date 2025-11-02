@@ -20,18 +20,32 @@ export default function AdminLogin() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-900">
-      <div className="flex flex-col items-center bg-white shadow-xl border border-gray-200 rounded-2xl p-8 w-full max-w-sm">
-        {/* Logo */}
+    <main
+      className="flex flex-col items-center justify-center min-h-screen text-gray-900"
+      style={{
+        backgroundColor: "white",
+        backgroundImage: "none",
+        background: "#ffffff",
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(255,255,255,0.8)",
+          boxShadow: "0 4px 30px rgba(0,0,0,0.1)",
+          border: "1px solid rgba(255,255,255,0.3)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+        }}
+        className="flex flex-col items-center rounded-2xl p-8 w-full max-w-sm"
+      >
         <Image
           src="/tst-logo.png"
           alt="TST Logo"
-          width={120}
-          height={120}
+          width={100}
+          height={100}
           className="mb-6 opacity-90"
         />
 
-        {/* Login */}
         <h1 className="text-2xl font-semibold mb-6">Admin Login</h1>
         <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full">
           <input
@@ -51,7 +65,7 @@ export default function AdminLogin() {
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
-            className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-2 rounded-lg transition-all"
+            className="bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg transition-all"
           >
             Login
           </button>
