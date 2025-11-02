@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Inventur-Check – Admin</title>
+<meta name="color-scheme" content="light dark" />
+<style>
+  :root{
+    --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --ring:#374151;
+    --brand:#00aeef; --brand-ink:#fff;
+  }
+  @media (prefers-color-scheme: light){
+    :root{--bg:#f8fafc;--card:#ffffff;--ink:#111827;--muted:#6b7280;--ring:#e5e7eb;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1000px;margin:auto;padding:24px}
+  h1{margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.08);margin-bottom:16px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:720px){.row{grid-template-columns:1fr}}
+  label{display:flex;flex-direction:column;gap:6px}
+  input,textarea{background:transparent;color:var(--ink);border:1px solid var(--ring);border-radius:10px;padding:12px;min-height:44px}
+  textarea{min-height:80px}
+  .btn{cursor:pointer;border:1px solid var(--ring);background:transparent;color:var(--ink);border-radius:10px;padding:12px 14px;min-height:44px}
+  .btn.primary{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .status-box{position:sticky;top:8px;z-index:10;background:var(--brand);color:var(--brand-ink);border-radius:12px;padding:12px 16px;box-shadow:0 2px 6px rgba(0,0,0,.15);margin-bottom:16px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  .note{color:var(--muted);font-size:.95rem}
+  .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  .table th,.table td{padding:10px;border-top:1px solid var(--ring);border-bottom:1px solid var(--ring)}
+  .table thead th{color:var(--muted);text-align:left}
+  .table tr td:first-child,.table tr th:first-child{border-left:1px solid var(--ring);border-top-left-radius:10px;border-bottom-left-radius:10px}
+  .table tr td:last-child,.table tr th:last-child{border-right:1px solid var(--ring);border-top-right-radius:10px;border-bottom-right-radius:10px}
+  .gap{display:flex;gap:10px;flex-wrap:wrap}
+  .top-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+  a.link{color:var(--brand)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-actions">
+      <h1>⚙️ Admin – Inventur-Check</h1>
+      <a class="link" href="./">← Zur Hauptseite</a>
+    </div>
+
+    <!-- GitHub Status-Leiste -->
+    <section id="ghStatus" class="status-box">
+      <strong>🔄 Verbindung wird geprüft …</strong><br>
+      <span class="mono" id="repoInfo">tstboenen/inventur-check (main/rules.json)</span><br>
+      💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.
+    </section>
+
+    <!-- Login / Setup -->
+    <section class="card" id="authBox">
+      <h3>Admin-Anmeldung</h3>
+      <div class="row">
+        <label>PIN
+          <input id="pinLogin" type="password" inputmode="numeric" placeholder="z. B. 4927" autocomplete="off">
+        </label>
+        <label>GitHub Token (Contents: Read & Write)
+          <input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off">
+        </label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label>Owner (GitHub Benutzer/Org)
+          <input id="ghOwner" type="text" value="tstboenen">
+        </label>
+        <label>Repo
+          <input id="ghRepo" type="text" value="inventur-check">
+        </label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <label>Branch
+          <input id="ghBranch" type="text" value="main">
+        </label>
+        <label>Pfad zur Datei
+          <input id="ghPath" type="text" value="rules.json">
+        </label>
+      </div>
+      <div class="gap" style="margin-top:12px">
+        <button class="btn primary" id="btnLogin">🔐 Anmelden</button>
+        <button class="btn" id="btnCreatePin">🆕 PIN anlegen (falls noch keine)</button>
+      </div>
+      <p class="note" id="authHint" style="margin-top:10px">
+        Erster Start: Wunsch-PIN + GitHub-Token eintragen → <strong>PIN anlegen</strong> klicken. Danach mit der PIN anmelden.
+      </p>
+    </section>
+
+    <!-- Admin Core -->
+    <section class="card" id="adminCore" style="display:none">
+      <div class="top-actions">
+        <h3 style="margin:0">Regelverwaltung</h3>
+        <div class="gap">
+          <button class="btn" id="btnLogout">🚪 Abmelden</button>
+          <button class="btn primary" id="btnSave">💾 Regeln speichern (GitHub)</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Start-Datum
+          <input id="rStart" type="date">
+        </label>
+        <label>End-Datum (optional)
+          <input id="rEnd" type="date" placeholder="leer = nur Starttag">
+        </label>
+      </div>
+      <div class="gap" style="margin-top:10px">
+        <label><input id="rFrueh" type="checkbox"> Frühschicht muss kommen</label>
+        <label><input id="rSpaet" type="checkbox"> Spätschicht muss kommen</label>
+        <label><input id="rNacht" type="checkbox"> Nachtschicht muss kommen</label>
+      </div>
+      <label style="margin-top:10px">Notiz (optional)
+        <textarea id="rNote" rows="2" placeholder="z. B. Jahresinventur, Aufräumtage…"></textarea>
+      </label>
+      <div class="gap" style="margin-top:12px">
+        <button class="btn" id="btnAdd">➕ Regel hinzufügen</button>
+        <button class="btn" id="btnSeed">🌱 Beispielregeln</button>
+        <button class="btn" id="btnClear">🗑️ Alle Regeln löschen</button>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin-top:0">Regeln</h3>
+        <table class="table" id="ruleTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Start</th>
+              <th>Ende</th>
+              <th>Früh</th>
+              <th>Spät</th>
+              <th>Nacht</th>
+              <th>Notiz</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin-top:0">PIN verwalten</h3>
+        <div class="row">
+          <label>Neue PIN
+            <input id="pinNew" type="password" inputmode="numeric" autocomplete="off" placeholder="Neue PIN">
+          </label>
+          <label>Bestätigen
+            <input id="pinNew2" type="password" inputmode="numeric" autocomplete="off" placeholder="Wiederholen">
+          </label>
+        </div>
+        <div class="gap" style="margin-top:12px">
+          <button class="btn" id="btnChangePin">🔄 PIN ändern (GitHub speichern)</button>
+        </div>
+        <p class="note">PIN wird als SHA-256-Hash in <code>rules.json</code> gespeichert (nie im Klartext).</p>
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ======= Backend: GitHub ======= */
+const BACKEND = {
+  owner: 'tstboenen',
+  repo: 'inventur-check',
+  branch: 'main',
+  path: 'rules.json',
+  setFromInputs(){
+    this.owner  = document.getElementById('ghOwner').value.trim() || this.owner;
+    this.repo   = document.getElementById('ghRepo').value.trim() || this.repo;
+    this.branch = document.getElementById('ghBranch').value.trim() || this.branch;
+    this.path   = document.getElementById('ghPath').value.trim() || this.path;
+    document.getElementById('repoInfo').textContent = `${this.owner}/${this.repo} (${this.branch}/${this.path})`;
+  },
+  rawUrl(){ return `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.branch}/${this.path}` },
+  apiUrl(){ return `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${this.path}?ref=${this.branch}` },
+  async fetchRemote(){
+    const r = await fetch(this.rawUrl(), {cache:'no-store'});
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('Laden fehlgeschlagen: '+r.status);
+    return await r.json();
+  },
+  async fetchMeta(){
+    const r = await fetch(this.apiUrl(), {cache:'no-store'});
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('API fehlgeschlagen: '+r.status);
+    return await r.json(); // enthält sha
+  },
+  async saveRemote(obj, token, message='Update Inventur-Regeln'){
+    if(!token) throw new Error('GitHub-Token fehlt.');
+    const meta = await this.fetchMeta();
+    const body = {
+      message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(obj, null, 2)))),
+      branch: this.branch
+    };
+    if(meta && meta.sha) body.sha = meta.sha;
+    const r = await fetch(this.apiUrl(), {
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(!r.ok){
+      const t = await r.text();
+      throw new Error('Speichern fehlgeschlagen: '+r.status+' '+t);
+    }
+    return await r.json();
+  }
+};
+
+/* ======= Default-Daten ======= */
+const DEFAULT_DATA = {
+  version: 3,
+  pinHash: null,
+  rules: [
+    { start:'2025-11-14', end:'2025-11-14', frueh:false, spaet:true,  nacht:true,  note:'Inventurbeginn: Spät 14:15, Nacht 20:45' },
+    { start:'2025-11-15', end:'2025-11-15', frueh:true,  spaet:true,  nacht:false, note:'Inventur: Früh 05:30; Spät garantiert' },
+    { start:'2025-11-16', end:'2025-11-16', frueh:false, spaet:false, nacht:false, note:'Kein Einsatz (Sonntag)' }
+  ]
+};
+let CURRENT = structuredClone(DEFAULT_DATA);
+
+/* ======= Utils ======= */
+const $ = (s,root=document)=>root.querySelector(s);
+function sha256Hex(text){ return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(buf=>Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')); }
+
+/* ======= GitHub-Status ======= */
+const ghStatus = $('#ghStatus');
+async function checkGitHub(){
+  BACKEND.setFromInputs();
+  ghStatus.innerHTML = `<strong>🔄 Verbindung wird geprüft …</strong><br><span class="mono" id="repoInfo">${BACKEND.owner}/${BACKEND.repo} (${BACKEND.branch}/${BACKEND.path})</span><br>💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.`;
+  try{
+    const r = await fetch(BACKEND.apiUrl(), {cache:'no-store'});
+    if(r.ok){
+      ghStatus.innerHTML = `<strong>✅ Verbunden mit GitHub</strong><br><span class="mono">${BACKEND.owner}/${BACKEND.repo} (${BACKEND.branch}/${BACKEND.path})</span><br>💾 Daten werden zentral im GitHub-Repository gespeichert, nicht lokal.`;
+    }else{
+      ghStatus.innerHTML = `<strong>❌ Keine Verbindung (${r.status})</strong><br>Prüfe Token/Repo/Datei.`;
+    }
+  }catch(e){
+    ghStatus.innerHTML = `<strong>❌ Keine Verbindung</strong><br>Prüfe Internet/GitHub.`;
+  }
+}
+setInterval(checkGitHub, 60000);
+
+/* ======= Laden + Rendern ======= */
+async function ensureDataLoaded(){
+  BACKEND.setFromInputs();
+  try{
+    const remote = await BACKEND.fetchRemote();
+    CURRENT = remote ? remote : structuredClone(DEFAULT_DATA);
+  }catch(_){
+    CURRENT = structuredClone(DEFAULT_DATA);
+  }
+}
+function renderRuleTable(){
+  const tb = $('#ruleTable tbody');
+  tb.innerHTML = '';
+  CURRENT.rules.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${r.start}</td>
+      <td>${r.end||''}</td>
+      <td>${r.frueh?'✅':'—'}</td>
+      <td>${r.spaet?'✅':'—'}</td>
+      <td>${r.nacht?'✅':'—'}</td>
+      <td>${r.note||''}</td>
+      <td class="gap">
+        <button class="btn" data-act="up" data-idx="${i}">⬆️</button>
+        <button class="btn" data-act="down" data-idx="${i}">⬇️</button>
+        <button class="btn" data-act="del" data-idx="${i}">🗑️</button>
+      </td>`;
+    tb.appendChild(tr);
+  });
+  tb.onclick = (e)=>{
+    const b = e.target.closest('button[data-act]'); if(!b) return;
+    const a = b.dataset.act, idx = +b.dataset.idx;
+    if(a==='del'){ CURRENT.rules.splice(idx,1); }
+    if(a==='up' && idx>0){ [CURRENT.rules[idx-1],CURRENT.rules[idx]]=[CURRENT.rules[idx],CURRENT.rules[idx-1]]; }
+    if(a==='down' && idx<CURRENT.rules.length-1){ [CURRENT.rules[idx+1],CURRENT.rules[idx]]=[CURRENT.rules[idx],CURRENT.rules[idx+1]]; }
+    renderRuleTable();
+  };
+}
+
+/* ======= Admin-Aktionen ======= */
+function addRule(){
+  const start = $('#rStart').value;
+  const end   = $('#rEnd').value || null;
+  const frueh = $('#rFrueh').checked;
+  const spaet = $('#rSpaet').checked;
+  const nacht = $('#rNacht').checked;
+  const note  = $('#rNote').value.trim() || null;
+  if(!start) return alert('Bitte Start-Datum wählen.');
+  if(!frueh && !spaet && !nacht) return alert('Mindestens eine Schicht auswählen.');
+  CURRENT.rules.push({start,end,frueh,spaet,nacht,note});
+  CURRENT.rules.sort((a,b)=> (a.start||'').localeCompare(b.start) || (a.end||'').localeCompare(b.end||''));
+  $('#rStart').value=''; $('#rEnd').value=''; $('#rFrueh').checked=false; $('#rSpaet').checked=false; $('#rNacht').checked=false; $('#rNote').value='';
+  renderRuleTable();
+}
+function seedRules(){ CURRENT.rules = structuredClone(DEFAULT_DATA.rules); renderRuleTable(); }
+function clearRules(){ if(confirm('Alle Regeln wirklich löschen?')){ CURRENT.rules = []; renderRuleTable(); } }
+async function saveRules(){
+  const token = $('#ghToken').value.trim();
+  await BACKEND.saveRemote({version:CURRENT.version||3,pinHash:CURRENT.pinHash||null,rules:CURRENT.rules}, token, 'Update Regeln');
+  alert('Erfolgreich in GitHub gespeichert.');
+  checkGitHub();
+}
+
+/* ======= PIN-Flow ======= */
+async function createPin(){
+  await ensureDataLoaded();
+  if(CURRENT.pinHash) return alert('PIN existiert bereits.');
+  const pin = $('#pinLogin').value.trim();
+  const token = $('#ghToken').value.trim();
+  if(!pin) return alert('Bitte eine PIN eingeben.');
+  if(!token) return alert('GitHub-Token ist erforderlich, um die PIN zu speichern.');
+  CURRENT.pinHash = await sha256Hex(pin);
+  await BACKEND.saveRemote(CURRENT, token, 'Set admin PIN');
+  alert('PIN angelegt. Bitte jetzt anmelden.');
+  checkGitHub();
+}
+async function login(){
+  await ensureDataLoaded();
+  if(!CURRENT.pinHash) return alert('Es ist noch keine PIN gesetzt. Bitte zuerst „PIN anlegen“.');
+  const pin = $('#pinLogin').value.trim();
+  if(!pin) return alert('Bitte PIN eingeben.');
+  const hash = await sha256Hex(pin);
+  if(hash === CURRENT.pinHash){
+    $('#authBox').style.display='none';
+    $('#adminCore').style.display='block';
+    renderRuleTable();
+    checkGitHub();
+  } else {
+    alert('Falsche PIN.');
+  }
+}
+async function changePin(){
+  const p1 = $('#pinNew').value.trim();
+  const p2 = $('#pinNew2').value.trim();
+  if(!p1||!p2) return alert('Bitte neue PIN zweimal eingeben.');
+  if(p1!==p2) return alert('PIN stimmt nicht überein.');
+  const token = $('#ghToken').value.trim();
+  CURRENT.pinHash = await sha256Hex(p1);
+  await BACKEND.saveRemote(CURRENT, token, 'Change admin PIN');
+  alert('PIN geändert.');
+  $('#pinNew').value=''; $('#pinNew2').value='';
+}
+function logout(){ location.reload(); }
+
+/* ======= Boot ======= */
+document.getElementById('btnLogin').addEventListener('click', login);
+document.getElementById('btnCreatePin').addEventListener('click', createPin);
+document.getElementById('btnSave').addEventListener('click', saveRules);
+document.getElementById('btnAdd').addEventListener('click', addRule);
+document.getElementById('btnSeed').addEventListener('click', seedRules);
+document.getElementById('btnClear').addEventListener('click', clearRules);
+document.getElementById('btnChangePin').addEventListener('click', changePin);
+document.getElementById('btnLogout').addEventListener('click', logout);
+
+// initialer Status-Check
+checkGitHub();
+</script>
+</body>
+</html>
