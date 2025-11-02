@@ -3,85 +3,106 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventur-Check – Früh / Spät / Nacht</title>
+  <title>Inventur‑Check</title>
   <style>
-    :root {
-      --ok:#16a34a; --no:#dc2626; --warn:#f59e0b;
-      --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --ring:#374151;
-      --brand:#00aeef;
+    :root{
+      --bg:#0b1220;--card:#111a2b;--muted:#8aa0c7;--text:#e6eeff;--accent:#64b5f6;--ok:#22c55e;--warn:#eab308;--danger:#ef4444;
+      --ring:#1d4ed8
     }
-    @media (prefers-color-scheme: light) {
-      :root {--bg:#f8fafc;--card:#fff;--ink:#111827;--muted:#6b7280;--ring:#e5e7eb;}
-    }
-    body {margin:0;font-family:system-ui,Roboto,sans-serif;background:var(--bg);color:var(--ink);}
-    .wrap{max-width:900px;margin:auto;padding:24px}
-    h1{margin:0 0 8px;font-size:clamp(1.5rem,1rem+2vw,2.2rem)}
-    .sub{margin:0 0 24px;color:var(--muted)}
-    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-    .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-    .card h2{margin:0 0 8px}
-    .badge{display:inline-block;padding:10px 14px;border-radius:10px;font-weight:600}
-    .ok{background:var(--ok);color:#fff}
-    .no{background:var(--no);color:#fff}
-    .warn{background:var(--warn);color:#111}
-    .hint{margin-top:12px;color:var(--muted);font-size:.9rem}
-    #countdown{font-family:monospace;font-size:1.4rem;color:var(--brand)}
-    .footer{margin-top:32px;text-align:center;color:var(--muted);font-size:.9rem}
-    a.btn{display:inline-block;margin-top:12px;background:var(--brand);color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;
+         background:radial-gradient(1200px 800px at 20% -10%,#173057 0%,transparent 60%),
+                    radial-gradient(1000px 700px at 120% 10%,#10213d 0%,transparent 50%),
+                    var(--bg);
+         color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;}
+    h1{font-size:28px;font-weight:800;margin:0 0 12px}
+    p{margin:6px 0}
+    #countdown{font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;margin-top:8px}
+    #info{color:var(--muted);margin-top:16px;max-width:520px}
+    #status{margin-top:20px;padding:8px 16px;border-radius:999px;font-weight:700;background:#0e1628;border:1px solid rgba(148,163,184,.2)}
+    @media(max-width:600px){body{padding:20px;font-size:16px}h1{font-size:22px}#countdown{font-size:18px}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Inventur-Check</h1>
-    <p class="sub">Zeigt, welche Schicht zur Inventur erscheinen muss.</p>
+  <h1 id="headline">Inventur‑Check</h1>
+  <div id="text">Die Inventur beginnt am 14.11. um 14:15 Uhr.</div>
+  <div id="countdown">–</div>
+  <div id="info"></div>
+  <div id="status">Status: –</div>
 
-    <div id="banner" class="card" style="text-align:center;">
-      <div><strong>Inventur-Start:</strong> 14. 11. 2025 – 14:15 Uhr</div>
-      <div id="countdown">– : – : –</div>
-    </div>
+  <script>
+    // URL-Config ONLY (keine lokale Speicherung)
+    const params = new URLSearchParams(window.location.search);
+    const cfgParam = params.get('config');
 
-    <main id="main" class="grid"></main>
+    function safeParse(b64){
+      try{ return JSON.parse(decodeURIComponent(escape(atob(b64)))) }catch(e){ return null }
+    }
 
-    <div class="footer">
-      <p>Aktuelle Daten aus <code>rules.json</code> – TST Bönen</p>
-      <a class="btn" href="admin.html">⚙️ Admin-Bereich</a>
-    </div>
-  </div>
+    const defaults = {
+      // Fallback nur zur Anzeige, wenn kein ?config übergeben wurde
+      start: null, // ohne Startzeit bleibt Status: "–"
+      end: null,
+      preText: 'Bitte Link mit ?config=... verwenden.',
+      liveText: 'Die Inventur ist gestartet.',
+      info: ''
+    };
 
-<script>
-const CONFIG = {
-  startISO: "2025-11-14T14:15:00+01:00",
-  repoRaw: "https://raw.githubusercontent.com/tstboenen/inventur-check/main/rules.json",
-  timezone: "Europe/Berlin"
-};
-function pad(n){return String(n).padStart(2,"0")}
-function formatDHMS(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return `${pad(h)}:${pad(m)}:${pad(sec)}`}
-function updateCountdown(){const now=new Date(),target=new Date(CONFIG.startISO),diff=target-now;document.getElementById("countdown").textContent=diff>0?formatDHMS(diff):"✅ Inventur gestartet";}
-function renderStatus(data){
-  const now=new Date();
-  const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,"0"),d=String(now.getDate()).padStart(2,"0");
-  const today=`${y}-${m}-${d}`;
-  const rule=data.rules.find(r=>today>=r.start&&today<= (r.end||r.start));
-  const main=document.getElementById("main");
-  if(!rule){main.innerHTML='<p>Keine Daten für heute.</p>';return;}
-  const shifts=[["frueh","Frühschicht","05:30–14:00"],["spaet","Spätschicht","14:15–22:00"],["nacht","Nachtschicht","20:45–05:30"]];
-  main.innerHTML=shifts.map(([key,label,time])=>{
-    const yes=rule[key];const cls=yes?"ok":"no";const icon=yes?"✅":"❌";
-    return `<section class='card'><h2>${label}</h2><div class='badge ${cls}'>${icon} ${yes?"MUSS":"MUSS NICHT"} kommen</div><div class='hint'>${time}</div></section>`;
-  }).join('');
-}
-async function loadData(){
-  try{
-    const r=await fetch(CONFIG.repoRaw,{cache:"no-store"});
-    const j=await r.json();
-    renderStatus(j);
-  }catch(e){
-    document.getElementById("main").innerHTML="<p style='color:red'>Fehler beim Laden der Daten.</p>";
-  }
-}
-setInterval(updateCountdown,1000);
-updateCountdown();
-loadData();
-</script>
+    const cfg = cfgParam ? (safeParse(cfgParam) || defaults) : defaults;
+
+    const start = cfg.start ? new Date(cfg.start) : null;
+    const end = cfg.end ? new Date(cfg.end) : null;
+    const textEl = document.getElementById('text');
+    const cdEl = document.getElementById('countdown');
+    const infoEl = document.getElementById('info');
+    const statusEl = document.getElementById('status');
+
+    infoEl.textContent = cfg.info || '';
+
+    function fmt(ms){
+      const sec = Math.max(0, Math.floor(ms/1000));
+      const d = Math.floor(sec/86400);
+      const h = Math.floor((sec%86400)/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return `${String(d).padStart(2,'0')}d : ${String(h).padStart(2,'0')}h : ${String(m).padStart(2,'0')}m : ${String(s).padStart(2,'0')}s`;
+    }
+
+    function update(){
+      const now = new Date();
+      if(!start){
+        textEl.textContent = cfg.preText || '–';
+        cdEl.textContent = '–';
+        statusEl.textContent = 'Status: –';
+        return;
+      }
+
+      if(now < start){
+        textEl.textContent = cfg.preText || '–';
+        cdEl.textContent = `Countdown bis Start: ${fmt(start-now)}`;
+        statusEl.textContent = 'Status: wartet';
+        statusEl.style.background = '#0e1628';
+      } else if(end && now < end){
+        textEl.textContent = cfg.liveText || 'Die Inventur ist gestartet.';
+        cdEl.textContent = `Läuft… Restzeit bis Ende: ${fmt(end-now)}`;
+        statusEl.textContent = 'Status: läuft';
+        statusEl.style.background = 'linear-gradient(180deg,#16a34a,#15803d)';
+      } else if(end && now >= end){
+        textEl.textContent = cfg.liveText || 'Die Inventur ist gestartet.';
+        cdEl.textContent = 'Beendet';
+        statusEl.textContent = 'Status: beendet';
+        statusEl.style.background = 'linear-gradient(180deg,#dc2626,#b91c1c)';
+      } else {
+        textEl.textContent = cfg.liveText || 'Die Inventur ist gestartet.';
+        cdEl.textContent = 'Gestartet';
+        statusEl.textContent = 'Status: gestartet';
+        statusEl.style.background = 'linear-gradient(180deg,#16a34a,#15803d)';
+      }
+    }
+
+    update();
+    setInterval(update,1000);
+  </script>
 </body>
 </html>
