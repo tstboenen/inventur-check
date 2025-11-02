@@ -13,7 +13,6 @@ export default function AdminPage() {
   const [hover, setHover] = useState(false);
 
   useEffect(() => {
-    // sanft einblenden
     const timer = setTimeout(() => setFadeIn(true), 80);
     return () => clearTimeout(timer);
   }, []);
@@ -40,7 +39,7 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // ---------- gemeinsame Styles ----------
+  // ---------- Styles ----------
   const page: React.CSSProperties = {
     minHeight: "100vh",
     background: "#ffffff",
@@ -102,7 +101,7 @@ export default function AdminPage() {
   const button: React.CSSProperties = {
     width: "100%",
     padding: "12px 14px",
-    background: "#d70080", // TST Pink
+    background: "#d70080",
     color: "#fff",
     border: "none",
     borderRadius: 10,
@@ -130,7 +129,7 @@ export default function AdminPage() {
     textAlign: "left",
   };
 
-  // ---------- Login-Ansicht ----------
+  // ---------- Login ----------
   if (!loggedIn) {
     return (
       <main style={page}>
@@ -139,8 +138,8 @@ export default function AdminPage() {
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
-              width={150} // leicht größer
-              height={150}
+              width={200} // 👈 jetzt 200 px
+              height={200}
               priority
               style={{ opacity: 0.95, transition: "opacity 0.5s ease" }}
             />
@@ -188,7 +187,7 @@ export default function AdminPage() {
     );
   }
 
-  // ---------- Panel nach Login ----------
+  // ---------- Panel ----------
   return (
     <main style={page}>
       <div style={{ ...card, maxWidth: 520 }}>
@@ -196,8 +195,8 @@ export default function AdminPage() {
           <Image
             src="/tst-logo.png"
             alt="TST Logo"
-            width={150}
-            height={150}
+            width={200}
+            height={200}
             priority
             style={{ opacity: 0.95 }}
           />
