@@ -3,23 +3,11 @@ import { kv } from "@vercel/kv";
 
 export const dynamic = "force-dynamic";
 
-type Status = "before" | "live" | "ended";
-
 type Cfg = {
-  // Steuerung
   live: boolean;
   ended: boolean;
-
-  // Zeiten (optional)
-  start: string | null;
-
-  // Texte / Anzeige
-  headline: string;
-  preText: string;
-  liveText: string;
-  endText: string;
-  info: string;
-  showCountdown: boolean;
+  start: string | null; // ISO oder null
+  info: string;         // optionaler Infotext
 };
 
 const KEY = "inventur:config";
@@ -31,23 +19,12 @@ const normNull = (v?: string | null) => (v === undefined || v === null || v === 
 const isIso = (s: unknown) => typeof s === "string" && s.length > 0 && !Number.isNaN(new Date(s).getTime());
 
 function toCfgFromHash(h: Record<string, string> | null): Cfg {
-  // Rückwärtskompatibilität: evtl. gab es früher "status"
-  const legacyStatus = (h?.status as Status | undefined) ?? "before";
-  const legacyLive = boolFromHash(h?.live) || legacyStatus === "live" || legacyStatus === "ended";
-  const legacyEnded = boolFromHash(h?.ended) || legacyStatus === "ended";
-
+  // Legacy-Mapping falls alte Keys existieren
   return {
-    live: legacyLive,
-    ended: legacyEnded,
-
+    live: boolFromHash(h?.live) || (h?.status === "live" || h?.status === "ended"),
+    ended: boolFromHash(h?.ended) || h?.status === "ended",
     start: normNull(h?.start),
-
-    headline: h?.headline ?? "TST BÖNEN INVENTUR 2025",
-    preText: h?.preText ?? "",
-    liveText: h?.liveText ?? "",
-    endText: h?.endText ?? "✅ Die Inventur ist beendet.",
     info: h?.info ?? "",
-    showCountdown: boolFromHash(h?.showCountdown),
   };
 }
 
@@ -65,15 +42,20 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
   const _ended = typeof body.ended === "boolean" ? body.ended : false;
 
   let start: string | null = null;
-  if (body.start === null || body.start === "" || body.start === undefined) {
-    start = null;
-  } else if (isIso(body.start)) {
-    start = String(body.start);
+  if (!_live) {
+    if (body.start === null || body.start === "" || body.start === undefined) {
+      start = null;
+    } else if (isIso(body.start)) {
+      start = String(body.start);
+    } else {
+      throw new Error("Ungültiger Termin (ISO erwartet).");
+    }
   } else {
-    throw new Error("Ungültiger Termin (ISO erwartet).");
+    // wenn live aktiv ist, spielt der Termin für die Anzeige keine Rolle
+    start = null;
   }
 
-  // Regel: ended => live muss true sein
+  // Regel: Ende impliziert Live
   const live = _ended ? true : _live;
   const ended = _ended && live;
 
@@ -81,19 +63,7 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
     live,
     ended,
     start,
-
-    headline:
-      typeof body.headline === "string" && body.headline.trim()
-        ? body.headline
-        : "TST BÖNEN INVENTUR 2025",
-    preText: typeof body.preText === "string" ? body.preText : "",
-    liveText: typeof body.liveText === "string" ? body.liveText : "",
-    endText:
-      typeof body.endText === "string" && body.endText.trim()
-        ? body.endText
-        : "✅ Die Inventur ist beendet.",
     info: typeof body.info === "string" ? body.info : "",
-    showCountdown: typeof body.showCountdown === "boolean" ? body.showCountdown : false,
   };
 }
 
@@ -101,15 +71,8 @@ function toHashPayload(cfg: Cfg): Record<string, string> {
   return {
     live: boolToHash(cfg.live),
     ended: boolToHash(cfg.ended),
-
     start: cfg.start ?? "",
-
-    headline: cfg.headline ?? "",
-    preText: cfg.preText ?? "",
-    liveText: cfg.liveText ?? "",
-    endText: cfg.endText ?? "",
     info: cfg.info ?? "",
-    showCountdown: boolToHash(cfg.showCountdown),
   };
 }
 
@@ -125,21 +88,13 @@ export async function GET() {
   const legacy = await kv.get(KEY);
   const parsed = maybeParseJson<Record<string, any>>(legacy);
   if (parsed && typeof parsed === "object") {
-    // Mappe alten Status auf neue Flags
-    const status: Status = parsed.status === "live" || parsed.status === "ended" ? parsed.status : "before";
-    const live = status === "live" || status === "ended" || !!parsed.live;
-    const ended = status === "ended" || !!parsed.ended;
-
+    const live = !!parsed.live || parsed.status === "live" || parsed.status === "ended";
+    const ended = !!parsed.ended || parsed.status === "ended";
     const cfg: Cfg = {
       live,
       ended,
       start: parsed.start ?? null,
-      headline: parsed.headline ?? "TST BÖNEN INVENTUR 2025",
-      preText: parsed.preText ?? "",
-      liveText: parsed.liveText ?? "",
-      endText: parsed.endText ?? "✅ Die Inventur ist beendet.",
       info: parsed.info ?? "",
-      showCountdown: !!parsed.showCountdown,
     };
     return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
   }
@@ -149,12 +104,7 @@ export async function GET() {
     live: false,
     ended: false,
     start: null,
-    headline: "TST BÖNEN INVENTUR 2025",
-    preText: "",
-    liveText: "",
-    endText: "✅ Die Inventur ist beendet.",
     info: "",
-    showCountdown: false,
   };
   return NextResponse.json(empty, { headers: { "Cache-Control": "no-store" } });
 }
