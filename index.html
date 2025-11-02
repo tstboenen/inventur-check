@@ -1,77 +1,87 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Inventur‑Check Admin</title>
-<style>
-body{font-family:system-ui,Roboto,Arial,sans-serif;margin:0;background:#f8fafc;color:#111827}
-.wrap{max-width:900px;margin:0 auto;padding:24px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.05)}
-.btn{cursor:pointer;background:#00aeef;color:#fff;border:none;padding:12px 18px;border-radius:10px;font-weight:600}
-.btn:hover{opacity:.9}
-.status-box{background:#00aeef;color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.95rem;box-shadow:0 2px 6px rgba(0,0,0,0.15);position:sticky;top:10px;z-index:9}
-.status-box strong{font-weight:700}
-.repo-info{font-family:monospace}
-.note{font-size:.9rem;color:#444}
-.admin .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.admin label{display:flex;flex-direction:column;gap:6px}
-.admin input{border:1px solid #ccc;border-radius:8px;padding:10px}
-.table{width:100%;border-collapse:collapse;margin-top:16px}
-.table th,.table td{border:1px solid #ddd;padding:6px 8px;text-align:left}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventur-Check – Früh / Spät / Nacht</title>
+  <style>
+    :root {
+      --ok:#16a34a; --no:#dc2626; --warn:#f59e0b;
+      --bg:#0b1020; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --ring:#374151;
+      --brand:#00aeef;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {--bg:#f8fafc;--card:#fff;--ink:#111827;--muted:#6b7280;--ring:#e5e7eb;}
+    }
+    body {margin:0;font-family:system-ui,Roboto,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:900px;margin:auto;padding:24px}
+    h1{margin:0 0 8px;font-size:clamp(1.5rem,1rem+2vw,2.2rem)}
+    .sub{margin:0 0 24px;color:var(--muted)}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    .card h2{margin:0 0 8px}
+    .badge{display:inline-block;padding:10px 14px;border-radius:10px;font-weight:600}
+    .ok{background:var(--ok);color:#fff}
+    .no{background:var(--no);color:#fff}
+    .warn{background:var(--warn);color:#111}
+    .hint{margin-top:12px;color:var(--muted);font-size:.9rem}
+    #countdown{font-family:monospace;font-size:1.4rem;color:var(--brand)}
+    .footer{margin-top:32px;text-align:center;color:var(--muted);font-size:.9rem}
+    a.btn{display:inline-block;margin-top:12px;background:var(--brand);color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>⚙️ Admin – Plan verwalten</h1>
-  <section class="status-box" id="ghStatus">
-    <strong>🔄 Verbindung wird geprüft …</strong><br>
-    <span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>
-    💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.
-  </section>
+  <div class="wrap">
+    <h1>Inventur-Check</h1>
+    <p class="sub">Zeigt, welche Schicht zur Inventur erscheinen muss.</p>
 
-  <section class="card admin">
-    <div class="row">
-      <label>PIN<input id="pinLogin" type="password" placeholder="z. B. 4927"/></label>
-      <label>GitHub Token<input id="ghToken" type="password" placeholder="github_pat_…"/></label>
+    <div id="banner" class="card" style="text-align:center;">
+      <div><strong>Inventur-Start:</strong> 14. 11. 2025 – 14:15 Uhr</div>
+      <div id="countdown">– : – : –</div>
     </div>
-    <div class="row">
-      <label>Owner<input id="ghOwner" type="text" value="tstboenen"/></label>
-      <label>Repo<input id="ghRepo" type="text" value="inventur-check"/></label>
+
+    <main id="main" class="grid"></main>
+
+    <div class="footer">
+      <p>Aktuelle Daten aus <code>rules.json</code> – TST Bönen</p>
+      <a class="btn" href="admin.html">⚙️ Admin-Bereich</a>
     </div>
-    <div class="row">
-      <label>Branch<input id="ghBranch" type="text" value="main"/></label>
-      <label>Pfad<input id="ghPath" type="text" value="rules.json"/></label>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn" id="btnLogin">🔐 Anmelden</button>
-      <button class="btn" id="btnCreatePin">🆕 PIN anlegen</button>
-      <button class="btn" id="btnSave">💾 Regeln speichern (GitHub)</button>
-    </div>
-    <p class="note">Hier verwaltst du die Inventur‑Regeln (Datumsbereich + Schichten). Alle Änderungen werden direkt in <code>rules.json</code> im GitHub‑Repository gespeichert.</p>
-    <table class="table" id="ruleTable">
-      <thead><tr><th>#</th><th>Start</th><th>Ende</th><th>Früh</th><th>Spät</th><th>Nacht</th><th>Notiz</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-</div>
+  </div>
+
 <script>
-const statusBox=document.getElementById('ghStatus');
-async function checkGitHub(){
-  statusBox.innerHTML='<strong>🔄 Verbindung wird geprüft …</strong><br><span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.';
+const CONFIG = {
+  startISO: "2025-11-14T14:15:00+01:00",
+  repoRaw: "https://raw.githubusercontent.com/tstboenen/inventur-check/main/rules.json",
+  timezone: "Europe/Berlin"
+};
+function pad(n){return String(n).padStart(2,"0")}
+function formatDHMS(ms){const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return `${pad(h)}:${pad(m)}:${pad(sec)}`}
+function updateCountdown(){const now=new Date(),target=new Date(CONFIG.startISO),diff=target-now;document.getElementById("countdown").textContent=diff>0?formatDHMS(diff):"✅ Inventur gestartet";}
+function renderStatus(data){
+  const now=new Date();
+  const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,"0"),d=String(now.getDate()).padStart(2,"0");
+  const today=`${y}-${m}-${d}`;
+  const rule=data.rules.find(r=>today>=r.start&&today<= (r.end||r.start));
+  const main=document.getElementById("main");
+  if(!rule){main.innerHTML='<p>Keine Daten für heute.</p>';return;}
+  const shifts=[["frueh","Frühschicht","05:30–14:00"],["spaet","Spätschicht","14:15–22:00"],["nacht","Nachtschicht","20:45–05:30"]];
+  main.innerHTML=shifts.map(([key,label,time])=>{
+    const yes=rule[key];const cls=yes?"ok":"no";const icon=yes?"✅":"❌";
+    return `<section class='card'><h2>${label}</h2><div class='badge ${cls}'>${icon} ${yes?"MUSS":"MUSS NICHT"} kommen</div><div class='hint'>${time}</div></section>`;
+  }).join('');
+}
+async function loadData(){
   try{
-    const r=await fetch('https://api.github.com/repos/tstboenen/inventur-check/contents/rules.json?ref=main',{cache:'no-store'});
-    if(r.ok){
-      statusBox.innerHTML='<strong>✅ Verbunden mit GitHub</strong><br><span class="repo-info">tstboenen/inventur-check (main/rules.json)</span><br>💾 Daten werden zentral im GitHub‑Repository gespeichert, nicht lokal.';
-    }else{
-      statusBox.innerHTML='<strong>❌ Keine Verbindung! ('+(r.status)+')</strong><br>Prüfe Token oder Repository Zugriff.';
-    }
+    const r=await fetch(CONFIG.repoRaw,{cache:"no-store"});
+    const j=await r.json();
+    renderStatus(j);
   }catch(e){
-    statusBox.innerHTML='<strong>❌ Keine Verbindung!</strong><br>Prüfe Internet oder GitHub‑Zugriff.';
+    document.getElementById("main").innerHTML="<p style='color:red'>Fehler beim Laden der Daten.</p>";
   }
 }
-checkGitHub();
-setInterval(checkGitHub,60000);
+setInterval(updateCountdown,1000);
+updateCountdown();
+loadData();
 </script>
 </body>
 </html>
