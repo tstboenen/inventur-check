@@ -2,12 +2,23 @@
 import { NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
 
+export const dynamic = 'force-dynamic';
+// Optional: Edge-Runtime (empfohlen mit KV)
+// export const runtime = 'edge';
+
 type Settings = {
   textVorStart: string;
-  startZeit: string | null; // ISO-String, z. B. "2025-11-14T14:15:00+01:00"
+  startZeit: string | null; // ISO, z. B. "2025-11-14T14:15:00+01:00"
 };
 
 const SETTINGS_KEY = 'inventur:settings';
+
+function normalizeSettings(data: Record<string, string> | null): Settings {
+  return {
+    textVorStart: data?.textVorStart ?? 'Text vor Start',
+    startZeit: data?.startZeit ?? null,
+  };
+}
 
 function isIsoLike(s: unknown) {
   if (typeof s !== 'string') return false;
@@ -16,14 +27,11 @@ function isIsoLike(s: unknown) {
 }
 
 export async function GET() {
-  const data = (await kv.hgetall<Settings>(SETTINGS_KEY)) || {};
-  const textVorStart = data.textVorStart ?? 'Text vor Start';
-  const startZeit = data.startZeit ?? null;
-
-  return NextResponse.json(
-    { textVorStart, startZeit },
-    { headers: { 'Cache-Control': 'no-store' } }
-  );
+  const raw = await kv.hgetall<Record<string, string>>(SETTINGS_KEY);
+  const settings = normalizeSettings(raw);
+  return NextResponse.json(settings, {
+    headers: { 'Cache-Control': 'no-store' },
+  });
 }
 
 export async function POST(req: Request) {
@@ -46,8 +54,9 @@ export async function POST(req: Request) {
     }
 
     await kv.hset(SETTINGS_KEY, { textVorStart, startZeit });
-
-    return NextResponse.json({ textVorStart, startZeit });
+    return NextResponse.json({ textVorStart, startZeit }, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch {
     return NextResponse.json({ error: 'Ungültiger Request' }, { status: 400 });
   }
