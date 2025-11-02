@@ -1,10 +1,13 @@
 /* app/home.css */
 
 .main-container {
-  display: grid;
-  place-items: center;
-  min-height: 100dvh;       /* volle Bildschirmhöhe, auch mobil korrekt */
-  background-color: white;  /* Hintergrund */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Logo nach oben */
+  min-height: 100dvh;
+  background-color: white;
+  padding-top: 60px; /* Abstand von oben */
 }
 
 .main-logo {
