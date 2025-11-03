@@ -42,7 +42,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       try {
         const r = await fetch("/api/config", { cache: "no-store" });
         const cfg = (await r.json()) as Cfg;
-
         setLive(!!cfg.live);
         setEnded(!!cfg.ended);
         setStartLocal(toLocalInput(cfg.start));
@@ -55,11 +54,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
+  // Logik
   function onToggleLive(next: boolean) {
     if (!next) setEnded(false);
     setLive(next);
   }
-
   function onToggleEnded(next: boolean) {
     if (next) setLive(true);
     setEnded(next);
@@ -94,6 +93,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  /* ---------- Styles ---------- */
   const gridRow: CSSProperties = {
     display: "grid",
     gridTemplateColumns: "160px 1fr",
@@ -130,6 +130,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
   if (loading) return <p>…lädt</p>;
 
+  /* ---------- UI ---------- */
   return (
     <>
       {/* 1️⃣ Termin */}
@@ -144,24 +145,94 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       </div>
 
       {/* 2️⃣ Live */}
-      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
+      <div style={gridRow}>
         <label style={lbl}>Live</label>
-        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-          <input type="checkbox" checked={live} onChange={(e) => onToggleLive(e.target.checked)} />
-          <span style={{ fontSize: 14, color: "#374151" }}>{live ? "an" : "aus"}</span>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+          <div style={{ position: "relative", width: 50, height: 28 }}>
+            <input
+              type="checkbox"
+              checked={live}
+              onChange={(e) => onToggleLive(e.target.checked)}
+              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                cursor: "pointer",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: live ? "#d70080" : "#d1d5db",
+                transition: "0.3s",
+                borderRadius: 34,
+              }}
+            ></span>
+            <span
+              style={{
+                position: "absolute",
+                height: 22,
+                width: 22,
+                left: live ? 26 : 4,
+                bottom: 3,
+                backgroundColor: "#fff",
+                transition: "0.3s",
+                borderRadius: "50%",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }}
+            ></span>
+          </div>
+          <span style={{ fontSize: 14, color: "#374151", minWidth: 45 }}>
+            {live ? "an" : "aus"}
+          </span>
         </label>
       </div>
 
       {/* 3️⃣ Ende */}
-      <div style={{ ...gridRow, gridTemplateColumns: "160px auto" }}>
+      <div style={gridRow}>
         <label style={lbl}>Ende</label>
-        <label style={{ display: "inline-flex", gap: 8, alignItems: "center", userSelect: "none" }}>
-          <input type="checkbox" checked={ended} onChange={(e) => onToggleEnded(e.target.checked)} />
-          <span style={{ fontSize: 14, color: "#374151" }}>{ended ? "aktiv" : "inaktiv"}</span>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+          <div style={{ position: "relative", width: 50, height: 28 }}>
+            <input
+              type="checkbox"
+              checked={ended}
+              onChange={(e) => onToggleEnded(e.target.checked)}
+              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                cursor: "pointer",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: ended ? "#d70080" : "#d1d5db",
+                transition: "0.3s",
+                borderRadius: 34,
+              }}
+            ></span>
+            <span
+              style={{
+                position: "absolute",
+                height: 22,
+                width: 22,
+                left: ended ? 26 : 4,
+                bottom: 3,
+                backgroundColor: "#fff",
+                transition: "0.3s",
+                borderRadius: "50%",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }}
+            ></span>
+          </div>
+          <span style={{ fontSize: 14, color: "#374151", minWidth: 60 }}>
+            {ended ? "aktiv" : "inaktiv"}
+          </span>
         </label>
       </div>
 
-      {/* Info-Feld bleibt */}
+      {/* Info */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
         <textarea
@@ -174,7 +245,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       <div style={bar}>
         <button onClick={onLogout} style={btn}>Logout</button>
-        <button onClick={save} style={primary} disabled={saving}>{saving ? "Speichert…" : "Speichern"}</button>
+        <button onClick={save} style={primary} disabled={saving}>
+          {saving ? "Speichert…" : "Speichern"}
+        </button>
       </div>
 
       {msg && <p style={{ marginTop: 10 }}>{msg}</p>}
@@ -335,4 +408,3 @@ export default function AdminPage() {
     </main>
   );
 }
-
