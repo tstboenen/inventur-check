@@ -32,16 +32,15 @@
   padding: var(--card-padding);
   box-sizing: border-box;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
 }
 
-/* Mehr Luft zwischen Zeilen im Admin-Panel */
-.admin-card form,
+/* 🔹 Mehr vertikaler Abstand zwischen einzelnen Blöcken (Termin, Live, Ende …) */
 .admin-card > div {
-  display: grid;
-  gap: 20px; /* 🔹 vorher 12px */
+  margin-bottom: 22px; /* vorher enger, jetzt deutlich luftiger */
+}
+
+.admin-card > div:last-child {
+  margin-bottom: 0;
 }
 
 /* ===== Animationen ===== */
@@ -80,7 +79,7 @@
 
 .admin-form {
   display: grid;
-  gap: 20px; /* 🔹 mehr Abstand zwischen Eingabeelementen */
+  gap: 20px;
 }
 
 .admin-label {
@@ -104,7 +103,6 @@
   box-sizing: border-box;
   text-align: center;
 }
-
 .admin-textarea {
   resize: vertical;
   text-align: left;
