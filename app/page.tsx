@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
+/* ---------- Types ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
   date: string;
@@ -14,9 +15,89 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
+  shifts?: Shift[]; // API may send array or JSON string (handled below)
 };
 
+type Lang = "de" | "en" | "pl" | "ru";
+
+/* ---------- Translations ---------- */
+const LOCALE_BY_LANG: Record<Lang, string> = {
+  de: "de-DE",
+  en: "en-GB",
+  pl: "pl-PL",
+  ru: "ru-RU",
+};
+
+const T = {
+  heading_live: {
+    de: "Die Inventur ist gestartet.",
+    en: "The inventory has started.",
+    pl: "Inwentaryzacja została rozpoczęta.",
+    ru: "Инвентаризация началась.",
+  },
+  heading_before_label: {
+    de: "Die Inventur startet in:",
+    en: "The inventory starts in:",
+    pl: "Inwentaryzacja rozpocznie się za:",
+    ru: "Инвентаризация начнётся через:",
+  },
+  heading_before_nostart: {
+    de: "Startzeit folgt.",
+    en: "Start time to be announced.",
+    pl: "Czas rozpoczęcia wkrótce.",
+    ru: "Время начала будет объявлено.",
+  },
+  heading_ended: {
+    de: "✅ Die Inventur ist beendet.",
+    en: "✅ The inventory has ended.",
+    pl: "✅ Inwentaryzacja zakończona.",
+    ru: "✅ Инвентаризация завершена.",
+  },
+  no_shifts: {
+    de: "Keine Schichtinformationen verfügbar.",
+    en: "No shift information available.",
+    pl: "Brak informacji o zmianach.",
+    ru: "Нет информации о сменах.",
+  },
+  // Shift type labels
+  shift_morning: {
+    de: "Frühschicht",
+    en: "Morning shift",
+    pl: "Zmiana poranna",
+    ru: "Утренняя смена",
+  },
+  shift_late: {
+    de: "Spätschicht",
+    en: "Late shift",
+    pl: "Zmiana wieczorna",
+    ru: "Вечерняя смена",
+  },
+  shift_night: {
+    de: "Nacht",
+    en: "Night shift",
+    pl: "Zmiana nocna",
+    ru: "Ночная смена",
+  },
+  // Status text (display only; backend keeps German keys)
+  status_yes: {
+    de: "Findet statt",
+    en: "Takes place",
+    pl: "Odbywa się",
+    ru: "Состоится",
+  },
+  status_no: {
+    de: "Findet nicht statt",
+    en: "Does not take place",
+    pl: "Nie odbywa się",
+    ru: "Не состоится",
+  },
+};
+
+function tr<K extends keyof typeof T>(key: K, lang: Lang) {
+  return T[key][lang];
+}
+
+/* ---------- Component ---------- */
 export default function HomePage() {
   const [cfg, setCfg] = useState<Cfg>({
     live: false,
@@ -29,7 +110,23 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden (shifts robust parsen)
+  // Language (persist in localStorage)
+  const [lang, setLang] = useState<Lang>("de");
+  useEffect(() => {
+    // load saved language once
+    try {
+      const saved = localStorage.getItem("lang") as Lang | null;
+      if (saved && ["de", "en", "pl", "ru"].includes(saved)) setLang(saved);
+    } catch {}
+  }, []);
+  const onLangChange = (v: Lang) => {
+    setLang(v);
+    try {
+      localStorage.setItem("lang", v);
+    } catch {}
+  };
+
+  // Load config (robust parse for shifts)
   useEffect(() => {
     (async () => {
       try {
@@ -65,14 +162,13 @@ export default function HomePage() {
     })();
   }, []);
 
-  // Countdown-Ticker
+  // Countdown ticker
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
-
   const formatDiff = (diffMs: number | null) => {
     if (diffMs === null || diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
@@ -98,10 +194,34 @@ export default function HomePage() {
     textAlign: "center",
     color: "#111827",
   };
-  const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
+  const topBar: CSSProperties = {
+    width: "100%",
+    maxWidth: 1100,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  };
+  const langWrap: CSSProperties = {
+    marginTop: 8,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  };
+  const langLabel: CSSProperties = { fontSize: 14, color: "#374151" };
+  const langSelect: CSSProperties = {
+    padding: "8px 12px",
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    fontSize: 14,
+    cursor: "pointer",
+  };
+
+  const title: CSSProperties = { marginTop: 12, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // black, no emoji
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
@@ -113,14 +233,13 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kachel-Design wie am Anfang: kompakt, starker Shadow; Farben grün/rot
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten"; // Findet statt
+    const ok = status === "Muss arbeiten"; // Takes place
     return {
       width: 260,
       padding: 18,
       borderRadius: 14,
-      background: ok ? "#16a34a" : "#dc2626", // grün / rot
+      background: ok ? "#16a34a" : "#dc2626", // green / red
       color: "#fff",
       boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
@@ -128,68 +247,109 @@ export default function HomePage() {
     };
   };
 
-  // Typografie wie am Anfang
-  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };  // Schicht
-  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };   // Datum
-  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };                  // Status
+  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 }; // Schicht
+  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 }; // Datum
+  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 }; // Status
+
+  /* ---------- Helpers: display strings by lang ---------- */
+  const dateFmt = (iso: string) => {
+    const loc = LOCALE_BY_LANG[lang] || "de-DE";
+    return new Date(iso).toLocaleDateString(loc);
+  };
+  const shiftTypeLabel = (t: Shift["type"]) => {
+    if (t === "Früh") return tr("shift_morning", lang);
+    if (t === "Spät") return tr("shift_late", lang);
+    return tr("shift_night", lang);
+  };
+  const statusText = (s: Shift["status"]) =>
+    s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang);
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      {/* Logo oben */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-        <Image
-          src="/tst-logo.png"
-          alt="TST Logo"
-          width={400}
-          height={400}
-          priority
-          style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
-        />
+      <div style={topBar}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Image
+            src="/tst-logo.png"
+            alt="TST Logo"
+            width={120}
+            height={120}
+            priority
+            style={{ width: 120, height: "auto", objectFit: "contain", opacity: 0.98 }}
+          />
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>TST BÖNEN INVENTUR 2025</h1>
+        </div>
+
+        {/* Language selector */}
+        <div style={langWrap}>
+          <span style={langLabel}>Sprache:</span>
+          <select
+            value={lang}
+            onChange={(e) => onLangChange(e.target.value as Lang)}
+            style={langSelect}
+            aria-label="Language"
+          >
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+            <option value="pl">Polski</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
       </div>
 
-      <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
+      {/* Big title below (kept) */}
+      <h2 style={title}>TST BÖNEN INVENTUR 2025</h2>
 
-      {/* Hauptlogik */}
+      {/* Main logic */}
       {loading ? (
-        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>
+          {lang === "de"
+            ? "…lädt"
+            : lang === "en"
+            ? "…loading"
+            : lang === "pl"
+            ? "…ładowanie"
+            : "…загрузка"}
+        </p>
       ) : err ? (
         <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
       ) : cfg.ended ? (
-        <div style={ended}>✅ Die Inventur ist beendet.</div>
+        <div style={ended}>{tr("heading_ended", lang)}</div>
       ) : cfg.live ? (
         <>
-          {/* Überschrift ohne Emoji, schwarz */}
-          <div style={liveTitle}>Die Inventur ist gestartet.</div>
+          {/* Live heading (no emoji, black) */}
+          <div style={liveTitle}>{tr("heading_live", lang)}</div>
 
-          {/* Schicht-Boxen (Schicht → Datum → Status) */}
+          {/* Shift tiles */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
-                const text = ok ? "Findet statt" : "Findet nicht statt";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    <div style={shiftTitle}>{s.type}schicht</div>
-                    <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
-                    <div style={shiftStatus}>{text}</div>
+                    {/* Order: Shift → Date → Status (as requested earlier) */}
+                    <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
+                    <div style={shiftDate}>{dateFmt(s.date)}</div>
+                    <div style={shiftStatus}>{statusText(s.status)}</div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
-              Keine Schichtinformationen verfügbar.
-            </p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>{tr("no_shifts", lang)}</p>
           )}
         </>
       ) : (
         <>
-          <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
+          <p style={sub}>
+            {cfg.start ? tr("heading_before_label", lang) : tr("heading_before_nostart", lang)}
+          </p>
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
 
+      {/* Info text: we show as-is (not auto-translated) */}
       {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
