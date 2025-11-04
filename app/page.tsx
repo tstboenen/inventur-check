@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[];
+  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
 };
 
 export default function HomePage() {
@@ -81,7 +81,7 @@ export default function HomePage() {
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     return d > 0
-      ? `${d}D ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      ? `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
@@ -99,10 +99,10 @@ export default function HomePage() {
     color: "#111827",
   };
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
-  const sub: CSSProperties = { marginTop: 30, fontSize: 28, color: "#111" };
+  const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, color: "#111" };
-  const ended: CSSProperties = { marginTop: 20, fontSize: 40, color: "#16a34a" };
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
+  const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
   const shiftGrid: CSSProperties = {
@@ -113,32 +113,30 @@ export default function HomePage() {
     marginTop: 30,
   };
 
+  // Kachel-Design wie am Anfang: kompakt, starker Shadow; Farben grün/rot
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten";
+    const ok = status === "Muss arbeiten"; // Findet statt
     return {
       width: 260,
       padding: 18,
       borderRadius: 14,
-      background: ok ? "#16a34a" : "#dc2626",
+      background: ok ? "#16a34a" : "#dc2626", // grün / rot
       color: "#fff",
       boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
-      textTransform: "uppercase", // 🔠 alles in Großbuchstaben
       transition: "transform 0.2s ease",
     };
   };
 
-  const equalSize = 26;
-  const rowStyle: CSSProperties = {
-    fontSize: equalSize,
-    fontWeight: 400,
-    marginBottom: 6,
-    letterSpacing: 0.5,
-  };
+  // Typografie wie am Anfang
+  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };  // Schicht
+  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };   // Datum
+  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };                  // Status
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
+      {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -152,44 +150,47 @@ export default function HomePage() {
 
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
+      {/* Hauptlogik */}
       {loading ? (
-        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…LÄDT</p>
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
       ) : err ? (
-        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err.toUpperCase()}</p>
+        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
       ) : cfg.ended ? (
-        <div style={ended}>✅ DIE INVENTUR IST BEENDET.</div>
+        <div style={ended}>✅ Die Inventur ist beendet.</div>
       ) : cfg.live ? (
         <>
-          <div style={liveTitle}>DIE INVENTUR IST GESTARTET.</div>
+          {/* Überschrift ohne Emoji, schwarz */}
+          <div style={liveTitle}>Die Inventur ist gestartet.</div>
 
+          {/* Schicht-Boxen (Schicht → Datum → Status) */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
-                const statusText = ok ? "FINDET STATT" : "FINDET NICHT STATT";
+                const text = ok ? "Findet statt" : "Findet nicht statt";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    <div style={rowStyle}>
-                      {new Date(s.date).toLocaleDateString("de-DE").toUpperCase()}
-                    </div>
-                    <div style={rowStyle}>{`${s.type}SCHICHT`.toUpperCase()}</div>
-                    <div style={{ ...rowStyle, marginBottom: 0 }}>{statusText}</div>
+                    <div style={shiftTitle}>{s.type}schicht</div>
+                    <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
+                    <div style={shiftStatus}>{text}</div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>KEINE SCHICHTINFORMATIONEN VERFÜGBAR.</p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
+              Keine Schichtinformationen verfügbar.
+            </p>
           )}
         </>
       ) : (
         <>
-          <p style={sub}>{cfg.start ? "DIE INVENTUR STARTET IN:" : "STARTZEIT FOLGT."}</p>
+          <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
 
-      {cfg.info ? <div style={info}>{cfg.info.toUpperCase()}</div> : null}
+      {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
 }
