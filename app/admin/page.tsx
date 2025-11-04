@@ -175,39 +175,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {/* Ende */}
-      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
-        <label className="admin-label">Ende</label>
-        <div
-          role="switch" aria-checked={ended} onClick={() => onToggleEnded(!ended)}
-          style={{
-            position: "relative", width: 56, height: 32, cursor: "pointer",
-            borderRadius: 999, border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
-            background: ended ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
-          }}
-        >
-          <span style={{
-            position: "absolute", top: 3, left: ended ? 29 : 3, width: 26, height: 26,
-            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            transition: "left .25s",
-          }} />
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
-        <label className="admin-label">Info</label>
-        <textarea
-          value={info}
-          onChange={(e) => setInfo(e.target.value)}
-          className="admin-textarea"
-          placeholder="Hinweise an die Mitarbeiter (optional)"
-        />
-      </div>
-
-      {/* Schichten */}
+      {/* 🔹 Schichtbereich direkt UNTER Live */}
       {live && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 8, marginBottom: 10 }}>
           <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 6 }}>
             Schichtübersicht
           </h3>
@@ -257,6 +227,36 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
           )}
         </div>
       )}
+
+      {/* Ende */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Ende</label>
+        <div
+          role="switch" aria-checked={ended} onClick={() => onToggleEnded(!ended)}
+          style={{
+            position: "relative", width: 56, height: 32, cursor: "pointer",
+            borderRadius: 999, border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
+            background: ended ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
+          }}
+        >
+          <span style={{
+            position: "absolute", top: 3, left: ended ? 29 : 3, width: 26, height: 26,
+            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            transition: "left .25s",
+          }} />
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Info</label>
+        <textarea
+          value={info}
+          onChange={(e) => setInfo(e.target.value)}
+          className="admin-textarea"
+          placeholder="Hinweise an die Mitarbeiter (optional)"
+        />
+      </div>
 
       {/* Bottom Bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
@@ -315,7 +315,6 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  /* ---------- LOGIN VIEW ---------- */
   if (!loggedIn) {
     return (
       <main className="admin-wrap">
@@ -324,9 +323,7 @@ export default function AdminPage() {
             <div className="admin-logo">
               <Image src="/tst-logo.png" alt="TST Logo" width={250} height={250} priority />
             </div>
-
             <h1 className="admin-title">Admin Login</h1>
-
             <form onSubmit={handleLogin} className="login-form">
               <label className="admin-label">
                 Benutzername
@@ -337,7 +334,6 @@ export default function AdminPage() {
                   className="admin-input"
                 />
               </label>
-
               <label className="admin-label">
                 Passwort
                 <input
@@ -347,9 +343,7 @@ export default function AdminPage() {
                   className="admin-input"
                 />
               </label>
-
               {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
-
               <button type="submit" className="admin-button login-button">Login</button>
             </form>
           </div>
@@ -358,7 +352,6 @@ export default function AdminPage() {
     );
   }
 
-  /* ---------- ADMIN VIEW ---------- */
   return (
     <main className="admin-wrap">
       <div className="admin-card fade-in">
