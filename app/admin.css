@@ -27,7 +27,7 @@
 }
 
 /* =========================================================
-   🔹 Allgemeine Card-Box
+   🔹 Allgemeine Card (Adminpanel)
    ========================================================= */
 .admin-card {
   width: 100%;
@@ -160,10 +160,10 @@
 }
 
 /* =========================================================
-   🔹 Login-spezifisch
+   🔹 LOGIN-BEREICH
    ========================================================= */
 
-/* Quadratische Box, Inhalt exakt mittig */
+/* Quadratische Box ohne Überschneidung mit admin-card */
 .login-box {
   width: 420px;
   height: 420px;
@@ -172,11 +172,12 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   display: grid;
-  place-items: center; /* Geometrisch exakt zentriert */
+  place-items: center;
   box-sizing: border-box;
+  padding: 0;
 }
 
-/* Innenlayout des Formulars */
+/* Formular innen kompakt & mittig */
 .login-form {
   width: 300px;
   display: grid;
@@ -189,7 +190,7 @@
   width: 100%;
 }
 
-/* Optional: sanfter Fade + Scale beim Öffnen */
+/* Sanfter Fade-In mit Scale */
 .login-box.fade-in {
   animation: fadeInScale 400ms ease-out both;
 }
