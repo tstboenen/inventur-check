@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
+  shifts?: Shift[];
 };
 
 export default function HomePage() {
@@ -29,7 +29,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden (shifts robust parsen)
+  // Config laden
   useEffect(() => {
     (async () => {
       try {
@@ -72,7 +72,6 @@ export default function HomePage() {
   }, []);
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
-
   const formatDiff = (diffMs: number | null) => {
     if (diffMs === null || diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
@@ -85,9 +84,11 @@ export default function HomePage() {
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  /* ---------- Styles ---------- */
+  /* ---------- Styles (Scrollbar-Fix) ---------- */
   const page: CSSProperties = {
-    minHeight: "100vh",
+    height: "100dvh",        // ✅ statt minHeight: 100vh
+    boxSizing: "border-box", // ✅ Padding zählt zur Höhe
+    overflowY: "hidden",     // ✅ kein vert. Scrollen
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -101,7 +102,7 @@ export default function HomePage() {
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" };
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
@@ -113,14 +114,14 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kachel-Design wie am Anfang: kompakt, starker Shadow; Farben grün/rot
+  // Kacheln (grün/rot)
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten"; // Findet statt
+    const ok = status === "Muss arbeiten";
     return {
       width: 260,
       padding: 18,
       borderRadius: 14,
-      background: ok ? "#16a34a" : "#dc2626", // grün / rot
+      background: ok ? "#16a34a" : "#dc2626",
       color: "#fff",
       boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
@@ -128,10 +129,9 @@ export default function HomePage() {
     };
   };
 
-  // Typografie wie am Anfang
-  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };  // Schicht
-  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };   // Datum
-  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };                  // Status
+  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
+  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
+  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
   /* ---------- UI ---------- */
   return (
@@ -150,7 +150,6 @@ export default function HomePage() {
 
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
-      {/* Hauptlogik */}
       {loading ? (
         <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
       ) : err ? (
@@ -159,10 +158,9 @@ export default function HomePage() {
         <div style={ended}>✅ Die Inventur ist beendet.</div>
       ) : cfg.live ? (
         <>
-          {/* Überschrift ohne Emoji, schwarz */}
           <div style={liveTitle}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Boxen (Schicht → Datum → Status) */}
+          {/* Schicht-Kacheln */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
