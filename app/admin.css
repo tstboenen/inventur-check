@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
-/* =========================================================
-   🔹 Farb- & Layout-Variablen
-   ========================================================= */
 :root {
   --pink: #d70080;
   --text: #111;
@@ -22,12 +19,11 @@
   background: var(--bg);
   display: grid;
   place-items: center;
-  padding: 24px;
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 /* =========================================================
-   🔹 Allgemeine Card (Adminpanel)
+   🔹 Admin-Card (für Hauptpanel)
    ========================================================= */
 .admin-card {
   width: 100%;
@@ -40,7 +36,6 @@
   box-sizing: border-box;
 }
 
-/* Fade-in Animation */
 .fade-in {
   animation: fadeIn 300ms ease-out both;
 }
@@ -56,114 +51,8 @@
 }
 
 /* =========================================================
-   🔹 Logo
+   🔹 Login-Bereich
    ========================================================= */
-.admin-logo {
-  display: grid;
-  place-items: center;
-  margin-bottom: 10px;
-}
-.admin-logo img {
-  width: 200px;
-  height: auto;
-}
-
-/* =========================================================
-   🔹 Überschriften
-   ========================================================= */
-.admin-title {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--text);
-  margin-bottom: 16px;
-}
-
-/* =========================================================
-   🔹 Formulare & Inputs
-   ========================================================= */
-.admin-form {
-  display: grid;
-  gap: 12px;
-}
-
-.admin-label {
-  display: grid;
-  gap: 6px;
-  color: var(--text);
-  font-size: 0.95rem;
-}
-
-.admin-input,
-.admin-textarea,
-.admin-select {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  outline: none;
-  font-size: 0.95rem;
-  background: #f9faff;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.admin-textarea {
-  resize: vertical;
-}
-
-.admin-input:focus,
-.admin-textarea:focus,
-.admin-select:focus {
-  border-color: rgba(215, 0, 128, 0.4);
-  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.15);
-}
-
-.admin-hint {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-/* =========================================================
-   🔹 Buttons
-   ========================================================= */
-.admin-button {
-  border: none;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--pink);
-  color: #fff;
-  transition: transform 0.05s ease, filter 0.15s ease;
-  margin-top: 4px;
-  text-align: center;
-}
-.admin-button:hover {
-  filter: brightness(1.05);
-}
-.admin-button:active {
-  transform: translateY(1px);
-}
-
-/* =========================================================
-   🔹 Status / Loading Texte
-   ========================================================= */
-.admin-status {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: var(--text);
-  text-align: center;
-}
-.admin-loading {
-  text-align: center;
-  color: var(--muted);
-  padding: 12px 0;
-}
-
-/* =========================================================
-   🔹 LOGIN-BEREICH (perfekt zentriert)
-   ========================================================= */
-
-/* Quadratische Box */
 .login-box {
   position: relative;
   width: 420px;
@@ -173,30 +62,37 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   box-sizing: border-box;
-  padding: 0;
   overflow: hidden;
 }
 
-/* Zentrierter Innenbereich */
+/* Perfekt zentrierter Inhalt */
 .login-center {
   position: absolute;
   top: 50%;
   left: 50%;
+  width: 320px;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 320px;             /* minimal breiter für optische Balance */
-  box-sizing: border-box;
+  text-align: center;
 }
 
-/* Logo und Titel */
+/* Logo */
 .login-center .admin-logo {
-  margin: 0 0 8px 0;
+  margin-bottom: 8px;
 }
+.login-center .admin-logo img {
+  width: 200px;
+  height: auto;
+}
+
+/* Titel */
 .login-center .admin-title {
-  margin: 0 0 12px 0;
+  margin-bottom: 14px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
 /* Formular */
@@ -204,17 +100,66 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: stretch;     /* Input + Button exakt gleich breit */
+  align-items: center;
   gap: 12px;
-  text-align: left;
 }
 
-/* Button exakt gleich breit wie Inputs */
+/* Label + Input */
+.admin-label {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  color: var(--text);
+  font-size: 0.95rem;
+  gap: 6px;
+}
+
+/* Inputs */
+.admin-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 0.95rem;
+  background: #f9faff;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.admin-input:focus {
+  border-color: rgba(215, 0, 128, 0.4);
+  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.15);
+}
+
+/* Button exakt gleich breit */
 .login-button {
   width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--pink);
+  color: #fff;
+  transition: transform 0.05s ease, filter 0.15s ease;
+}
+.login-button:hover {
+  filter: brightness(1.05);
+}
+.login-button:active {
+  transform: translateY(1px);
 }
 
-/* Sanfter Fade-In mit Scale */
+/* Fehlermeldung */
+.admin-hint {
+  color: #dc2626;
+  font-size: 0.85rem;
+}
+
+/* =========================================================
+   🔹 Fade & Responsive
+   ========================================================= */
 .login-box.fade-in {
   animation: fadeInScale 400ms ease-out both;
 }
@@ -229,9 +174,6 @@
   }
 }
 
-/* =========================================================
-   🔹 Responsive Anpassung
-   ========================================================= */
 @media (max-width: 480px) {
   .login-box {
     width: 340px;
