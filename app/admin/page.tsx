@@ -36,9 +36,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     if (!iso) return "";
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-      d.getDate()
-    )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}`;
   };
   const toIso = (local?: string) => {
     if (!local) return "";
@@ -53,8 +53,20 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         const r = await fetch("/api/config", { cache: "no-store" });
         const cfg = (await r.json()) as Cfg;
 
-        setLive(!!cfg.live);
-        setEnded(!!cfg.ended);
+        const live0 = !!cfg.live;
+        const ended0 = !!cfg.ended;
+
+        if (ended0) {
+          setEnded(true);
+          setLive(false);
+        } else if (live0) {
+          setLive(true);
+          setEnded(false);
+        } else {
+          setLive(false);
+          setEnded(false);
+        }
+
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
         setShifts(cfg.shifts || []);
@@ -123,7 +135,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         shifts: live ? shifts : [],
       };
 
-      // 👇 Debug-Ausgabe im Browser
+      // 👇 Nur diese Zeile bleibt zum Debuggen
       console.log("SAVE BODY:", JSON.stringify(body, null, 2));
 
       const r = await fetch("/api/config", {
@@ -132,20 +144,17 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         body: JSON.stringify(body),
       });
 
-      const result = await r.json().catch(() => ({}));
-      console.log("API RESPONSE:", result);
-
       if (!r.ok) {
-        throw new Error(result?.error || "Speichern fehlgeschlagen");
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.error || "Speichern fehlgeschlagen");
       }
 
       setMsg("✅ Gespeichert");
     } catch (e: any) {
-      console.error("SAVE ERROR:", e);
       setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
     } finally {
       setSaving(false);
-      setTimeout(() => setMsg(""), 3000);
+      setTimeout(() => setMsg(""), 2500);
     }
   }
 
@@ -413,15 +422,16 @@ export default function AdminPage() {
   const card: CSSProperties = {
     width: "100%",
     maxWidth: 480,
-    background: "rgba(255,255,255,0.75)",
+    background: "rgba(255, 255, 255, 0.75)",
     backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     border: "1px solid #e5e7eb",
     borderRadius: 18,
     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
     padding: 24,
     transition: "opacity 0.35s ease, transform 0.35s ease",
     opacity: fadeIn ? 1 : 0,
-    transform: fadeIn ? "translateY(0)" : "translateY(12px)",
+    transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
   const h1: CSSProperties = {
     fontSize: 22,
@@ -434,24 +444,79 @@ export default function AdminPage() {
     return (
       <main style={page}>
         <div style={{ ...card, maxWidth: 420 }}>
-          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Image
+              src="/tst-logo.png"
+              alt="TST Logo"
+              width={200}
+              height={200}
+              priority
+              style={{
+                width: "200px",
+                height: "auto",
+                objectFit: "contain",
+                opacity: 0.95,
+              }}
+            />
+          </div>
+
           <h1 style={h1}>Admin Login</h1>
-          <form onSubmit={handleLogin}>
-            <input
-              type="text"
-              placeholder="Benutzername"
-              value={user}
-              onChange={(e) => setUser(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Passwort"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-            />
-            <button type="submit">Login</button>
-            {error && <div style={{ color: "#dc2626" }}>{error}</div>}
+
+          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 500 }}>Benutzername</label>
+              <input
+                type="text"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 10,
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 500 }}>Passwort</label>
+              <input
+                type="password"
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 10,
+                }}
+              />
+              {error && (
+                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 700,
+                background: "#d70080",
+                color: "#fff",
+                boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
+              }}
+            >
+              Login
+            </button>
           </form>
+
+          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
+            Zugriff nur für autorisierte Mitarbeiter.
+          </div>
         </div>
       </main>
     );
@@ -460,7 +525,22 @@ export default function AdminPage() {
   return (
     <main style={page}>
       <div style={card}>
-        <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Image
+            src="/tst-logo.png"
+            alt="TST Logo"
+            width={200}
+            height={200}
+            priority
+            style={{
+              width: "200px",
+              height: "auto",
+              objectFit: "contain",
+              opacity: 0.95,
+            }}
+          />
+        </div>
+
         <h2 style={{ ...h1, marginTop: 8 }}>Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
       </div>
