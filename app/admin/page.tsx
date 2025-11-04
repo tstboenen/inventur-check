@@ -423,159 +423,160 @@ export default function AdminPage() {
       <main
         style={{
           minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          display: "grid",
+          placeItems: "center",
           background: "#f9fafb",
           fontFamily:
             "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
           padding: 16,
         }}
       >
+        {/* Quadratische Box */}
         <div
           style={{
-            width: 380,              // schmalere Box
-            maxWidth: "94%",
+            width: 420,
+            height: 420, // exakt quadratisch
             background: "#fff",
             borderRadius: 16,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-            padding: "16px 18px 18px", // weniger Höhe
+            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+            // EXAKTE Zentrierung des Inhalts in der Box:
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",  // Inhalt mittig in der Box
-            gap: 10,
+            justifyContent: "center",
           }}
         >
-          {/* Logo */}
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={200}
-            height={200}
-            priority
-            style={{ objectFit: "contain" }}
-          />
-
-          {/* Titel */}
-          <h1
+          {/* Inhalt-Wrapper (keine feste Höhe, nur Breite für Felder) */}
+          <div
             style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: "#111827",
-              margin: 0,
+              width: 320,              // Inputs & Button: 300px, plus Spielraum
+              maxWidth: "90%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",   // mittig in der Breite
+              justifyContent: "center",
+              gap: 10,
               textAlign: "center",
             }}
           >
-            Admin Login
-          </h1>
+            {/* Logo */}
+            <Image
+              src="/tst-logo.png"
+              alt="TST Logo"
+              width={200}
+              height={200}
+              priority
+              style={{ objectFit: "contain" }}
+            />
 
-          {/* Formular (schmal & zentriert) */}
-          <form
-            onSubmit={handleLogin}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "100%",
-              gap: 10,
-            }}
-          >
-            <div style={{ width: 320, maxWidth: "100%" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: 6,
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  color: "#374151",
-                }}
-              >
-                Benutzername
-              </label>
-              <input
-                type="text"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: 10,
-                  fontSize: 14.5,
-                }}
-                placeholder="Dein Benutzername"
-              />
-            </div>
+            {/* Titel */}
+            <h1
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: "#111827",
+                margin: 0,
+              }}
+            >
+              Admin Login
+            </h1>
 
-            <div style={{ width: 320, maxWidth: "100%" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: 6,
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  color: "#374151",
-                }}
-              >
-                Passwort
-              </label>
-              <input
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: 10,
-                  fontSize: 14.5,
-                }}
-                placeholder="••••••••"
-              />
-              {error && (
-                <div
+            {/* Formular (300px breit, exakt mittig) */}
+            <form
+              onSubmit={handleLogin}
+              style={{
+                width: 300,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div style={{ width: "100%" }}>
+                <label
                   style={{
-                    color: "#dc2626",
+                    display: "block",
+                    marginBottom: 6,
                     fontSize: 12.5,
-                    marginTop: 6,
+                    fontWeight: 500,
+                    color: "#374151",
                     textAlign: "left",
                   }}
                 >
-                  {error}
-                </div>
-              )}
-            </div>
+                  Benutzername
+                </label>
+                <input
+                  type="text"
+                  value={user}
+                  onChange={(e) => setUser(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: 10,
+                    fontSize: 14.5,
+                  }}
+                  placeholder="Dein Benutzername"
+                />
+              </div>
 
-            <button
-              type="submit"
-              style={{
-                width: 320,
-                maxWidth: "100%",
-                padding: "11px 14px",
-                borderRadius: 12,
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 700,
-                fontSize: 15,
-                background: "#d70080",
-                color: "#fff",
-                boxShadow: "0 3px 10px rgba(215,0,128,0.22)",
-              }}
-            >
-              Login
-            </button>
-          </form>
+              <div style={{ width: "100%" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    color: "#374151",
+                    textAlign: "left",
+                  }}
+                >
+                  Passwort
+                </label>
+                <input
+                  type="password"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: 10,
+                    fontSize: 14.5,
+                  }}
+                  placeholder="••••••••"
+                />
+                {error && (
+                  <div
+                    style={{
+                      color: "#dc2626",
+                      fontSize: 12.5,
+                      marginTop: 6,
+                      textAlign: "left",
+                    }}
+                  >
+                    {error}
+                  </div>
+                )}
+              </div>
 
-          {/* Footer Hinweis */}
-          <div
-            style={{
-              fontSize: 12,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
-            Zugriff nur für autorisierte Mitarbeiter.
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  borderRadius: 12,
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  background: "#d70080",
+                  color: "#fff",
+                  boxShadow: "0 3px 10px rgba(215,0,128,0.22)",
+                }}
+              >
+                Login
+              </button>
+            </form>
           </div>
         </div>
       </main>
