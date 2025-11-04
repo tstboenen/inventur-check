@@ -73,7 +73,7 @@ const T = {
     ru: "Вечерняя смена",
   },
   shift_night: {
-    de: "Nacht",
+    de: "Nachtschicht",
     en: "Night shift",
     pl: "Zmiana nocna",
     ru: "Ночная смена",
@@ -113,7 +113,6 @@ export default function HomePage() {
   // Language (persist in localStorage)
   const [lang, setLang] = useState<Lang>("de");
   useEffect(() => {
-    // load saved language once
     try {
       const saved = localStorage.getItem("lang") as Lang | null;
       if (saved && ["de", "en", "pl", "ru"].includes(saved)) setLang(saved);
@@ -124,6 +123,7 @@ export default function HomePage() {
     try {
       localStorage.setItem("lang", v);
     } catch {}
+    setOpen(false);
   };
 
   // Load config (robust parse for shifts)
@@ -181,7 +181,7 @@ export default function HomePage() {
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  /* ---------- Styles ---------- */
+  /* ---------- Styles (unchanged design) ---------- */
   const page: CSSProperties = {
     minHeight: "100vh",
     display: "flex",
@@ -194,31 +194,7 @@ export default function HomePage() {
     textAlign: "center",
     color: "#111827",
   };
-  const topBar: CSSProperties = {
-    width: "100%",
-    maxWidth: 1100,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  };
-  const langWrap: CSSProperties = {
-    marginTop: 8,
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  };
-  const langLabel: CSSProperties = { fontSize: 14, color: "#374151" };
-  const langSelect: CSSProperties = {
-    padding: "8px 12px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    fontSize: 14,
-    cursor: "pointer",
-  };
-
-  const title: CSSProperties = { marginTop: 12, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
+  const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
   const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // black, no emoji
@@ -233,8 +209,9 @@ export default function HomePage() {
     marginTop: 30,
   };
 
+  // Tiles as before: compact, strong shadow; green/red by status
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten"; // Takes place
+    const ok = status === "Muss arbeiten"; // Finds place
     return {
       width: 260,
       padding: 18,
@@ -250,6 +227,53 @@ export default function HomePage() {
   const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 }; // Schicht
   const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 }; // Datum
   const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 }; // Status
+
+  /* ---------- Language dropdown (flags) ---------- */
+  const [open, setOpen] = useState(false);
+  const flagOf: Record<Lang, string> = { de: "🇩🇪", en: "🇬🇧", pl: "🇵🇱", ru: "🇷🇺" };
+
+  const flagFab: CSSProperties = {
+    position: "fixed",
+    top: 16,
+    right: 16,
+    zIndex: 50,
+  };
+
+  const flagBtn: CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.10)",
+    cursor: "pointer",
+    fontSize: 22,
+    display: "grid",
+    placeItems: "center",
+  };
+
+  const flagMenu: CSSProperties = {
+    marginTop: 8,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    borderRadius: 12,
+    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+    padding: 6,
+    display: "grid",
+    gap: 6,
+  };
+
+  const flagItem: CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    border: "1px solid #f3f4f6",
+    background: "#fff",
+    cursor: "pointer",
+    fontSize: 22,
+    display: "grid",
+    placeItems: "center",
+  };
 
   /* ---------- Helpers: display strings by lang ---------- */
   const dateFmt = (iso: string) => {
@@ -267,41 +291,47 @@ export default function HomePage() {
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      <div style={topBar}>
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={120}
-            height={120}
-            priority
-            style={{ width: 120, height: "auto", objectFit: "contain", opacity: 0.98 }}
-          />
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>TST BÖNEN INVENTUR 2025</h1>
-        </div>
-
-        {/* Language selector */}
-        <div style={langWrap}>
-          <span style={langLabel}>Sprache:</span>
-          <select
-            value={lang}
-            onChange={(e) => onLangChange(e.target.value as Lang)}
-            style={langSelect}
-            aria-label="Language"
-          >
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-            <option value="pl">Polski</option>
-            <option value="ru">Русский</option>
-          </select>
-        </div>
+      {/* Floating flag dropdown (top-right) */}
+      <div style={flagFab}>
+        <button
+          aria-label="Language"
+          style={flagBtn}
+          onClick={() => setOpen((v) => !v)}
+          title="Sprache wählen"
+        >
+          {flagOf[lang]}
+        </button>
+        {open && (
+          <div style={flagMenu}>
+            {(["de", "en", "pl", "ru"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                aria-label={l}
+                style={flagItem}
+                onClick={() => onLangChange(l)}
+                title={l.toUpperCase()}
+              >
+                {flagOf[l]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Big title below (kept) */}
-      <h2 style={title}>TST BÖNEN INVENTUR 2025</h2>
+      {/* Original design below (unchanged) */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+        <Image
+          src="/tst-logo.png"
+          alt="TST Logo"
+          width={400}
+          height={400}
+          priority
+          style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
+        />
+      </div>
 
-      {/* Main logic */}
+      <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
+
       {loading ? (
         <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>
           {lang === "de"
@@ -321,23 +351,21 @@ export default function HomePage() {
           {/* Live heading (no emoji, black) */}
           <div style={liveTitle}>{tr("heading_live", lang)}</div>
 
-          {/* Shift tiles */}
+          {/* Shift tiles (Schicht → Datum → Status) */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
-              {cfg.shifts.map((s, i) => {
-                const ok = s.status === "Muss arbeiten";
-                return (
-                  <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    {/* Order: Shift → Date → Status (as requested earlier) */}
-                    <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
-                    <div style={shiftDate}>{dateFmt(s.date)}</div>
-                    <div style={shiftStatus}>{statusText(s.status)}</div>
-                  </div>
-                );
-              })}
+              {cfg.shifts.map((s, i) => (
+                <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
+                  <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
+                  <div style={shiftDate}>{dateFmt(s.date)}</div>
+                  <div style={shiftStatus}>{statusText(s.status)}</div>
+                </div>
+              ))}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>{tr("no_shifts", lang)}</p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
+              {tr("no_shifts", lang)}
+            </p>
           )}
         </>
       ) : (
@@ -349,7 +377,6 @@ export default function HomePage() {
         </>
       )}
 
-      {/* Info text: we show as-is (not auto-translated) */}
       {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
