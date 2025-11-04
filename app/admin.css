@@ -55,7 +55,7 @@
   margin-bottom: 10px;
 }
 .admin-logo img {
-  width: 200px; /* 🔹 fix auf 200 px */
+  width: 250px; /* 🔹 jetzt größer */
   height: auto;
 }
 
@@ -90,9 +90,11 @@
   background: #f9faff;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   box-sizing: border-box;
+  text-align: center; /* 🔹 Text in den Eingabefeldern zentriert */
 }
 .admin-textarea {
   resize: vertical;
+  text-align: left;
 }
 
 .admin-input:focus,
@@ -138,7 +140,7 @@
   padding: 12px 0;
 }
 
-/* ===== LOGIN-BEREICH (500x500, perfekt mittig) ===== */
+/* ===== LOGIN-BEREICH (500x500, Logo höher, Input zentriert) ===== */
 .login-box {
   position: relative;
   width: 500px;
@@ -151,12 +153,12 @@
   overflow: hidden;
 }
 
-/* Absolut zentrierter Innen-Wrapper */
+/* Innen-Wrapper */
 .login-center {
   position: absolute;
-  top: 50%;
+  top: 45%; /* 🔹 leicht nach oben verschoben */
   left: 50%;
-  width: 360px; /* Innenbreite */
+  width: 360px;
   transform: translate(-50%, -50%);
   display: grid;
   gap: 14px;
@@ -180,11 +182,10 @@
   width: 100%;
   display: grid;
   gap: 12px;
-  text-align: left;
+  text-align: center; /* 🔹 Labels + Inputs wirken harmonisch zentriert */
   box-sizing: border-box;
 }
 
-/* Inputs & Button exakt gleich breit */
 .login-form .admin-label {
   width: 100%;
 }
@@ -193,7 +194,7 @@
 }
 .login-button {
   width: 100%;
-  margin-top: 16px; /* 🔹 weiter nach unten */
+  margin-top: 16px; /* schöner Abstand */
 }
 
 /* Sanfter Fade-In */
@@ -219,5 +220,8 @@
   }
   .login-center {
     width: 280px;
+  }
+  .admin-logo img {
+    width: 180px;
   }
 }
