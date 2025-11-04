@@ -22,8 +22,21 @@ const KEY = "inventur:config";
 /* ---------- Helpers ---------- */
 const boolFromHash = (v?: string | null) => v === "1";
 const boolToHash = (v?: boolean) => (v ? "1" : "0");
-const normNull = (v?: string | null) => (v === undefined || v === null || v === "" ? null : v);
-const isIso = (s: unknown) => typeof s === "string" && s.length > 0 && !Number.isNaN(new Date(s).getTime());
+const normNull = (v?: string | null) =>
+  v === undefined || v === null || v === "" ? null : v;
+const isIso = (s: unknown) =>
+  typeof s === "string" &&
+  s.length > 0 &&
+  !Number.isNaN(new Date(s).getTime());
+
+function maybeParseJson<T = any>(val: unknown): T | null {
+  if (typeof val !== "string") return null;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return null;
+  }
+}
 
 function toCfgFromHash(h: Record<string, string> | null): Cfg {
   return {
@@ -33,15 +46,6 @@ function toCfgFromHash(h: Record<string, string> | null): Cfg {
     info: h?.info ?? "",
     shifts: h?.shifts ? maybeParseJson<Shift[]>(h.shifts) || [] : [],
   };
-}
-
-function maybeParseJson<T = any>(val: unknown): T | null {
-  if (typeof val !== "string") return null;
-  try {
-    return JSON.parse(val) as T;
-  } catch {
-    return null;
-  }
 }
 
 function sanitizeInput(body: Partial<Cfg>): Cfg {
@@ -96,7 +100,9 @@ function toHashPayload(cfg: Cfg): Record<string, string> {
 export async function GET() {
   const hash = await kv.hgetall<Record<string, string>>(KEY);
   if (hash && Object.keys(hash).length > 0) {
-    return NextResponse.json(toCfgFromHash(hash), { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(toCfgFromHash(hash), {
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 
   const legacy = await kv.get(KEY);
@@ -109,23 +115,33 @@ export async function GET() {
       info: parsed.info ?? "",
       shifts: parsed.shifts ?? [],
     };
-    return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(cfg, {
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 
   const empty: Cfg = { live: false, ended: false, start: null, info: "", shifts: [] };
-  return NextResponse.json(empty, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(empty, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
 
 /* ---------- POST ---------- */
 export async function POST(req: Request) {
   const cookie = req.headers.get("cookie") || "";
   const ok = /(^|;\s*)admin_session=ok(;|$)/.test(cookie);
-  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!ok)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const body = (await req.json()) as Partial<Cfg>;
     const cfg = sanitizeInput(body);
     const payload = toHashPayload(cfg);
+
+    // 🩹 Fix: shifts immer als String absichern
+    if (Array.isArray(cfg.shifts)) {
+      payload.shifts = JSON.stringify(cfg.shifts);
+    }
 
     try {
       await kv.hset(KEY, payload);
@@ -138,8 +154,13 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(cfg, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Ungültiger Request" }, { status: 400 });
+    return NextResponse.json(
+      { error: e?.message || "Ungültiger Request" },
+      { status: 400 }
+    );
   }
 }
