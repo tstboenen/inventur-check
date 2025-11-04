@@ -243,7 +243,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       <div style={gridRow}>
         <label style={lbl}>Live</label>
         <div
-          style={{ position: "relative", width: 56, height: 32, cursor: "pointer", borderRadius: 999, border: `1px solid ${live ? "#d70080" : "#d1d5db"}`, background: live ? "#d70080" : "#f3f4f6", transition: "all .25s" }}
+          style={{
+            position: "relative",
+            width: 56,
+            height: 32,
+            cursor: "pointer",
+            borderRadius: 999,
+            border: `1px solid ${live ? "#d70080" : "#d1d5db"}`,
+            background: live ? "#d70080" : "#f3f4f6",
+            transition: "all .25s",
+          }}
           onClick={() => onToggleLive(!live)}
         >
           <span
@@ -266,7 +275,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
         <div
-          style={{ position: "relative", width: 56, height: 32, cursor: "pointer", borderRadius: 999, border: `1px solid ${ended ? "#d70080" : "#d1d5db"}`, background: ended ? "#d70080" : "#f3f4f6", transition: "all .25s" }}
+          style={{
+            position: "relative",
+            width: 56,
+            height: 32,
+            cursor: "pointer",
+            borderRadius: 999,
+            border: `1px solid ${ended ? "#d70080" : "#d1d5db"}`,
+            background: ended ? "#d70080" : "#f3f4f6",
+            transition: "all .25s",
+          }}
           onClick={() => onToggleEnded(!ended)}
         >
           <span
@@ -411,6 +429,7 @@ export default function AdminPage() {
           background: "#f9fafb",
           fontFamily:
             "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+          padding: 16,
         }}
       >
         <div
@@ -419,15 +438,15 @@ export default function AdminPage() {
             maxWidth: 420,
             background: "#fff",
             borderRadius: 18,
-            boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-            padding: "32px 28px 36px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+            padding: "20px 20px 24px", // kompakter
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
             <Image
               src="/tst-logo.png"
               alt="TST Logo"
@@ -441,27 +460,28 @@ export default function AdminPage() {
           {/* Titel */}
           <h1
             style={{
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: 700,
               color: "#111827",
-              marginBottom: 24,
+              marginBottom: 16, // weniger Abstand
               textAlign: "center",
             }}
           >
             Admin Login
           </h1>
 
-          {/* Formular */}
+          {/* Formular (schmal & mittig) */}
           <form
             onSubmit={handleLogin}
             style={{
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
               width: "100%",
-              gap: "16px",
+              gap: 12,
             }}
           >
-            <div>
+            <div style={{ width: 300 /* schmal */, maxWidth: "90%" }}>
               <label
                 style={{
                   display: "block",
@@ -488,7 +508,7 @@ export default function AdminPage() {
               />
             </div>
 
-            <div>
+            <div style={{ width: 300 /* schmal */, maxWidth: "90%" }}>
               <label
                 style={{
                   display: "block",
@@ -530,7 +550,9 @@ export default function AdminPage() {
             <button
               type="submit"
               style={{
-                marginTop: 8,
+                width: 300, // gleiche Breite wie Inputs
+                maxWidth: "90%",
+                marginTop: 6,
                 padding: "12px 16px",
                 borderRadius: 12,
                 border: "none",
@@ -539,7 +561,7 @@ export default function AdminPage() {
                 fontSize: 15,
                 background: "#d70080",
                 color: "#fff",
-                boxShadow: "0 4px 14px rgba(215,0,128,0.3)",
+                boxShadow: "0 4px 14px rgba(215,0,128,0.25)",
               }}
             >
               Login
@@ -549,7 +571,7 @@ export default function AdminPage() {
           {/* Footer Hinweis */}
           <div
             style={{
-              marginTop: 20,
+              marginTop: 14,
               fontSize: 12,
               color: "#6b7280",
               textAlign: "center",
