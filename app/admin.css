@@ -34,20 +34,49 @@
 }
 
 /* Anim */
-.fade-in { animation: fadeIn 300ms ease-out both; }
+.fade-in {
+  animation: fadeIn 300ms ease-out both;
+}
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== Typo / Form ===== */
-.admin-logo { display: grid; place-items: center; margin-bottom: 10px; }
-.admin-logo img { width: 200px; height: auto; }
+.admin-logo {
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+}
+.admin-logo img {
+  width: 200px;
+  height: auto;
+}
 
-.admin-title { text-align: center; font-weight: 700; font-size: 1.4rem; color: var(--text); margin-bottom: 16px; }
+.admin-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--text);
+  margin-bottom: 16px;
+}
 
-.admin-form { display: grid; gap: 12px; }
-.admin-label { display: grid; gap: 6px; color: var(--text); font-size: 0.95rem; }
+.admin-form {
+  display: grid;
+  gap: 12px;
+}
+.admin-label {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
 
 .admin-input,
 .admin-textarea,
@@ -62,7 +91,9 @@
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   box-sizing: border-box;
 }
-.admin-textarea { resize: vertical; }
+.admin-textarea {
+  resize: vertical;
+}
 
 .admin-input:focus,
 .admin-textarea:focus,
@@ -71,7 +102,10 @@
   box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.15);
 }
 
-.admin-hint { color: var(--muted); font-size: 0.8rem; }
+.admin-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
 
 .admin-button {
   border: none;
@@ -86,19 +120,32 @@
   text-align: center;
   box-sizing: border-box;
 }
-.admin-button:hover { filter: brightness(1.05); }
-.admin-button:active { transform: translateY(1px); }
+.admin-button:hover {
+  filter: brightness(1.05);
+}
+.admin-button:active {
+  transform: translateY(1px);
+}
 
-.admin-status { margin-top: 8px; font-size: 0.9rem; color: var(--text); text-align: center; }
-.admin-loading { text-align: center; color: var(--muted); padding: 12px 0; }
+.admin-status {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+  text-align: center;
+}
+.admin-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 12px 0;
+}
 
 /* ===== LOGIN (exakt mittig, symmetrisch) ===== */
 
-/* Quadrat ohne Padding */
+/* Quadratische Box */
 .login-box {
   position: relative;
-  width: 420px;
-  height: 420px;
+  width: 500px;
+  height: 500px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -112,42 +159,67 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 300px;                 /* Referenzbreite für Inputs & Button */
+  width: 360px; /* breiter für Balance */
   transform: translate(-50%, -50%);
   display: grid;
-  gap: 12px;
-  justify-items: center;        /* Logo & Titel mittig */
+  gap: 14px;
+  justify-items: center;
   box-sizing: border-box;
   text-align: center;
 }
 
-/* Logo & Titel ohne Zusatz-Margins */
-.login-center .admin-logo { margin: 0; }
-.login-center .admin-title { margin: 0; font-size: 1.2rem; }
+/* Logo & Titel */
+.login-center .admin-logo {
+  margin: 0;
+}
+.login-center .admin-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
 
-/* Formular füllt exakt die 300px-Breite */
+/* Formular */
 .login-form {
   width: 100%;
   display: grid;
   gap: 12px;
-  text-align: left;             /* Label/Inputs innen linksbündig (natürlich) */
+  text-align: left;
   box-sizing: border-box;
 }
 
 /* Inputs & Button exakt gleich breit */
-.login-form .admin-label { width: 100%; }
-.login-form .admin-input { width: 100%; }
-.login-button { width: 100%; }
+.login-form .admin-label {
+  width: 100%;
+}
+.login-form .admin-input {
+  width: 100%;
+}
+.login-button {
+  width: 100%;
+}
 
-/* Subtiler Einstieg */
-.login-box.fade-in { animation: fadeInScale 400ms ease-out both; }
+/* Sanfter Fade-In mit Scale */
+.login-box.fade-in {
+  animation: fadeInScale 400ms ease-out both;
+}
 @keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Responsive */
 @media (max-width: 480px) {
-  .login-box { width: 340px; height: 340px; }
-  .login-center { width: 260px; }
+  .login-box {
+    width: 360px;
+    height: 360px;
+  }
+  .login-center {
+    width: 280px;
+  }
 }
