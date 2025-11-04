@@ -7,7 +7,7 @@ import "../admin.css";
 /* ---------- Typen ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
-  date: string; // UI: YYYY-MM-DD, Server: ISO
+  date: string;
   status: "Muss arbeiten" | "Hat frei";
 };
 
@@ -32,7 +32,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [info, setInfo] = useState("");
   const [shifts, setShifts] = useState<Shift[]>([]);
 
-  // Helpers
+  /* ---------- Helpers ---------- */
   const toLocalInput = (iso?: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -56,7 +56,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const fromDateInputToIso = (dateOnly: string) =>
     new Date(dateOnly + "T00:00:00Z").toISOString();
 
-  // Config laden
+  /* ---------- Config laden ---------- */
   useEffect(() => {
     (async () => {
       try {
@@ -88,7 +88,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  // Toggles
+  /* ---------- Toggles ---------- */
   function onToggleLive(next: boolean) {
     if (next) {
       setLive(true);
@@ -108,7 +108,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  // Schichten
+  /* ---------- Schichten ---------- */
   function addShift() {
     if (shifts.length >= 3) return;
     setShifts([
@@ -125,14 +125,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     setShifts(shifts.filter((_, idx) => idx !== i));
   }
 
-  // Speichern
+  /* ---------- Speichern ---------- */
   async function save() {
     setSaving(true);
     setMsg("");
     try {
       const normalized: Shift[] = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
+          ? fromDateInputToIso(s.date)
+          : new Date(s.date).toISOString(),
       }));
 
       const body: Partial<Cfg> = {
@@ -262,9 +264,20 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       {/* Schichten */}
       {live && (
         <div style={{ marginTop: 16 }}>
-          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>Schichtübersicht</h3>
+          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>
+            Schichtübersicht
+          </h3>
           {(shifts || []).map((shift, i) => (
-            <div key={i} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 12, marginBottom: 10, background: "#f9fafb" }}>
+            <div
+              key={i}
+              style={{
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 10,
+                background: "#f9fafb",
+              }}
+            >
               <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
                 <select
                   value={shift.type}
@@ -294,7 +307,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
-                <button onClick={() => removeShift(i)} className="admin-button" style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}>
+                <button
+                  onClick={() => removeShift(i)}
+                  className="admin-button"
+                  style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}
+                >
                   ❌ Löschen
                 </button>
               </div>
@@ -310,11 +327,19 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       {/* Bottom Bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
-        <button onClick={() => router.push("/")} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+        <button
+          onClick={() => router.push("/")}
+          className="admin-button"
+          style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+        >
           Zur Hauptseite
         </button>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onLogout} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+          <button
+            onClick={onLogout}
+            className="admin-button"
+            style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+          >
             Logout
           </button>
           <button onClick={save} disabled={saving} className="admin-button">
@@ -360,40 +385,18 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  // ---------- LOGIN VIEW ----------
+  /* ---------- LOGIN VIEW ---------- */
   if (!loggedIn) {
     return (
       <main className="admin-wrap">
-        {/* Quadratische Login-Box: nutzt .admin-card + exakte Maße/Centering via Inline, CSS bleibt unverändert */}
-        <div
-          className="admin-card fade-in"
-          style={{
-            width: 420,
-            height: 420,
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-          }}
-        >
-          <div className="admin-logo" style={{ marginBottom: 6 }}>
+        <div className="admin-card fade-in login-box">
+          <div className="admin-logo">
             <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
           </div>
 
-          <h1 className="admin-title" style={{ marginBottom: 10, fontSize: "1.1rem" }}>
-            Admin Login
-          </h1>
+          <h1 className="admin-title">Admin Login</h1>
 
-          <form
-            onSubmit={handleLogin}
-            style={{
-              width: 300, // schmale, exakt zentrierte Inputs
-              display: "grid",
-              gap: 10,
-            }}
-          >
+          <form onSubmit={handleLogin} className="admin-form login-form">
             <label className="admin-label">
               Benutzername
               <input
@@ -416,14 +419,16 @@ export default function AdminPage() {
 
             {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
 
-            <button type="submit" className="admin-button">Login</button>
+            <button type="submit" className="admin-button login-button">
+              Login
+            </button>
           </form>
         </div>
       </main>
     );
   }
 
-  // ---------- ADMIN VIEW ----------
+  /* ---------- ADMIN VIEW ---------- */
   return (
     <main className="admin-wrap">
       <div className="admin-card fade-in">
