@@ -1,280 +1,373 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+"use client";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import "../admin.css";
 
-/* ===== Variablen ===== */
-:root {
-  --pink: #d70080;
-  --text: #111;
-  --muted: #666;
-  --border: #e5e7eb;
-  --bg: #ffffff;
-  --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  --radius: 16px;
-  --card-padding: 24px 28px;
-}
+/* ---------- Typen ---------- */
+type Shift = {
+  type: "Früh" | "Spät" | "Nacht";
+  date: string;
+  status: "Muss arbeiten" | "Hat frei";
+};
 
-/* ===== Page Wrapper ===== */
-.admin-wrap {
-  min-height: 100dvh;
-  background: var(--bg);
-  display: grid;
-  place-items: center;
-  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-}
+type Cfg = {
+  live: boolean;
+  ended: boolean;
+  start: string | null;
+  info: string;
+  shifts?: Shift[];
+};
 
-/* ===== Adminpanel Card ===== */
-.admin-card {
-  width: 800px;
-  height: 800px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--card-padding);
-  box-sizing: border-box;
-  overflow-y: auto;
-}
+/* ---------- Admin Panel ---------- */
+function ConfigForm({ onLogout }: { onLogout: () => void }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
 
-/* Mehr vertikaler Abstand zwischen Eingabeelementen */
-.admin-card > div {
-  margin-bottom: 22px;
-}
-.admin-card > div:last-child {
-  margin-bottom: 0;
-}
+  const [live, setLive] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const [startLocal, setStartLocal] = useState<string>("");
+  const [info, setInfo] = useState("");
+  const [shifts, setShifts] = useState<Shift[]>([]);
 
-/* ===== Schichtkarten (kompakter & moderner) ===== */
-.shift-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #f9fafb;
-  padding: 10px 12px; /* 🔹 vorher 12px – jetzt kompakter */
-  margin-bottom: 10px;
-  display: grid;
-  gap: 8px; /* 🔹 etwas engerer Abstand zwischen Feldern */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
+  const toLocalInput = (iso?: string | null) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}`;
+  };
+  const toIso = (local?: string) => {
+    if (!local) return "";
+    const d = new Date(local);
+    return d.toISOString();
+  };
+  const toDateInput = (maybeIso: string) => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(maybeIso)) return maybeIso;
+    const d = new Date(maybeIso);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  const fromDateInputToIso = (dateOnly: string) =>
+    new Date(dateOnly + "T00:00:00Z").toISOString();
 
-/* Inneres Layout: gleichmäßige Felder */
-.shift-card select,
-.shift-card input[type="date"] {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  background: #fff;
-  box-sizing: border-box;
-  width: 100%;
-}
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch("/api/config", { cache: "no-store", credentials: "include" });
+        const cfg = (await r.json()) as Cfg;
 
-/* Delete-Button */
-.shift-card button {
-  border-radius: 8px;
-  font-size: 0.85rem;
-  padding: 8px 10px;
-  cursor: pointer;
-  background: #fff;
-  border: 1px solid #fca5a5;
-  color: #dc2626;
-  transition: all 0.2s ease;
-}
-.shift-card button:hover {
-  background: #fee2e2;
-}
+        if (cfg.ended) { setEnded(true); setLive(false); }
+        else if (cfg.live) { setLive(true); setEnded(false); }
+        else { setLive(false); setEnded(false); }
 
-/* ===== Animationen ===== */
-.fade-in {
-  animation: fadeIn 300ms ease-out both;
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+        setStartLocal(toLocalInput(cfg.start));
+        setInfo(cfg.info || "");
+        const hydrated = (cfg.shifts || []).map((s) => ({ ...s, date: toDateInput(s.date) })) as Shift[];
+        setShifts(hydrated);
+      } catch {
+        setMsg("Fehler beim Laden der Konfiguration.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  function onToggleLive(next: boolean) {
+    if (next) { setLive(true); setEnded(false); }
+    else { setLive(false); setShifts([]); }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  function onToggleEnded(next: boolean) {
+    if (next) { setEnded(true); setLive(false); setShifts([]); }
+    else { setEnded(false); }
   }
-}
 
-/* ===== Allgemeine Elemente ===== */
-.admin-logo {
-  display: grid;
-  place-items: center;
-  margin-bottom: 10px;
-}
-.admin-logo img {
-  width: 250px;
-  height: auto;
-}
-
-.admin-title {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--text);
-  margin-bottom: 16px;
-}
-
-.admin-form {
-  display: grid;
-  gap: 20px;
-}
-
-.admin-label {
-  display: grid;
-  gap: 6px;
-  color: var(--text);
-  font-size: 0.95rem;
-}
-
-.admin-input,
-.admin-textarea,
-.admin-select {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  outline: none;
-  font-size: 0.95rem;
-  background: #f9faff;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
-  box-sizing: border-box;
-  text-align: center;
-}
-.admin-textarea {
-  resize: vertical;
-  text-align: left;
-}
-
-.admin-input:focus,
-.admin-textarea:focus,
-.admin-select:focus {
-  border-color: rgba(215, 0, 128, 0.4);
-  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.15);
-}
-
-.admin-hint {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.admin-button {
-  border: none;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--pink);
-  color: #fff;
-  transition: transform 0.05s ease, filter 0.15s ease;
-  text-align: center;
-  box-sizing: border-box;
-}
-.admin-button:hover {
-  filter: brightness(1.05);
-}
-.admin-button:active {
-  transform: translateY(1px);
-}
-
-.admin-status {
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: var(--text);
-  text-align: center;
-}
-.admin-loading {
-  text-align: center;
-  color: var(--muted);
-  padding: 12px 0;
-}
-
-/* ===== LOGIN-BEREICH ===== */
-.login-box {
-  position: relative;
-  width: 500px;
-  height: 500px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Innen-Wrapper */
-.login-center {
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  width: 360px;
-  transform: translate(-50%, -50%);
-  display: grid;
-  gap: 14px;
-  justify-items: center;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-/* Logo & Titel */
-.login-center .admin-logo {
-  margin: 0;
-}
-.login-center .admin-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-/* Formular */
-.login-form {
-  width: 100%;
-  display: grid;
-  gap: 12px;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.login-form .admin-label {
-  width: 100%;
-}
-.login-form .admin-input {
-  width: 100%;
-}
-.login-button {
-  width: 100%;
-  margin-top: 28px;
-}
-
-/* Sanfter Fade-In */
-.login-box.fade-in {
-  animation: fadeInScale 400ms ease-out both;
-}
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
+  function addShift() {
+    if (shifts.length >= 3) return;
+    setShifts([
+      ...shifts,
+      { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" },
+    ]);
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+  function updateShift(i: number, field: keyof Shift, value: any) {
+    const copy = [...shifts];
+    copy[i] = { ...copy[i], [field]: value };
+    setShifts(copy);
   }
+  function removeShift(i: number) {
+    setShifts(shifts.filter((_, idx) => idx !== i));
+  }
+
+  async function save() {
+    setSaving(true);
+    setMsg("");
+    try {
+      const normalized = (live ? shifts : []).map((s) => ({
+        ...s,
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
+          ? fromDateInputToIso(s.date)
+          : new Date(s.date).toISOString(),
+      }));
+      const body: Partial<Cfg> = {
+        live,
+        ended,
+        start: !live && !ended && startLocal ? toIso(startLocal) : null,
+        info,
+        shifts: live ? normalized : [],
+      };
+      const r = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error((j as any)?.error || "Speichern fehlgeschlagen");
+      }
+      setMsg("✅ Gespeichert");
+    } catch (e: any) {
+      setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMsg(""), 2500);
+    }
+  }
+
+  if (loading) return <p className="admin-loading">…lädt</p>;
+
+  return (
+    <>
+      {/* Termin */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label" style={{ display: (live || ended) ? "none" : "grid" }}>
+          Termin (Start)
+        </label>
+        <input
+          type="datetime-local"
+          value={startLocal}
+          onChange={(e) => setStartLocal(e.target.value)}
+          className="admin-input"
+          style={{ display: (live || ended) ? "none" : "block" }}
+        />
+      </div>
+
+      {/* Live */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Live</label>
+        <div
+          role="switch" aria-checked={live} onClick={() => onToggleLive(!live)}
+          style={{
+            position: "relative", width: 56, height: 32, cursor: "pointer",
+            borderRadius: 999, border: `1px solid ${live ? "var(--pink)" : "var(--border)"}`,
+            background: live ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
+          }}
+        >
+          <span style={{
+            position: "absolute", top: 3, left: live ? 29 : 3, width: 26, height: 26,
+            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            transition: "left .25s",
+          }} />
+        </div>
+      </div>
+
+      {/* Ende */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Ende</label>
+        <div
+          role="switch" aria-checked={ended} onClick={() => onToggleEnded(!ended)}
+          style={{
+            position: "relative", width: 56, height: 32, cursor: "pointer",
+            borderRadius: 999, border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
+            background: ended ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
+          }}
+        >
+          <span style={{
+            position: "absolute", top: 3, left: ended ? 29 : 3, width: 26, height: 26,
+            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            transition: "left .25s",
+          }} />
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Info</label>
+        <textarea
+          value={info}
+          onChange={(e) => setInfo(e.target.value)}
+          className="admin-textarea"
+          placeholder="Hinweise an die Mitarbeiter (optional)"
+        />
+      </div>
+
+      {/* Schichten */}
+      {live && (
+        <div style={{ marginTop: 8 }}>
+          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 6 }}>
+            Schichtübersicht
+          </h3>
+
+          {(shifts || []).map((shift, i) => (
+            <div key={i} className="shift-card fade-in-up">
+              <div className="row">
+                <select
+                  value={shift.type}
+                  onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
+                  className="admin-select"
+                >
+                  <option value="Früh">Frühschicht</option>
+                  <option value="Spät">Spätschicht</option>
+                  <option value="Nacht">Nachtschicht</option>
+                </select>
+
+                <input
+                  type="date"
+                  value={shift.date}
+                  onChange={(e) => updateShift(i, "date", e.target.value)}
+                  className="admin-input"
+                />
+              </div>
+
+              <div className="row">
+                <select
+                  value={shift.status}
+                  onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
+                  className="admin-select"
+                >
+                  <option value="Muss arbeiten">Muss arbeiten</option>
+                  <option value="Hat frei">Hat frei</option>
+                </select>
+
+                <button onClick={() => removeShift(i)} className="danger">
+                  ❌ Löschen
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {shifts.length < 3 && (
+            <button onClick={addShift} className="admin-button" style={{ margin: "8px auto 0", display: "block", maxWidth: 520 }}>
+              ➕ Schicht hinzufügen
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Bottom Bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
+        <button
+          onClick={() => router.push("/")}
+          className="admin-button"
+          style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+        >
+          Zur Hauptseite
+        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={onLogout}
+            className="admin-button"
+            style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+          >
+            Logout
+          </button>
+          <button onClick={save} disabled={saving} className="admin-button">
+            {saving ? "Speichert…" : "Speichern"}
+          </button>
+        </div>
+      </div>
+
+      {msg && <p className="admin-status">{msg}</p>}
+    </>
+  );
 }
 
-/* ===== Responsive ===== */
-@media (max-width: 480px) {
-  .admin-card {
-    width: 90%;
-    height: auto;
+/* ---------- Login + Wrapper ---------- */
+export default function AdminPage() {
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    try {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: user, password: pass }),
+      });
+      if (!r.ok) { setError("Falsche Zugangsdaten"); return; }
+      setLoggedIn(true);
+    } catch {
+      setError("Login fehlgeschlagen");
+    }
   }
-  .login-box {
-    width: 360px;
-    height: 360px;
+
+  async function handleLogout() {
+    await fetch("/api/logout", { method: "POST", credentials: "include" }).catch(() => {});
+    setLoggedIn(false);
   }
-  .login-center {
-    width: 280px;
+
+  /* ---------- LOGIN VIEW ---------- */
+  if (!loggedIn) {
+    return (
+      <main className="admin-wrap">
+        <div className="login-box fade-in">
+          <div className="login-center">
+            <div className="admin-logo">
+              <Image src="/tst-logo.png" alt="TST Logo" width={250} height={250} priority />
+            </div>
+
+            <h1 className="admin-title">Admin Login</h1>
+
+            <form onSubmit={handleLogin} className="login-form">
+              <label className="admin-label">
+                Benutzername
+                <input
+                  type="text"
+                  value={user}
+                  onChange={(e) => setUser(e.target.value)}
+                  className="admin-input"
+                />
+              </label>
+
+              <label className="admin-label">
+                Passwort
+                <input
+                  type="password"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                  className="admin-input"
+                />
+              </label>
+
+              {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
+
+              <button type="submit" className="admin-button login-button">Login</button>
+            </form>
+          </div>
+        </div>
+      </main>
+    );
   }
-  .admin-logo img {
-    width: 180px;
-  }
+
+  /* ---------- ADMIN VIEW ---------- */
+  return (
+    <main className="admin-wrap">
+      <div className="admin-card fade-in">
+        <div className="admin-logo">
+          <Image src="/tst-logo.png" alt="TST Logo" width={250} height={250} priority />
+        </div>
+        <h2 className="admin-title">Inventur-Einstellungen</h2>
+        <ConfigForm onLogout={handleLogout} />
+      </div>
+    </main>
+  );
 }
