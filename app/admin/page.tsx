@@ -50,7 +50,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/config", { cache: "no-store" });
+        const r = await fetch("/api/config", { cache: "no-store", credentials: "include" });
         const cfg = (await r.json()) as Cfg;
 
         const live0 = !!cfg.live;
@@ -135,12 +135,12 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         shifts: live ? shifts : [],
       };
 
-      // 👇 Nur diese Zeile bleibt zum Debuggen
       console.log("SAVE BODY:", JSON.stringify(body, null, 2));
 
       const r = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
@@ -373,14 +373,13 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-/* ---------- Login + Panel ---------- */
+/* ---------- Login + Wrapper ---------- */
 export default function AdminPage() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [error, setError] = useState("");
   const [fadeIn, setFadeIn] = useState(false);
-  const [hover, setHover] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setFadeIn(true), 80);
@@ -394,6 +393,7 @@ export default function AdminPage() {
       const r = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username: user, password: pass }),
       });
       if (!r.ok) {
@@ -407,7 +407,7 @@ export default function AdminPage() {
   }
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST" }).catch(() => {});
+    await fetch("/api/logout", { method: "POST", credentials: "include" }).catch(() => {});
     setLoggedIn(false);
   }
 
@@ -417,6 +417,7 @@ export default function AdminPage() {
     display: "grid",
     placeItems: "center",
     padding: "24px",
+    fontSize: 16,
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   };
   const card: CSSProperties = {
@@ -424,7 +425,6 @@ export default function AdminPage() {
     maxWidth: 480,
     background: "rgba(255, 255, 255, 0.75)",
     backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
     border: "1px solid #e5e7eb",
     borderRadius: 18,
     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
@@ -433,38 +433,41 @@ export default function AdminPage() {
     opacity: fadeIn ? 1 : 0,
     transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
-  const h1: CSSProperties = {
-    fontSize: 22,
-    fontWeight: 600,
-    margin: "16px 0 20px",
-    textAlign: "center",
-  };
+  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
 
   if (!loggedIn) {
     return (
       <main style={page}>
         <div style={{ ...card, maxWidth: 420 }}>
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <Image
-              src="/tst-logo.png"
-              alt="TST Logo"
-              width={200}
-              height={200}
-              priority
-              style={{
-                width: "200px",
-                height: "auto",
-                objectFit: "contain",
-                opacity: 0.95,
-              }}
-            />
+            <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
           </div>
 
           <h1 style={h1}>Admin Login</h1>
 
-          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 500 }}>Benutzername</label>
+          <form
+            onSubmit={handleLogin}
+            style={{
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <div style={{ width: "90%" }}>
+              <label
+                style={{
+                  display: "block",
+                  textAlign: "left",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#374151",
+                  marginBottom: 6,
+                }}
+              >
+                Benutzername
+              </label>
               <input
                 type="text"
                 value={user}
@@ -478,8 +481,19 @@ export default function AdminPage() {
               />
             </div>
 
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 500 }}>Passwort</label>
+            <div style={{ width: "90%" }}>
+              <label
+                style={{
+                  display: "block",
+                  textAlign: "left",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#374151",
+                  marginBottom: 6,
+                }}
+              >
+                Passwort
+              </label>
               <input
                 type="password"
                 value={pass}
@@ -492,14 +506,16 @@ export default function AdminPage() {
                 }}
               />
               {error && (
-                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>
+                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4, textAlign: "left", width: "100%" }}>
+                  {error}
+                </div>
               )}
             </div>
 
             <button
               type="submit"
               style={{
-                width: "100%",
+                width: "90%",
                 padding: "12px 16px",
                 borderRadius: 12,
                 border: "none",
@@ -508,6 +524,7 @@ export default function AdminPage() {
                 background: "#d70080",
                 color: "#fff",
                 boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
+                marginTop: "4px",
               }}
             >
               Login
@@ -526,19 +543,7 @@ export default function AdminPage() {
     <main style={page}>
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={200}
-            height={200}
-            priority
-            style={{
-              width: "200px",
-              height: "auto",
-              objectFit: "contain",
-              opacity: 0.95,
-            }}
-          />
+          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
         </div>
 
         <h2 style={{ ...h1, marginTop: 8 }}>Inventur-Einstellungen</h2>
