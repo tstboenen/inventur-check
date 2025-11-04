@@ -1,6 +1,8 @@
-/* app/admin.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+/* =========================================================
+   🔹 Farb- & Layout-Variablen
+   ========================================================= */
 :root {
   --pink: #d70080;
   --text: #111;
@@ -9,8 +11,12 @@
   --bg: #ffffff;
   --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   --radius: 16px;
+  --card-padding: 24px 28px;
 }
 
+/* =========================================================
+   🔹 Grundlayout
+   ========================================================= */
 .admin-wrap {
   min-height: 100dvh;
   background: var(--bg);
@@ -20,21 +26,24 @@
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* 🟡 Kleinere Box */
+/* =========================================================
+   🔹 Allgemeine Card-Box
+   ========================================================= */
 .admin-card {
   width: 100%;
-  max-width: 540px; /* vorher 720px */
+  max-width: 540px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 24px 28px;
+  padding: var(--card-padding);
+  box-sizing: border-box;
 }
 
+/* Fade-in Animation */
 .fade-in {
   animation: fadeIn 300ms ease-out both;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -46,18 +55,22 @@
   }
 }
 
-/* 🟡 Logo fest auf 200px */
+/* =========================================================
+   🔹 Logo
+   ========================================================= */
 .admin-logo {
   display: grid;
   place-items: center;
   margin-bottom: 10px;
 }
-
 .admin-logo img {
   width: 200px;
   height: auto;
 }
 
+/* =========================================================
+   🔹 Überschriften
+   ========================================================= */
 .admin-title {
   text-align: center;
   font-weight: 700;
@@ -66,7 +79,9 @@
   margin-bottom: 16px;
 }
 
-/* 🟡 Form kompakter */
+/* =========================================================
+   🔹 Formulare & Inputs
+   ========================================================= */
 .admin-form {
   display: grid;
   gap: 12px;
@@ -80,7 +95,8 @@
 }
 
 .admin-input,
-.admin-textarea {
+.admin-textarea,
+.admin-select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -90,15 +106,15 @@
   background: #fff;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-
 .admin-textarea {
   resize: vertical;
 }
 
 .admin-input:focus,
-.admin-textarea:focus {
-  border-color: rgba(215, 0, 128, 0.25);
-  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.12);
+.admin-textarea:focus,
+.admin-select:focus {
+  border-color: rgba(215, 0, 128, 0.4);
+  box-shadow: 0 0 0 3px rgba(215, 0, 128, 0.15);
 }
 
 .admin-hint {
@@ -106,7 +122,9 @@
   font-size: 0.8rem;
 }
 
-/* 🟡 Button */
+/* =========================================================
+   🔹 Buttons
+   ========================================================= */
 .admin-button {
   border: none;
   border-radius: 12px;
@@ -117,6 +135,7 @@
   color: #fff;
   transition: transform 0.05s ease, filter 0.15s ease;
   margin-top: 4px;
+  text-align: center;
 }
 .admin-button:hover {
   filter: brightness(1.05);
@@ -125,16 +144,60 @@
   transform: translateY(1px);
 }
 
-/* 🟡 Status & Loading */
+/* =========================================================
+   🔹 Status / Loading Texte
+   ========================================================= */
 .admin-status {
   margin-top: 8px;
   font-size: 0.9rem;
   color: var(--text);
   text-align: center;
 }
-
 .admin-loading {
   text-align: center;
   color: var(--muted);
   padding: 12px 0;
+}
+
+/* =========================================================
+   🔹 Login-spezifisch
+   ========================================================= */
+
+/* Quadratische Box, ohne admin-card-Rand & Padding */
+.login-box {
+  width: 420px;
+  height: 420px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Formular innen kompakt & mittig */
+.login-form {
+  width: 300px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+/* Button exakt gleich breit wie Inputs */
+.login-button {
+  width: 100%;
+}
+
+/* Optional: kleinere Box auf sehr kleinen Screens */
+@media (max-width: 480px) {
+  .login-box {
+    width: 340px;
+    height: 340px;
+  }
+  .login-form {
+    width: 260px;
+  }
 }
