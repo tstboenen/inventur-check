@@ -34,13 +34,51 @@
   overflow-y: auto;
 }
 
-/* 🔹 Mehr vertikaler Abstand zwischen einzelnen Blöcken (Termin, Live, Ende …) */
+/* Mehr vertikaler Abstand zwischen Eingabeelementen */
 .admin-card > div {
-  margin-bottom: 22px; /* vorher enger, jetzt deutlich luftiger */
+  margin-bottom: 22px;
 }
-
 .admin-card > div:last-child {
   margin-bottom: 0;
+}
+
+/* ===== Schichtkarten (kompakter & moderner) ===== */
+.shift-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f9fafb;
+  padding: 10px 12px; /* 🔹 vorher 12px – jetzt kompakter */
+  margin-bottom: 10px;
+  display: grid;
+  gap: 8px; /* 🔹 etwas engerer Abstand zwischen Feldern */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Inneres Layout: gleichmäßige Felder */
+.shift-card select,
+.shift-card input[type="date"] {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: #fff;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Delete-Button */
+.shift-card button {
+  border-radius: 8px;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  transition: all 0.2s ease;
+}
+.shift-card button:hover {
+  background: #fee2e2;
 }
 
 /* ===== Animationen ===== */
