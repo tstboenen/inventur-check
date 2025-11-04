@@ -1,66 +1,63 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
-/* ---------- Typen ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
-  date: string; // ISO oder YYYY-MM-DD
+  date: string;
   status: "Muss arbeiten" | "Hat frei";
 };
 
 type Cfg = {
   live: boolean;
   ended: boolean;
-  start: string | null; // ISO
+  start: string | null;
   info: string;
-  shifts?: Shift[];
+  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
 };
 
-/* ---------- Countdown Helper ---------- */
-function useCountdown(startIso?: string | null) {
-  const [now, setNow] = useState<number>(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const diff = useMemo(() => {
-    if (!startIso) return null;
-    const start = new Date(startIso).getTime();
-    const delta = Math.max(0, start - now);
-    const s = Math.floor(delta / 1000);
-    const d = Math.floor(s / 86400);
-    const h = Math.floor((s % 86400) / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return { d, h, m, s: sec, ms: delta };
-  }, [startIso, now]);
-  return diff;
-}
-
-/* ---------- UI ---------- */
 export default function HomePage() {
-  const [cfg, setCfg] = useState<Cfg | null>(null);
+  const [cfg, setCfg] = useState<Cfg>({
+    live: false,
+    ended: false,
+    start: null,
+    info: "",
+    shifts: [],
+  });
+  const [now, setNow] = useState<number>(Date.now());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // Config laden (shifts robust parsen)
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/config", { cache: "no-store" });
-        const j = (await r.json()) as Cfg;
+        const r = await fetch("/api/config", { cache: "no-store", credentials: "include" });
+        const raw = await r.json();
 
-        // Falls Shiftdaten als ISO vorliegen -> für Anzeige Day-string erzeugen
-        const safeShifts =
-          (j.shifts || []).map((s) => ({
-            ...s,
-            date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
-              ? s.date
-              : new Date(s.date).toISOString().slice(0, 10),
-          })) as Shift[];
+        let parsedShifts: Shift[] = [];
+        if (Array.isArray(raw.shifts)) {
+          parsedShifts = raw.shifts as Shift[];
+        } else if (typeof raw.shifts === "string") {
+          try {
+            const tmp = JSON.parse(raw.shifts);
+            if (Array.isArray(tmp)) parsedShifts = tmp as Shift[];
+          } catch {
+            parsedShifts = [];
+          }
+        }
 
-        setCfg({ ...j, shifts: safeShifts });
-      } catch (e) {
+        const nextCfg: Cfg = {
+          live: !!raw.live,
+          ended: !!raw.ended,
+          start: typeof raw.start === "string" ? raw.start : null,
+          info: typeof raw.info === "string" ? raw.info : "",
+          shifts: parsedShifts,
+        };
+
+        setCfg(nextCfg);
+      } catch {
         setErr("Konfiguration konnte nicht geladen werden.");
       } finally {
         setLoading(false);
@@ -68,205 +65,146 @@ export default function HomePage() {
     })();
   }, []);
 
-  const cd = useCountdown(cfg?.start ?? null);
+  // Countdown-Ticker
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
+
+  const formatDiff = (diffMs: number | null) => {
+    if (diffMs === null || diffMs <= 0) return "00:00:00";
+    const totalSec = Math.floor(diffMs / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return d > 0
+      ? `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
 
   /* ---------- Styles ---------- */
   const page: CSSProperties = {
     minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-start",
     background: "#ffffff",
-    display: "grid",
-    gridTemplateRows: "auto 1fr",
-    gap: 16,
-    padding: "28px 20px",
-    color: "#111827",
+    padding: "32px 24px",
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    textAlign: "center",
+    color: "#111827",
+  };
+  const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
+  const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
+  const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz, ohne Emoji
+  const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
+  const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
+
+  const shiftGrid: CSSProperties = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 20,
+    justifyContent: "center",
+    marginTop: 30,
   };
 
-  const container: CSSProperties = {
-    width: "100%",
-    maxWidth: 980,
-    margin: "0 auto",
+  // Kartenfarb-Logik: intern "Muss arbeiten" => Findet statt (grün), "Hat frei" => Findet nicht statt (rot)
+  const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
+    const ok = status === "Muss arbeiten";
+    return {
+      width: 260,
+      padding: 18,
+      borderRadius: 14,
+      background: ok ? "#ecfdf5" : "#fef2f2", // hellgrün / hellrot
+      color: ok ? "#065f46" : "#991b1b", // dunkles Grün / dunkles Rot
+      border: `1px solid ${ok ? "#a7f3d0" : "#fecaca"}`,
+      boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+      textAlign: "center",
+      transition: "transform 0.2s ease",
+    };
   };
 
-  const h1: CSSProperties = {
-    fontSize: 28,
-    lineHeight: 1.2,
-    fontWeight: 700,
-    color: "#111111", // schwarz, ohne Emoji
-    margin: "0 0 12px 0",
-  };
-
-  const sub: CSSProperties = {
-    fontSize: 14,
-    color: "#4b5563",
-    marginBottom: 14,
-  };
-
-  const infoBox: CSSProperties = {
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 16,
-    background: "#f9fafb",
-    marginTop: 10,
-    whiteSpace: "pre-wrap",
-  };
-
-  const rowCards: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: 12,
-    marginTop: 10,
-  };
-
-  const cardBase: CSSProperties = {
-    borderRadius: 12,
-    padding: 14,
-    border: "1px solid transparent",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-  };
-
-  const cardGreen: CSSProperties = {
-    ...cardBase,
-    background: "#ecfdf5", // grünlich hell
-    borderColor: "#a7f3d0",
-  };
-
-  const cardRed: CSSProperties = {
-    ...cardBase,
-    background: "#fef2f2", // rötlich hell
-    borderColor: "#fecaca",
-  };
-
-  const statusPill = (ok: boolean): CSSProperties => ({
+  const pill = (ok: boolean): CSSProperties => ({
     display: "inline-block",
+    padding: "4px 10px",
+    borderRadius: 999,
     fontSize: 12,
     fontWeight: 700,
-    padding: "4px 8px",
-    borderRadius: 999,
-    background: ok ? "#10b981" : "#ef4444",
     color: "#fff",
+    background: ok ? "#10b981" : "#ef4444",
   });
 
-  const label: CSSProperties = { fontSize: 12, color: "#6b7280" };
-  const val: CSSProperties = { fontSize: 16, fontWeight: 600, color: "#111827" };
+  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
+  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 10 };
+  const shiftStatus: CSSProperties = { fontSize: 14, fontWeight: 700 };
 
-  if (loading) {
-    return (
-      <main style={page}>
-        <div style={container}>
-          <h1 style={h1}>Inventur-Check</h1>
-          <p>…lädt</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (err || !cfg) {
-    return (
-      <main style={page}>
-        <div style={container}>
-          <h1 style={h1}>Inventur-Check</h1>
-          <p style={{ color: "#b91c1c" }}>{err || "Unbekannter Fehler."}</p>
-        </div>
-      </main>
-    );
-  }
-
-  /* ---------- Zustände ---------- */
-  const isBefore = !cfg.live && !cfg.ended;
-  const isLive = cfg.live && !cfg.ended;
-  const isEnded = cfg.ended;
-
+  /* ---------- UI ---------- */
   return (
     <main style={page}>
-      <div style={container}>
-        {/* Kopfzeile je nach Zustand */}
-        {isBefore && (
-          <>
-            <h1 style={h1}>Die Inventur startet in Kürze.</h1>
-            {cfg.start && cd && cd.ms > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  alignItems: "baseline",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                <div style={{ fontSize: 42, fontWeight: 800 }}>
-                  {cd.d}d {String(cd.h).padStart(2, "0")}:
-                  {String(cd.m).padStart(2, "0")}:
-                  {String(cd.s).padStart(2, "0")}
-                </div>
-                <div style={{ ...sub, margin: 0 }}>
-                  Start: {new Date(cfg.start).toLocaleString()}
-                </div>
-              </div>
-            )}
-            {cfg.info?.trim() && (
-              <div style={infoBox}>
-                <div style={{ fontSize: 14, color: "#111827", fontWeight: 600, marginBottom: 6 }}>
-                  Hinweise
-                </div>
-                <div style={{ fontSize: 14, color: "#374151" }}>{cfg.info}</div>
-              </div>
-            )}
-          </>
-        )}
-
-        {isLive && (
-          <>
-            {/* Überschrift ohne Emoji, schwarz */}
-            <h1 style={h1}>Die Inventur ist gestartet.</h1>
-            {cfg.info?.trim() && <div style={infoBox}>{cfg.info}</div>}
-
-            {/* Schichtkarten farblich */}
-            {(cfg.shifts && cfg.shifts.length > 0) ? (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ ...sub, color: "#111827", marginBottom: 8, fontWeight: 600 }}>
-                  Schichten
-                </div>
-                <div style={rowCards}>
-                  {cfg.shifts!.map((s, i) => {
-                    const ok = s.status === "Muss arbeiten"; // -> Findet statt
-                    const statusText = ok ? "Findet statt" : "Findet nicht statt";
-                    const style = ok ? cardGreen : cardRed;
-
-                    return (
-                      <div key={i} style={style}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                          <div style={{ ...label, textTransform: "uppercase", letterSpacing: 0.3 }}>
-                            {s.type}schicht
-                          </div>
-                          <span style={statusPill(ok)}>{statusText}</span>
-                        </div>
-
-                        <div style={{ display: "grid", gap: 4 }}>
-                          <div>
-                            <div style={label}>Datum</div>
-                            <div style={val}>{s.date}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <p style={{ ...sub, color: "#6b7280", marginTop: 10 }}>
-                Keine Schichten hinterlegt.
-              </p>
-            )}
-          </>
-        )}
-
-        {isEnded && (
-          <>
-            <h1 style={h1}>Die Inventur ist beendet.</h1>
-            {cfg.info?.trim() && <div style={infoBox}>{cfg.info}</div>}
-          </>
-        )}
+      {/* Logo oben */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+        <Image
+          src="/tst-logo.png"
+          alt="TST Logo"
+          width={400}
+          height={400}
+          priority
+          style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
+        />
       </div>
+
+      <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
+
+      {/* Hauptlogik */}
+      {loading ? (
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
+      ) : err ? (
+        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
+      ) : cfg.ended ? (
+        <div style={ended}>✅ Die Inventur ist beendet.</div>
+      ) : cfg.live ? (
+        <>
+          {/* Überschrift ohne Emoji, schwarz */}
+          <div style={liveTitle}>Die Inventur ist gestartet.</div>
+
+          {/* Schicht-Boxen farblich */}
+          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
+            <div style={shiftGrid}>
+              {cfg.shifts.map((s, i) => {
+                const ok = s.status === "Muss arbeiten";
+                const statusText = ok ? "Findet statt" : "Findet nicht statt";
+                return (
+                  <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
+                    <div style={shiftTitle}>{s.type}schicht</div>
+                    <div style={shiftDate}>
+                      {new Date(s.date).toLocaleDateString("de-DE")}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center" }}>
+                      <span style={pill(ok)}>{statusText}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
+              Keine Schichtinformationen verfügbar.
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
+          {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
+        </>
+      )}
+
+      {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
 }
