@@ -21,16 +21,17 @@
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* ===== Adminpanel Card ===== */
+/* ===== Adminpanel Card (jetzt 800x800) ===== */
 .admin-card {
-  width: 100%;
-  max-width: 540px;
+  width: 800px;           /* 🔹 feste Breite */
+  height: 800px;          /* 🔹 feste Höhe */
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--card-padding);
   box-sizing: border-box;
+  overflow-y: auto;       /* 🔹 scrollt bei viel Inhalt */
 }
 
 /* ===== Animationen ===== */
@@ -55,7 +56,7 @@
   margin-bottom: 10px;
 }
 .admin-logo img {
-  width: 250px; /* 🔹 fix 250px */
+  width: 250px;
   height: auto;
 }
 
@@ -90,7 +91,7 @@
   background: #f9faff;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   box-sizing: border-box;
-  text-align: center; /* 🔹 Text in Inputs zentriert */
+  text-align: center;
 }
 .admin-textarea {
   resize: vertical;
@@ -156,7 +157,7 @@
 /* Innen-Wrapper */
 .login-center {
   position: absolute;
-  top: 45%; /* 🔹 leicht nach oben versetzt */
+  top: 45%;
   left: 50%;
   width: 360px;
   transform: translate(-50%, -50%);
@@ -194,7 +195,7 @@
 }
 .login-button {
   width: 100%;
-  margin-top: 28px; /* 🔹 tieferer Abstand */
+  margin-top: 28px;
 }
 
 /* Sanfter Fade-In */
