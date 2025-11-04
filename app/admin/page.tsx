@@ -6,7 +6,7 @@ import { useState, useEffect, type CSSProperties } from "react";
 type Cfg = {
   live: boolean;
   ended: boolean;
-  start: string | null; // ISO
+  start: string | null;
   info: string;
 };
 
@@ -16,7 +16,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
-  // State
   const [live, setLive] = useState(false);
   const [ended, setEnded] = useState(false);
   const [startLocal, setStartLocal] = useState<string>("");
@@ -27,9 +26,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     if (!iso) return "";
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(
-      d.getMinutes()
-    )}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}`;
   };
   const toIso = (local?: string) => {
     if (!local) return "";
@@ -37,13 +36,28 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     return d.toISOString();
   };
 
+  // Laden der Config
   useEffect(() => {
     (async () => {
       try {
         const r = await fetch("/api/config", { cache: "no-store" });
         const cfg = (await r.json()) as Cfg;
-        setLive(!!cfg.live);
-        setEnded(!!cfg.ended);
+
+        const live0 = !!cfg.live;
+        const ended0 = !!cfg.ended;
+
+        // Nur ein Zustand aktiv
+        if (ended0) {
+          setEnded(true);
+          setLive(false);
+        } else if (live0) {
+          setLive(true);
+          setEnded(false);
+        } else {
+          setLive(false);
+          setEnded(false);
+        }
+
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
       } catch {
@@ -54,16 +68,26 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  // Logik
+  // Logik: gegenseitig ausschließen
   function onToggleLive(next: boolean) {
-    if (!next) setEnded(false);
-    setLive(next);
-  }
-  function onToggleEnded(next: boolean) {
-    if (next) setLive(true);
-    setEnded(next);
+    if (next) {
+      setLive(true);
+      setEnded(false);
+    } else {
+      setLive(false);
+    }
   }
 
+  function onToggleEnded(next: boolean) {
+    if (next) {
+      setEnded(true);
+      setLive(false);
+    } else {
+      setEnded(false);
+    }
+  }
+
+  // Speichern
   async function save() {
     setSaving(true);
     setMsg("");
@@ -80,10 +104,12 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error || "Speichern fehlgeschlagen");
       }
+
       setMsg("✅ Gespeichert");
     } catch (e: any) {
       setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
@@ -244,7 +270,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       </div>
 
       <div style={bar}>
-        <button onClick={onLogout} style={btn}>Logout</button>
+        <button onClick={onLogout} style={btn}>
+          Logout
+        </button>
         <button onClick={save} style={primary} disabled={saving}>
           {saving ? "Speichert…" : "Speichern"}
         </button>
@@ -255,7 +283,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-/* ---------- Seite (Login + Panel) ---------- */
+/* ---------- Login + Panel ---------- */
 export default function AdminPage() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
