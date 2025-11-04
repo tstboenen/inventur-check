@@ -81,7 +81,7 @@ export default function HomePage() {
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     return d > 0
-      ? `${d}d ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      ? `${d}D ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
@@ -101,7 +101,7 @@ export default function HomePage() {
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, color: "#111" }; // schwarz
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, color: "#111" };
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
@@ -113,9 +113,8 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kachel-Design wie vorher (kompakt), Farben grün/rot
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten"; // Findet statt
+    const ok = status === "Muss arbeiten";
     return {
       width: 260,
       padding: 18,
@@ -124,18 +123,22 @@ export default function HomePage() {
       color: "#fff",
       boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
+      textTransform: "uppercase", // 🔠 alles in Großbuchstaben
       transition: "transform 0.2s ease",
     };
   };
 
-  // Alle drei gleich groß, NICHT fett
   const equalSize = 26;
-  const rowStyle: CSSProperties = { fontSize: equalSize, fontWeight: 400, marginBottom: 6 };
+  const rowStyle: CSSProperties = {
+    fontSize: equalSize,
+    fontWeight: 400,
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  };
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -149,48 +152,44 @@ export default function HomePage() {
 
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
-      {/* Hauptlogik */}
       {loading ? (
-        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…LÄDT</p>
       ) : err ? (
-        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
+        <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err.toUpperCase()}</p>
       ) : cfg.ended ? (
-        <div style={ended}>✅ Die Inventur ist beendet.</div>
+        <div style={ended}>✅ DIE INVENTUR IST BEENDET.</div>
       ) : cfg.live ? (
         <>
-          {/* Überschrift ohne Emoji, schwarz */}
-          <div style={liveTitle}>Die Inventur ist gestartet.</div>
+          <div style={liveTitle}>DIE INVENTUR IST GESTARTET.</div>
 
-          {/* Schicht-Kacheln */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
-                const statusText = ok ? "Findet statt" : "Findet nicht statt";
+                const statusText = ok ? "FINDET STATT" : "FINDET NICHT STATT";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    {/* Reihenfolge: Datum → Schicht → Status (alle gleich groß, nicht fett) */}
-                    <div style={rowStyle}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
-                    <div style={rowStyle}>{s.type}schicht</div>
+                    <div style={rowStyle}>
+                      {new Date(s.date).toLocaleDateString("de-DE").toUpperCase()}
+                    </div>
+                    <div style={rowStyle}>{`${s.type}SCHICHT`.toUpperCase()}</div>
                     <div style={{ ...rowStyle, marginBottom: 0 }}>{statusText}</div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
-              Keine Schichtinformationen verfügbar.
-            </p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>KEINE SCHICHTINFORMATIONEN VERFÜGBAR.</p>
           )}
         </>
       ) : (
         <>
-          <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
+          <p style={sub}>{cfg.start ? "DIE INVENTUR STARTET IN:" : "STARTZEIT FOLGT."}</p>
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
 
-      {cfg.info ? <div style={info}>{cfg.info}</div> : null}
+      {cfg.info ? <div style={info}>{cfg.info.toUpperCase()}</div> : null}
     </main>
   );
 }
