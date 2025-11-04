@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 /* ---------- Typen ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
-  date: string;
+  date: string; // im UI "YYYY-MM-DD", zum Server ISO
   status: "Muss arbeiten" | "Hat frei";
 };
 
@@ -40,10 +40,25 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       d.getHours()
     )}:${pad(d.getMinutes())}`;
   };
+
   const toIso = (local?: string) => {
     if (!local) return "";
     const d = new Date(local);
     return d.toISOString();
+  };
+
+  const toDateInput = (maybeIso: string) => {
+    // akzeptiert sowohl "YYYY-MM-DD" als auch ISO
+    if (/^\d{4}-\d{2}-\d{2}$/.test(maybeIso)) return maybeIso;
+    const d = new Date(maybeIso);
+    if (isNaN(d.getTime())) return ""; // falls unlesbar
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  const fromDateInputToIso = (dateOnly: string) => {
+    // "YYYY-MM-DD" → ISO Mitternacht UTC
+    return new Date(dateOnly + "T00:00:00Z").toISOString();
   };
 
   /* ---------- Config laden ---------- */
@@ -69,7 +84,15 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
-        setShifts(cfg.shifts || []);
+
+        // WICHTIG: für <input type="date"> brauchen wir "YYYY-MM-DD"
+        const hydratedShifts =
+          (cfg.shifts || []).map((s) => ({
+            ...s,
+            date: toDateInput(s.date),
+          })) as Shift[];
+
+        setShifts(hydratedShifts);
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
       } finally {
@@ -106,7 +129,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       ...shifts,
       {
         type: "Früh",
-        date: new Date().toISOString().split("T")[0],
+        date: toDateInput(new Date().toISOString()),
         status: "Muss arbeiten",
       },
     ]);
@@ -127,15 +150,19 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     setSaving(true);
     setMsg("");
     try {
+      // Datum von "YYYY-MM-DD" → echte ISO, sonst wird’s serverseitig oft verworfen
+      const normalizedShifts: Shift[] = (live ? shifts : []).map((s) => ({
+        ...s,
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
+      }));
+
       const body: Partial<Cfg> = {
         live,
         ended,
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
-        shifts: live ? shifts : [],
+        shifts: live ? normalizedShifts : [],
       };
-
-      console.log("SAVE BODY:", JSON.stringify(body, null, 2));
 
       const r = await fetch("/api/config", {
         method: "POST",
@@ -146,7 +173,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        throw new Error(j?.error || "Speichern fehlgeschlagen");
+        throw new Error((j as any)?.error || "Speichern fehlgeschlagen");
       }
 
       setMsg("✅ Gespeichert");
