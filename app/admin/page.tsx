@@ -209,8 +209,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
                   className="admin-select"
                 >
-                  <option value="Muss arbeiten">Muss arbeiten</option>
-                  <option value="Hat frei">Hat frei</option>
+                  <option value="Muss arbeiten">Findet statt</option>
+                  <option value="Hat frei">Findet nicht statt</option>
                 </select>
 
                 <button onClick={() => removeShift(i)} className="danger">
