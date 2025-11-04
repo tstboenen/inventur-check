@@ -29,7 +29,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden (shifts robust parsen)
+  // Config laden
   useEffect(() => {
     (async () => {
       try {
@@ -65,14 +65,13 @@ export default function HomePage() {
     })();
   }, []);
 
-  // Countdown-Ticker
+  // Countdown
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
-
   const formatDiff = (diffMs: number | null) => {
     if (diffMs === null || diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
@@ -96,12 +95,11 @@ export default function HomePage() {
     padding: "32px 24px",
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     textAlign: "center",
-    color: "#111827",
   };
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz, ohne Emoji
+  const live: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
@@ -113,40 +111,28 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kartenfarb-Logik: intern "Muss arbeiten" => Findet statt (grün), "Hat frei" => Findet nicht statt (rot)
-  const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
-    const ok = status === "Muss arbeiten";
+  // gleiche Kachelgröße + Stil wie Magenta, nur Farbcode angepasst:
+  const shiftCard = (status: string): CSSProperties => {
+    const ok = status === "Muss arbeiten"; // Findet statt
     return {
       width: 260,
       padding: 18,
       borderRadius: 14,
-      background: ok ? "#ecfdf5" : "#fef2f2", // hellgrün / hellrot
-      color: ok ? "#065f46" : "#991b1b", // dunkles Grün / dunkles Rot
-      border: `1px solid ${ok ? "#a7f3d0" : "#fecaca"}`,
-      boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+      background: ok ? "#16a34a" : "#dc2626", // grün / rot
+      color: "#fff",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
       transition: "transform 0.2s ease",
     };
   };
 
-  const pill = (ok: boolean): CSSProperties => ({
-    display: "inline-block",
-    padding: "4px 10px",
-    borderRadius: 999,
-    fontSize: 12,
-    fontWeight: 700,
-    color: "#fff",
-    background: ok ? "#10b981" : "#ef4444",
-  });
-
   const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
-  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 10 };
-  const shiftStatus: CSSProperties = { fontSize: 14, fontWeight: 700 };
+  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
+  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -169,24 +155,19 @@ export default function HomePage() {
         <div style={ended}>✅ Die Inventur ist beendet.</div>
       ) : cfg.live ? (
         <>
-          {/* Überschrift ohne Emoji, schwarz */}
-          <div style={liveTitle}>Die Inventur ist gestartet.</div>
+          <div style={live}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Boxen farblich */}
+          {/* Schicht-Boxen */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
-                const statusText = ok ? "Findet statt" : "Findet nicht statt";
+                const text = ok ? "Findet statt" : "Findet nicht statt";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
                     <div style={shiftTitle}>{s.type}schicht</div>
-                    <div style={shiftDate}>
-                      {new Date(s.date).toLocaleDateString("de-DE")}
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <span style={pill(ok)}>{statusText}</span>
-                    </div>
+                    <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
+                    <div style={shiftStatus}>{text}</div>
                   </div>
                 );
               })}
