@@ -78,18 +78,25 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   }, []);
 
   function onToggleLive(next: boolean) {
-    if (next) { setLive(true); setEnded(false); } else { setLive(false); setShifts([]); }
+    if (next) { setLive(true); setEnded(false); }
+    else { setLive(false); setShifts([]); }
   }
   function onToggleEnded(next: boolean) {
-    if (next) { setEnded(true); setLive(false); setShifts([]); } else { setEnded(false); }
+    if (next) { setEnded(true); setLive(false); setShifts([]); }
+    else { setEnded(false); }
   }
 
   function addShift() {
     if (shifts.length >= 3) return;
-    setShifts([...shifts, { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" }]);
+    setShifts([
+      ...shifts,
+      { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" },
+    ]);
   }
   function updateShift(i: number, field: keyof Shift, value: any) {
-    const copy = [...shifts]; copy[i] = { ...copy[i], [field]: value }; setShifts(copy);
+    const copy = [...shifts];
+    copy[i] = { ...copy[i], [field]: value };
+    setShifts(copy);
   }
   function removeShift(i: number) {
     setShifts(shifts.filter((_, idx) => idx !== i));
@@ -101,10 +108,13 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     try {
       const normalized = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
+          ? fromDateInputToIso(s.date)
+          : new Date(s.date).toISOString(),
       }));
       const body: Partial<Cfg> = {
-        live, ended,
+        live,
+        ended,
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
         shifts: live ? normalized : [],
@@ -197,34 +207,51 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       {/* Schichten */}
       {live && (
-        <div style={{ marginTop: 16 }}>
-          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>Schichtübersicht</h3>
+        <div style={{ marginTop: 8 }}>
+          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 6 }}>
+            Schichtübersicht
+          </h3>
+
           {(shifts || []).map((shift, i) => (
-            <div key={i} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 12, marginBottom: 10, background: "#f9fafb" }}>
-              <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-                <select value={shift.type} onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
-                        className="admin-input" style={{ flex: 1 }}>
+            <div key={i} className="shift-card fade-in-up">
+              <div className="row">
+                <select
+                  value={shift.type}
+                  onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
+                  className="admin-select"
+                >
                   <option value="Früh">Frühschicht</option>
                   <option value="Spät">Spätschicht</option>
                   <option value="Nacht">Nachtschicht</option>
                 </select>
-                <input type="date" value={shift.date} onChange={(e) => updateShift(i, "date", e.target.value)}
-                       className="admin-input" style={{ flex: 1 }} />
+
+                <input
+                  type="date"
+                  value={shift.date}
+                  onChange={(e) => updateShift(i, "date", e.target.value)}
+                  className="admin-input"
+                />
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <select value={shift.status} onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
-                        className="admin-input" style={{ flex: 1 }}>
+
+              <div className="row">
+                <select
+                  value={shift.status}
+                  onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
+                  className="admin-select"
+                >
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
-                <button onClick={() => removeShift(i)} className="admin-button" style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}>
+
+                <button onClick={() => removeShift(i)} className="danger">
                   ❌ Löschen
                 </button>
               </div>
             </div>
           ))}
+
           {shifts.length < 3 && (
-            <button onClick={addShift} className="admin-button" style={{ marginTop: 8 }}>
+            <button onClick={addShift} className="admin-button" style={{ margin: "8px auto 0", display: "block", maxWidth: 520 }}>
               ➕ Schicht hinzufügen
             </button>
           )}
@@ -233,11 +260,19 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       {/* Bottom Bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
-        <button onClick={() => router.push("/")} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+        <button
+          onClick={() => router.push("/")}
+          className="admin-button"
+          style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+        >
           Zur Hauptseite
         </button>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onLogout} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+          <button
+            onClick={onLogout}
+            className="admin-button"
+            style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+          >
             Logout
           </button>
           <button onClick={save} disabled={saving} className="admin-button">
@@ -287,7 +322,7 @@ export default function AdminPage() {
         <div className="login-box fade-in">
           <div className="login-center">
             <div className="admin-logo">
-              <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+              <Image src="/tst-logo.png" alt="TST Logo" width={250} height={250} priority />
             </div>
 
             <h1 className="admin-title">Admin Login</h1>
@@ -328,7 +363,7 @@ export default function AdminPage() {
     <main className="admin-wrap">
       <div className="admin-card fade-in">
         <div className="admin-logo">
-          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+          <Image src="/tst-logo.png" alt="TST Logo" width={250} height={250} priority />
         </div>
         <h2 className="admin-title">Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
