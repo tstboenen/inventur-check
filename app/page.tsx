@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[];
+  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
 };
 
 export default function HomePage() {
@@ -29,13 +29,34 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden
+  // Config laden (shifts robust parsen)
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/config", { cache: "no-store" });
-        const j = (await r.json()) as Cfg;
-        setCfg(j);
+        const r = await fetch("/api/config", { cache: "no-store", credentials: "include" });
+        const raw = await r.json();
+
+        let parsedShifts: Shift[] = [];
+        if (Array.isArray(raw.shifts)) {
+          parsedShifts = raw.shifts as Shift[];
+        } else if (typeof raw.shifts === "string") {
+          try {
+            const tmp = JSON.parse(raw.shifts);
+            if (Array.isArray(tmp)) parsedShifts = tmp as Shift[];
+          } catch {
+            parsedShifts = [];
+          }
+        }
+
+        const nextCfg: Cfg = {
+          live: !!raw.live,
+          ended: !!raw.ended,
+          start: typeof raw.start === "string" ? raw.start : null,
+          info: typeof raw.info === "string" ? raw.info : "",
+          shifts: parsedShifts,
+        };
+
+        setCfg(nextCfg);
       } catch {
         setErr("Konfiguration konnte nicht geladen werden.");
       } finally {
@@ -52,8 +73,8 @@ export default function HomePage() {
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
 
-  const formatDiff = (diffMs: number) => {
-    if (diffMs <= 0) return "00:00:00";
+  const formatDiff = (diffMs: number | null) => {
+    if (diffMs === null || diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
     const d = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
@@ -76,12 +97,12 @@ export default function HomePage() {
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     textAlign: "center",
   };
-  const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
-  const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
-  const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const live: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#d70080" };
-  const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
-  const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
+  const title:    CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
+  const sub:      CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
+  const countdown:CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
+  const live:     CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#d70080" };
+  const ended:    CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
+  const info:     CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
   const shiftGrid: CSSProperties = {
     display: "flex",
@@ -102,8 +123,8 @@ export default function HomePage() {
     transition: "transform 0.2s ease",
   });
 
-  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
-  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
+  const shiftTitle:  CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
+  const shiftDate:   CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
   const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
   /* ---------- UI ---------- */
@@ -135,10 +156,10 @@ export default function HomePage() {
           <div style={live}>✅ Die Inventur ist gestartet.</div>
 
           {/* Schicht-Boxen */}
-          {cfg.shifts && cfg.shifts.length > 0 ? (
+          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => (
-                <div key={i} style={shiftCard(s.status)}>
+                <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
                   <div style={shiftTitle}>{s.type}schicht</div>
                   <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
                   <div style={shiftStatus}>{s.status}</div>
