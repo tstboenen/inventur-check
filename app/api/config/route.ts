@@ -3,6 +3,7 @@ import { kv } from "@vercel/kv";
 
 export const dynamic = "force-dynamic";
 
+/* ---------- Typen ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
   date: string;
@@ -19,7 +20,7 @@ type Cfg = {
 
 const KEY = "inventur:config";
 
-/* ---------- Helpers ---------- */
+/* ---------- Helper ---------- */
 const boolFromHash = (v?: string | null) => v === "1";
 const boolToHash = (v?: boolean) => (v ? "1" : "0");
 const normNull = (v?: string | null) =>
@@ -38,6 +39,7 @@ function maybeParseJson<T = any>(val: unknown): T | null {
   }
 }
 
+/* ---------- Mapping ---------- */
 function toCfgFromHash(h: Record<string, string> | null): Cfg {
   return {
     live: boolFromHash(h?.live),
@@ -48,6 +50,7 @@ function toCfgFromHash(h: Record<string, string> | null): Cfg {
   };
 }
 
+/* ---------- Input-Validierung ---------- */
 function sanitizeInput(body: Partial<Cfg>): Cfg {
   const _live = typeof body.live === "boolean" ? body.live : false;
   const _ended = typeof body.ended === "boolean" ? body.ended : false;
@@ -57,24 +60,21 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
 
   let start: string | null = null;
   const allowStart = !live && !ended;
-  if (allowStart && isIso(body.start)) {
-    start = String(body.start);
-  }
+  if (allowStart && isIso(body.start)) start = String(body.start);
 
+  // 🩹 Shifts robuster einlesen (Array oder JSON-String)
   let shifts: Shift[] = [];
-  if (live && Array.isArray(body.shifts)) {
-    shifts = body.shifts
-      .filter(
-        (s) =>
-          typeof s?.type === "string" &&
-          typeof s?.date === "string" &&
-          typeof s?.status === "string"
-      )
-      .map((s) => ({
-        type: s.type as Shift["type"],
-        date: s.date,
-        status: s.status as Shift["status"],
-      }));
+  if (live) {
+    if (Array.isArray(body.shifts)) {
+      shifts = body.shifts;
+    } else if (typeof (body as any).shifts === "string") {
+      try {
+        const parsed = JSON.parse((body as any).shifts);
+        if (Array.isArray(parsed)) shifts = parsed;
+      } catch {
+        shifts = [];
+      }
+    }
   }
 
   return {
@@ -86,6 +86,7 @@ function sanitizeInput(body: Partial<Cfg>): Cfg {
   };
 }
 
+/* ---------- Hash-Payload ---------- */
 function toHashPayload(cfg: Cfg): Record<string, string> {
   return {
     live: boolToHash(cfg.live),
@@ -105,6 +106,7 @@ export async function GET() {
     });
   }
 
+  // Fallback auf Legacy-Struktur (falls vorhanden)
   const legacy = await kv.get(KEY);
   const parsed = maybeParseJson<Record<string, any>>(legacy);
   if (parsed && typeof parsed === "object") {
@@ -120,14 +122,14 @@ export async function GET() {
     });
   }
 
+  // Default-Fallback
   const empty: Cfg = { live: false, ended: false, start: null, info: "", shifts: [] };
-  return NextResponse.json(empty, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  return NextResponse.json(empty, { headers: { "Cache-Control": "no-store" } });
 }
 
 /* ---------- POST ---------- */
 export async function POST(req: Request) {
+  // Session prüfen
   const cookie = req.headers.get("cookie") || "";
   const ok = /(^|;\s*)admin_session=ok(;|$)/.test(cookie);
   if (!ok)
@@ -138,7 +140,7 @@ export async function POST(req: Request) {
     const cfg = sanitizeInput(body);
     const payload = toHashPayload(cfg);
 
-    // 🩹 Fix: shifts immer als String absichern
+    // 🩹 Absicherung – shifts immer als String speichern
     if (Array.isArray(cfg.shifts)) {
       payload.shifts = JSON.stringify(cfg.shifts);
     }
@@ -154,9 +156,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json(cfg, {
-      headers: { "Cache-Control": "no-store" },
-    });
+    return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message || "Ungültiger Request" },
