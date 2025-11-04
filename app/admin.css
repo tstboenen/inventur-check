@@ -160,26 +160,47 @@
 }
 
 /* =========================================================
-   🔹 LOGIN-BEREICH
+   🔹 LOGIN-BEREICH (perfekt mittig)
    ========================================================= */
 
-/* Quadratische Box ohne Überschneidung mit admin-card */
+/* Quadratische Box */
 .login-box {
+  position: relative;
   width: 420px;
   height: 420px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  display: grid;
-  place-items: center;
   box-sizing: border-box;
   padding: 0;
+  overflow: hidden;
+}
+
+/* Zentrierter Innenbereich */
+.login-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* Logo und Titel ohne Abstand oben/unten */
+.login-center .admin-logo {
+  margin: 0;
+}
+.login-center .admin-title {
+  margin: 0;
 }
 
 /* Formular innen kompakt & mittig */
 .login-form {
-  width: 300px;
+  width: 100%;
   display: grid;
   gap: 12px;
   text-align: left;
@@ -213,7 +234,7 @@
     width: 340px;
     height: 340px;
   }
-  .login-form {
+  .login-center {
     width: 260px;
   }
 }
