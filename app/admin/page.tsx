@@ -85,20 +85,35 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   }, []);
 
   function onToggleLive(next: boolean) {
-    if (next) { setLive(true); setEnded(false); }
-    else { setLive(false); setShifts([]); }
+    if (next) {
+      setLive(true);
+      setEnded(false);
+    } else {
+      setLive(false);
+      setShifts([]);
+    }
   }
   function onToggleEnded(next: boolean) {
-    if (next) { setEnded(true); setLive(false); setShifts([]); }
-    else { setEnded(false); }
+    if (next) {
+      setEnded(true);
+      setLive(false);
+      setShifts([]);
+    } else {
+      setEnded(false);
+    }
   }
 
   function addShift() {
     if (shifts.length >= 3) return;
-    setShifts([...shifts, { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" }]);
+    setShifts([
+      ...shifts,
+      { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" },
+    ]);
   }
   function updateShift(i: number, field: keyof Shift, value: any) {
-    const copy = [...shifts]; copy[i] = { ...copy[i], [field]: value }; setShifts(copy);
+    const copy = [...shifts];
+    copy[i] = { ...copy[i], [field]: value };
+    setShifts(copy);
   }
   function removeShift(i: number) {
     setShifts(shifts.filter((_, idx) => idx !== i));
@@ -110,10 +125,13 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     try {
       const normalized = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
+          ? fromDateInputToIso(s.date)
+          : new Date(s.date).toISOString(),
       }));
       const body: Partial<Cfg> = {
-        live, ended,
+        live,
+        ended,
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
         shifts: live ? normalized : [],
@@ -143,7 +161,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     <>
       {/* Termin */}
       <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
-        <label className="admin-label" style={{ display: (live || ended) ? "none" : "grid" }}>
+        <label className="admin-label" style={{ display: live || ended ? "none" : "grid" }}>
           Termin (Start)
         </label>
         <input
@@ -151,7 +169,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
           value={startLocal}
           onChange={(e) => setStartLocal(e.target.value)}
           className="admin-input"
-          style={{ display: (live || ended) ? "none" : "block" }}
+          style={{ display: live || ended ? "none" : "block" }}
         />
       </div>
 
@@ -159,18 +177,33 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
         <label className="admin-label">Live</label>
         <div
-          role="switch" aria-checked={live} onClick={() => onToggleLive(!live)}
+          role="switch"
+          aria-checked={live}
+          onClick={() => onToggleLive(!live)}
           style={{
-            position: "relative", width: 56, height: 32, cursor: "pointer",
-            borderRadius: 999, border: `1px solid ${live ? "var(--pink)" : "var(--border)"}`,
-            background: live ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
+            position: "relative",
+            width: 56,
+            height: 32,
+            cursor: "pointer",
+            borderRadius: 999,
+            border: `1px solid ${live ? "var(--pink)" : "var(--border)"}`,
+            background: live ? "var(--pink)" : "#f3f4f6",
+            transition: "all .25s",
           }}
         >
-          <span style={{
-            position: "absolute", top: 3, left: live ? 29 : 3, width: 26, height: 26,
-            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            transition: "left .25s",
-          }} />
+          <span
+            style={{
+              position: "absolute",
+              top: 3,
+              left: live ? 29 : 3,
+              width: 26,
+              height: 26,
+              backgroundColor: "#fff",
+              borderRadius: "50%",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              transition: "left .25s",
+            }}
+          />
         </div>
       </div>
 
@@ -178,18 +211,33 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
         <label className="admin-label">Ende</label>
         <div
-          role="switch" aria-checked={ended} onClick={() => onToggleEnded(!ended)}
+          role="switch"
+          aria-checked={ended}
+          onClick={() => onToggleEnded(!ended)}
           style={{
-            position: "relative", width: 56, height: 32, cursor: "pointer",
-            borderRadius: 999, border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
-            background: ended ? "var(--pink)" : "#f3f4f6", transition: "all .25s",
+            position: "relative",
+            width: 56,
+            height: 32,
+            cursor: "pointer",
+            borderRadius: 999,
+            border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
+            background: ended ? "var(--pink)" : "#f3f4f6",
+            transition: "all .25s",
           }}
         >
-          <span style={{
-            position: "absolute", top: 3, left: ended ? 29 : 3, width: 26, height: 26,
-            backgroundColor: "#fff", borderRadius: "50%", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            transition: "left .25s",
-          }} />
+          <span
+            style={{
+              position: "absolute",
+              top: 3,
+              left: ended ? 29 : 3,
+              width: 26,
+              height: 26,
+              backgroundColor: "#fff",
+              borderRadius: "50%",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              transition: "left .25s",
+            }}
+          />
         </div>
       </div>
 
@@ -207,30 +255,54 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       {/* Schichten */}
       {live && (
         <div style={{ marginTop: 16 }}>
-          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>Schichtübersicht</h3>
+          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>
+            Schichtübersicht
+          </h3>
           {(shifts || []).map((shift, i) => (
-            <div key={i} style={{
-              border: "1px solid var(--border)", borderRadius: 12, padding: 12, marginBottom: 10, background: "#f9fafb",
-            }}>
+            <div
+              key={i}
+              style={{
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 10,
+                background: "#f9fafb",
+              }}
+            >
               <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
-                <select value={shift.type} onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
-                        className="admin-input" style={{ flex: 1 }}>
+                <select
+                  value={shift.type}
+                  onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
+                  className="admin-input"
+                  style={{ flex: 1 }}
+                >
                   <option value="Früh">Frühschicht</option>
                   <option value="Spät">Spätschicht</option>
                   <option value="Nacht">Nachtschicht</option>
                 </select>
-                <input type="date" value={shift.date} onChange={(e) => updateShift(i, "date", e.target.value)}
-                       className="admin-input" style={{ flex: 1 }} />
+                <input
+                  type="date"
+                  value={shift.date}
+                  onChange={(e) => updateShift(i, "date", e.target.value)}
+                  className="admin-input"
+                  style={{ flex: 1 }}
+                />
               </div>
               <div style={{ display: "flex", gap: 10 }}>
-                <select value={shift.status} onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
-                        className="admin-input" style={{ flex: 1 }}>
+                <select
+                  value={shift.status}
+                  onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
+                  className="admin-input"
+                  style={{ flex: 1 }}
+                >
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
-                <button onClick={() => removeShift(i)}
-                        className="admin-button"
-                        style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}>
+                <button
+                  onClick={() => removeShift(i)}
+                  className="admin-button"
+                  style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}
+                >
                   ❌ Löschen
                 </button>
               </div>
@@ -246,13 +318,19 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       {/* Bottom Bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
-        <button onClick={() => router.push("/")} className="admin-button"
-                style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+        <button
+          onClick={() => router.push("/")}
+          className="admin-button"
+          style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+        >
           Zur Hauptseite
         </button>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onLogout} className="admin-button"
-                  style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
+          <button
+            onClick={onLogout}
+            className="admin-button"
+            style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}
+          >
             Logout
           </button>
           <button onClick={save} disabled={saving} className="admin-button">
@@ -283,7 +361,10 @@ export default function AdminPage() {
         credentials: "include",
         body: JSON.stringify({ username: user, password: pass }),
       });
-      if (!r.ok) { setError("Falsche Zugangsdaten"); return; }
+      if (!r.ok) {
+        setError("Falsche Zugangsdaten");
+        return;
+      }
       setLoggedIn(true);
     } catch {
       setError("Login fehlgeschlagen");
@@ -299,39 +380,42 @@ export default function AdminPage() {
   if (!loggedIn) {
     return (
       <main className="admin-wrap">
-        {/* WICHTIG: KEINE admin-card-Klasse hier */}
         <div className="login-box fade-in">
-          <div className="admin-logo">
-            <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+          <div className="login-center">
+            <div className="admin-logo">
+              <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+            </div>
+
+            <h1 className="admin-title">Admin Login</h1>
+
+            <form onSubmit={handleLogin} className="admin-form login-form">
+              <label className="admin-label">
+                Benutzername
+                <input
+                  type="text"
+                  value={user}
+                  onChange={(e) => setUser(e.target.value)}
+                  className="admin-input"
+                />
+              </label>
+
+              <label className="admin-label">
+                Passwort
+                <input
+                  type="password"
+                  value={pass}
+                  onChange={(e) => setPass(e.target.value)}
+                  className="admin-input"
+                />
+              </label>
+
+              {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
+
+              <button type="submit" className="admin-button login-button">
+                Login
+              </button>
+            </form>
           </div>
-
-          <h1 className="admin-title">Admin Login</h1>
-
-          <form onSubmit={handleLogin} className="login-form">
-            <label className="admin-label">
-              Benutzername
-              <input
-                type="text"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                className="admin-input"
-              />
-            </label>
-
-            <label className="admin-label">
-              Passwort
-              <input
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                className="admin-input"
-              />
-            </label>
-
-            {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
-
-            <button type="submit" className="admin-button login-button">Login</button>
-          </form>
         </div>
       </main>
     );
