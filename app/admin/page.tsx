@@ -173,89 +173,79 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       {/* 2️⃣ Live */}
       <div style={gridRow}>
         <label style={lbl}>Live</label>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-          <div style={{ position: "relative", width: 50, height: 28 }}>
-            <input
-              type="checkbox"
-              checked={live}
-              onChange={(e) => onToggleLive(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                cursor: "pointer",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: live ? "#d70080" : "#d1d5db",
-                transition: "0.3s",
-                borderRadius: 34,
-              }}
-            ></span>
-            <span
-              style={{
-                position: "absolute",
-                height: 22,
-                width: 22,
-                left: live ? 26 : 4,
-                bottom: 3,
-                backgroundColor: "#fff",
-                transition: "0.3s",
-                borderRadius: "50%",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-              }}
-            ></span>
-          </div>
-          <span style={{ fontSize: 14, color: "#374151", minWidth: 45 }}>
-            {live ? "an" : "aus"}
-          </span>
-        </label>
+        <div style={{ position: "relative", width: 50, height: 28 }}>
+          <input
+            type="checkbox"
+            checked={live}
+            onChange={(e) => onToggleLive(e.target.checked)}
+            style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              cursor: "pointer",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: live ? "#d70080" : "#d1d5db",
+              transition: "0.3s",
+              borderRadius: 34,
+            }}
+          ></span>
+          <span
+            style={{
+              position: "absolute",
+              height: 22,
+              width: 22,
+              left: live ? 26 : 4,
+              bottom: 3,
+              backgroundColor: "#fff",
+              transition: "0.3s",
+              borderRadius: "50%",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          ></span>
+        </div>
       </div>
 
       {/* 3️⃣ Ende */}
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-          <div style={{ position: "relative", width: 50, height: 28 }}>
-            <input
-              type="checkbox"
-              checked={ended}
-              onChange={(e) => onToggleEnded(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                cursor: "pointer",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: ended ? "#d70080" : "#d1d5db",
-                transition: "0.3s",
-                borderRadius: 34,
-              }}
-            ></span>
-            <span
-              style={{
-                position: "absolute",
-                height: 22,
-                width: 22,
-                left: ended ? 26 : 4,
-                bottom: 3,
-                backgroundColor: "#fff",
-                transition: "0.3s",
-                borderRadius: "50%",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-              }}
-            ></span>
-          </div>
-          <span style={{ fontSize: 14, color: "#374151", minWidth: 60 }}>
-            {ended ? "aktiv" : "inaktiv"}
-          </span>
-        </label>
+        <div style={{ position: "relative", width: 50, height: 28 }}>
+          <input
+            type="checkbox"
+            checked={ended}
+            onChange={(e) => onToggleEnded(e.target.checked)}
+            style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              cursor: "pointer",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: ended ? "#d70080" : "#d1d5db",
+              transition: "0.3s",
+              borderRadius: 34,
+            }}
+          ></span>
+          <span
+            style={{
+              position: "absolute",
+              height: 22,
+              width: 22,
+              left: ended ? 26 : 4,
+              bottom: 3,
+              backgroundColor: "#fff",
+              transition: "0.3s",
+              borderRadius: "50%",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          ></span>
+        </div>
       </div>
 
       {/* Info */}
@@ -389,12 +379,24 @@ export default function AdminPage() {
           <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
             <div style={inputWrap}>
               <label style={label}>Benutzername</label>
-              <input type="text" style={input} value={user} onChange={(e) => setUser(e.target.value)} autoComplete="username" />
+              <input
+                type="text"
+                style={input}
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                autoComplete="username"
+              />
             </div>
 
             <div style={inputWrap}>
               <label style={label}>Passwort</label>
-              <input type="password" style={input} value={pass} onChange={(e) => setPass(e.target.value)} autoComplete="current-password" />
+              <input
+                type="password"
+                style={input}
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                autoComplete="current-password"
+              />
               {error && <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>}
             </div>
 
