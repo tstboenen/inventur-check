@@ -4,11 +4,18 @@ import { useState, useEffect, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
 /* ---------- Typen ---------- */
+type Shift = {
+  type: "Früh" | "Spät" | "Nacht";
+  date: string;
+  status: "Muss arbeiten" | "Hat frei";
+};
+
 type Cfg = {
   live: boolean;
   ended: boolean;
   start: string | null;
   info: string;
+  shifts?: Shift[];
 };
 
 /* ---------- Admin Panel ---------- */
@@ -22,7 +29,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [ended, setEnded] = useState(false);
   const [startLocal, setStartLocal] = useState<string>("");
   const [info, setInfo] = useState("");
+  const [shifts, setShifts] = useState<Shift[]>([]);
 
+  /* ---------- Helpers ---------- */
   const toLocalInput = (iso?: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -37,6 +46,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     return d.toISOString();
   };
 
+  /* ---------- Config laden ---------- */
   useEffect(() => {
     (async () => {
       try {
@@ -59,6 +69,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
+        setShifts(cfg.shifts || []);
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
       } finally {
@@ -67,12 +78,14 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
+  /* ---------- Logik ---------- */
   function onToggleLive(next: boolean) {
     if (next) {
       setLive(true);
       setEnded(false);
     } else {
       setLive(false);
+      setShifts([]); // bei Deaktivierung alles löschen
     }
   }
 
@@ -80,11 +93,32 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     if (next) {
       setEnded(true);
       setLive(false);
+      setShifts([]);
     } else {
       setEnded(false);
     }
   }
 
+  /* ---------- Schichtboxen ---------- */
+  function addShift() {
+    if (shifts.length >= 3) return;
+    setShifts([
+      ...shifts,
+      { type: "Früh", date: new Date().toISOString().split("T")[0], status: "Muss arbeiten" },
+    ]);
+  }
+
+  function updateShift(index: number, field: keyof Shift, value: any) {
+    const copy = [...shifts];
+    copy[index] = { ...copy[index], [field]: value };
+    setShifts(copy);
+  }
+
+  function removeShift(index: number) {
+    setShifts(shifts.filter((_, i) => i !== index));
+  }
+
+  /* ---------- Speichern ---------- */
   async function save() {
     setSaving(true);
     setMsg("");
@@ -94,6 +128,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         ended,
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
+        shifts: live ? shifts : [],
       };
 
       const r = await fetch("/api/config", {
@@ -131,7 +166,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     border: "1px solid #d1d5db",
     borderRadius: 10,
     fontSize: 14,
-    boxSizing: "border-box",
   };
   const textarea: CSSProperties = { ...input, height: 72, resize: "vertical" as const };
   const barContainer: CSSProperties = {
@@ -140,10 +174,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     alignItems: "center",
     marginTop: 20,
   };
-  const barRight: CSSProperties = {
-    display: "flex",
-    gap: 10,
-  };
+  const barRight: CSSProperties = { display: "flex", gap: 10 };
   const btn: CSSProperties = {
     padding: "10px 14px",
     borderRadius: 10,
@@ -159,13 +190,20 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
     fontWeight: 600,
   };
+  const shiftCard: CSSProperties = {
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    background: "#f9fafb",
+  };
 
   if (loading) return <p>…lädt</p>;
 
   /* ---------- UI ---------- */
   return (
     <>
-      {/* 1️⃣ Termin */}
+      {/* Termin */}
       <div style={{ ...gridRow, display: live || ended ? "none" : "grid" }}>
         <label style={lbl}>Termin (Start)</label>
         <input
@@ -176,16 +214,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
-      {/* 2️⃣ Live */}
+      {/* Live */}
       <div style={gridRow}>
         <label style={lbl}>Live</label>
         <div
-          style={{
-            position: "relative",
-            width: 50,
-            height: 28,
-            cursor: "pointer",
-          }}
+          style={{ position: "relative", width: 50, height: 28, cursor: "pointer" }}
           onClick={() => onToggleLive(!live)}
         >
           <span
@@ -216,16 +249,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {/* 3️⃣ Ende */}
+      {/* Ende */}
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
         <div
-          style={{
-            position: "relative",
-            width: 50,
-            height: 28,
-            cursor: "pointer",
-          }}
+          style={{ position: "relative", width: 50, height: 28, cursor: "pointer" }}
           onClick={() => onToggleEnded(!ended)}
         >
           <span
@@ -266,6 +294,56 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
           placeholder="Hinweise an die Mitarbeiter (optional)"
         />
       </div>
+
+      {/* Schichtboxen - nur wenn live */}
+      {live && (
+        <div style={{ marginTop: 20 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
+
+          {shifts.map((shift, i) => (
+            <div key={i} style={shiftCard}>
+              <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                <select
+                  value={shift.type}
+                  onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
+                  style={{ ...input, flex: 1 }}
+                >
+                  <option value="Früh">Frühschicht</option>
+                  <option value="Spät">Spätschicht</option>
+                  <option value="Nacht">Nachtschicht</option>
+                </select>
+                <input
+                  type="date"
+                  value={shift.date}
+                  onChange={(e) => updateShift(i, "date", e.target.value)}
+                  style={{ ...input, flex: 1 }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <select
+                  value={shift.status}
+                  onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
+                  style={{ ...input, flex: 1 }}
+                >
+                  <option value="Muss arbeiten">Muss arbeiten</option>
+                  <option value="Hat frei">Hat frei</option>
+                </select>
+
+                <button onClick={() => removeShift(i)} style={{ ...btn, color: "#dc2626" }}>
+                  ❌ Löschen
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {shifts.length < 3 && (
+            <button onClick={addShift} style={{ ...btn, marginTop: 10 }}>
+              ➕ Schicht hinzufügen
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Buttons unten */}
       <div style={barContainer}>
@@ -348,9 +426,21 @@ export default function AdminPage() {
     opacity: fadeIn ? 1 : 0,
     transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
   };
-  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
+  const h1: CSSProperties = {
+    fontSize: 22,
+    fontWeight: 600,
+    margin: "16px 0 20px",
+    textAlign: "center",
+  };
   const inputWrap: CSSProperties = { marginBottom: 14 };
-  const label: CSSProperties = { display: "block", textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 };
+  const label: CSSProperties = {
+    display: "block",
+    textAlign: "left",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#374151",
+    marginBottom: 6,
+  };
   const input: CSSProperties = {
     width: "100%",
     padding: "10px 12px",
@@ -372,7 +462,10 @@ export default function AdminPage() {
     boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
     transition: "background 0.2s ease, transform 0.15s ease",
   };
-  const buttonHover: CSSProperties = { background: "#b00068", transform: "translateY(-1px)" };
+  const buttonHover: CSSProperties = {
+    background: "#b00068",
+    transform: "translateY(-1px)",
+  };
 
   if (!loggedIn) {
     return (
@@ -385,7 +478,12 @@ export default function AdminPage() {
               width={200}
               height={200}
               priority
-              style={{ width: "200px", height: "auto", objectFit: "contain", opacity: 0.95 }}
+              style={{
+                width: "200px",
+                height: "auto",
+                objectFit: "contain",
+                opacity: 0.95,
+              }}
             />
           </div>
 
@@ -412,7 +510,11 @@ export default function AdminPage() {
                 onChange={(e) => setPass(e.target.value)}
                 autoComplete="current-password"
               />
-              {error && <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>{error}</div>}
+              {error && (
+                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>
+                  {error}
+                </div>
+              )}
             </div>
 
             <button
@@ -425,7 +527,14 @@ export default function AdminPage() {
             </button>
           </form>
 
-          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 12,
+              color: "#6b7280",
+              textAlign: "center",
+            }}
+          >
             Zugriff nur für autorisierte Mitarbeiter.
           </div>
         </div>
@@ -443,7 +552,12 @@ export default function AdminPage() {
             width={200}
             height={200}
             priority
-            style={{ width: "200px", height: "auto", objectFit: "contain", opacity: 0.95 }}
+            style={{
+              width: "200px",
+              height: "auto",
+              objectFit: "contain",
+              opacity: 0.95,
+            }}
           />
         </div>
 
