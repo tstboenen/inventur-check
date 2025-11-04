@@ -198,7 +198,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 18,
   };
   const barRight: CSSProperties = { display: "flex", gap: 10 };
   const btn: CSSProperties = {
@@ -316,7 +316,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
       {/* Schichtboxen */}
       {live && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 16 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
 
           {shifts.map((shift, i) => (
@@ -357,7 +357,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
           ))}
 
           {shifts.length < 3 && (
-            <button onClick={addShift} style={{ ...btn, marginTop: 10 }}>
+            <button onClick={addShift} style={{ ...btn, marginTop: 8 }}>
               ➕ Schicht hinzufügen
             </button>
           )}
@@ -434,43 +434,43 @@ export default function AdminPage() {
       >
         <div
           style={{
-            width: "100%",
-            maxWidth: 420,
+            width: 380,              // schmalere Box
+            maxWidth: "94%",
             background: "#fff",
-            borderRadius: 18,
+            borderRadius: 16,
             boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-            padding: "20px 20px 24px", // kompakter
+            padding: "16px 18px 18px", // weniger Höhe
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            justifyContent: "center",  // Inhalt mittig in der Box
+            gap: 10,
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-            <Image
-              src="/tst-logo.png"
-              alt="TST Logo"
-              width={200}
-              height={200}
-              priority
-              style={{ objectFit: "contain" }}
-            />
-          </div>
+          <Image
+            src="/tst-logo.png"
+            alt="TST Logo"
+            width={200}
+            height={200}
+            priority
+            style={{ objectFit: "contain" }}
+          />
 
           {/* Titel */}
           <h1
             style={{
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 700,
               color: "#111827",
-              marginBottom: 16, // weniger Abstand
+              margin: 0,
               textAlign: "center",
             }}
           >
             Admin Login
           </h1>
 
-          {/* Formular (schmal & mittig) */}
+          {/* Formular (schmal & zentriert) */}
           <form
             onSubmit={handleLogin}
             style={{
@@ -478,15 +478,15 @@ export default function AdminPage() {
               flexDirection: "column",
               alignItems: "center",
               width: "100%",
-              gap: 12,
+              gap: 10,
             }}
           >
-            <div style={{ width: 300 /* schmal */, maxWidth: "90%" }}>
+            <div style={{ width: 320, maxWidth: "100%" }}>
               <label
                 style={{
                   display: "block",
                   marginBottom: 6,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 500,
                   color: "#374151",
                 }}
@@ -502,18 +502,18 @@ export default function AdminPage() {
                   padding: "10px 12px",
                   border: "1px solid #d1d5db",
                   borderRadius: 10,
-                  fontSize: 15,
+                  fontSize: 14.5,
                 }}
                 placeholder="Dein Benutzername"
               />
             </div>
 
-            <div style={{ width: 300 /* schmal */, maxWidth: "90%" }}>
+            <div style={{ width: 320, maxWidth: "100%" }}>
               <label
                 style={{
                   display: "block",
                   marginBottom: 6,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: 500,
                   color: "#374151",
                 }}
@@ -529,7 +529,7 @@ export default function AdminPage() {
                   padding: "10px 12px",
                   border: "1px solid #d1d5db",
                   borderRadius: 10,
-                  fontSize: 15,
+                  fontSize: 14.5,
                 }}
                 placeholder="••••••••"
               />
@@ -537,7 +537,7 @@ export default function AdminPage() {
                 <div
                   style={{
                     color: "#dc2626",
-                    fontSize: 13,
+                    fontSize: 12.5,
                     marginTop: 6,
                     textAlign: "left",
                   }}
@@ -550,10 +550,9 @@ export default function AdminPage() {
             <button
               type="submit"
               style={{
-                width: 300, // gleiche Breite wie Inputs
-                maxWidth: "90%",
-                marginTop: 6,
-                padding: "12px 16px",
+                width: 320,
+                maxWidth: "100%",
+                padding: "11px 14px",
                 borderRadius: 12,
                 border: "none",
                 cursor: "pointer",
@@ -561,7 +560,7 @@ export default function AdminPage() {
                 fontSize: 15,
                 background: "#d70080",
                 color: "#fff",
-                boxShadow: "0 4px 14px rgba(215,0,128,0.25)",
+                boxShadow: "0 3px 10px rgba(215,0,128,0.22)",
               }}
             >
               Login
@@ -571,7 +570,6 @@ export default function AdminPage() {
           {/* Footer Hinweis */}
           <div
             style={{
-              marginTop: 14,
               fontSize: 12,
               color: "#6b7280",
               textAlign: "center",
@@ -592,7 +590,7 @@ export default function AdminPage() {
         display: "grid",
         placeItems: "center",
         background: "#ffffff",
-        padding: 24,
+        padding: 20,
         fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
       }}
     >
@@ -601,9 +599,9 @@ export default function AdminPage() {
           width: "100%",
           maxWidth: 720,
           background: "#fff",
-          borderRadius: 18,
+          borderRadius: 16,
           boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-          padding: 24,
+          padding: 20,
           border: "1px solid #e5e7eb",
         }}
       >
@@ -611,7 +609,7 @@ export default function AdminPage() {
           <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
         </div>
 
-        <h2 style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 20px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: "6px 0 16px", textAlign: "center" }}>
           Inventur-Einstellungen
         </h2>
 
