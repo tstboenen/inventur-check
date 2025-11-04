@@ -15,10 +15,12 @@ type Cfg = {
   ended: boolean;
   start: string | null; // ISO
   info: string;
-  shifts?: Shift[];
+  shifts: Shift[];
 };
 
-const KEY = "inventur:config";
+/* ---------- Keys ---------- */
+const KEY_V2 = "inventur:config:v2";   // JSON-Blob (neues, robustes Format)
+const KEY_V1 = "inventur:config";      // Alt: Hash (legacy)
 
 /* ---------- Helpers ---------- */
 const boolFromHash = (v?: string | null) => v === "1";
@@ -37,126 +39,135 @@ function maybeParseJson<T = any>(val: unknown): T | null {
   }
 }
 
-/* ---------- Mapping ---------- */
-function toCfgFromHash(h: Record<string, string> | null): Cfg {
-  return {
-    live: boolFromHash(h?.live),
-    ended: boolFromHash(h?.ended),
-    start: normNull(h?.start),
-    info: h?.info ?? "",
-    shifts: h?.shifts ? (maybeParseJson<Shift[]>(h.shifts) ?? []) : [],
-  };
+function toCfgFromHash(h: Record<string, string> | null): Cfg | null {
+  if (!h || Object.keys(h).length === 0) return null;
+  const live = boolFromHash(h?.live);
+  const ended = boolFromHash(h?.ended);
+  const start = normNull(h?.start);
+  const info = h?.info ?? "";
+  const shifts = h?.shifts ? (maybeParseJson<Shift[]>(h.shifts) ?? []) : [];
+  return { live, ended, start, info, shifts };
 }
 
-/* ---------- Input-Validierung ---------- */
-function sanitizeInput(body: Partial<Cfg>): Cfg {
-  const _live = typeof body.live === "boolean" ? body.live : false;
-  const _ended = typeof body.ended === "boolean" ? body.ended : false;
-
-  // Ende impliziert live (Geschäftslogik)
-  const live = _ended ? true : _live;
-  const ended = _ended && live;
-
-  // Termin nur, wenn weder live noch ended
-  let start: string | null = null;
-  const allowStart = !live && !ended;
-  if (allowStart && isIso(body.start)) start = String(body.start);
-
-  // Shifts robust annehmen (Array oder JSON-String), NICHT an live koppeln,
-  // damit Tests leichter sind; leeres/fehlendes -> []
-  let shifts: Shift[] = [];
-  if (Array.isArray(body.shifts)) {
-    shifts = body.shifts.filter(
+function sanitizeShifts(input: unknown): Shift[] {
+  if (Array.isArray(input)) {
+    return input.filter(
       (s: any) =>
         s &&
         (s.type === "Früh" || s.type === "Spät" || s.type === "Nacht") &&
         typeof s.date === "string" &&
         (s.status === "Muss arbeiten" || s.status === "Hat frei")
     );
-  } else if (typeof (body as any).shifts === "string") {
-    const parsed = maybeParseJson<Shift[]>((body as any).shifts);
-    if (Array.isArray(parsed)) {
-      shifts = parsed.filter(
-        (s: any) =>
-          s &&
-          (s.type === "Früh" || s.type === "Spät" || s.type === "Nacht") &&
-          typeof s.date === "string" &&
-          (s.status === "Muss arbeiten" || s.status === "Hat frei")
-      );
-    }
-  } else if (body.shifts === undefined) {
-    // wenn der Client nichts schickt, behalten wir NICHT automatisch alte Werte bei,
-    // sondern setzen [] (explizit). So ist das Verhalten klar.
-    shifts = [];
   }
-
-  return { live, ended, start, info: typeof body.info === "string" ? body.info : "", shifts };
+  if (typeof input === "string") {
+    const parsed = maybeParseJson<Shift[]>(input);
+    if (Array.isArray(parsed)) return sanitizeShifts(parsed);
+  }
+  return [];
 }
 
-/* ---------- Hash-Payload ---------- */
-function toHashPayload(cfg: Cfg): Record<string, string> {
-  return {
-    live: boolToHash(cfg.live),
-    ended: boolToHash(cfg.ended),
-    start: cfg.start ?? "",
-    info: cfg.info ?? "",
-    shifts: JSON.stringify(cfg.shifts ?? []), // immer String in KV
-  };
+function sanitizeInput(body: any): Cfg {
+  const _live = typeof body?.live === "boolean" ? body.live : false;
+  const _ended = typeof body?.ended === "boolean" ? body.ended : false;
+
+  // Geschäftslogik: ended ⇒ live
+  const live = _ended ? true : _live;
+  const ended = _ended && live;
+
+  // start nur, wenn weder live noch ended
+  let start: string | null = null;
+  const allowStart = !live && !ended;
+  if (allowStart && isIso(body?.start)) start = String(body.start);
+
+  const info = typeof body?.info === "string" ? body.info : "";
+
+  // Shifts robust akzeptieren (Array oder JSON-String). Nicht an live koppeln,
+  // aber im Admin schicken wir ohnehin nur bei live > 0.
+  const shifts = sanitizeShifts(body?.shifts);
+
+  return { live, ended, start, info, shifts };
 }
 
-/* ---------- GET ---------- */
-export async function GET() {
-  const hash = await kv.hgetall<Record<string, string>>(KEY);
-  if (hash && Object.keys(hash).length > 0) {
-    return NextResponse.json(toCfgFromHash(hash), { headers: { "Cache-Control": "no-store" } });
-  }
-
-  // Fallback auf Legacy-JSON (falls alt)
-  const legacy = await kv.get(KEY);
-  const parsed = maybeParseJson<Record<string, any>>(legacy);
+/* ---------- Migration: V1 (Hash) -> V2 (JSON) ---------- */
+async function loadCfg(): Promise<Cfg> {
+  // 1) Bevorzugt V2 (JSON)
+  const raw = await kv.get<string>(KEY_V2);
+  const parsed = maybeParseJson<Cfg>(raw);
   if (parsed && typeof parsed === "object") {
-    const cfg: Cfg = {
+    // Ensure defaults
+    return {
       live: !!parsed.live,
       ended: !!parsed.ended,
       start: parsed.start ?? null,
       info: parsed.info ?? "",
       shifts: Array.isArray(parsed.shifts) ? parsed.shifts : [],
     };
-    return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
   }
 
-  // Default
-  const empty: Cfg = { live: false, ended: false, start: null, info: "", shifts: [] };
-  return NextResponse.json(empty, { headers: { "Cache-Control": "no-store" } });
+  // 2) Fallback: V1 (Hash) → migrieren
+  try {
+    const h = await kv.hgetall<Record<string, string>>(KEY_V1);
+    const migrated = toCfgFromHash(h);
+    if (migrated) {
+      await kv.set(KEY_V2, JSON.stringify(migrated));
+      return migrated;
+    }
+  } catch (e: any) {
+    // falls WRONGTYPE (z.B. V1 war nie Hash), ignorieren wir
+  }
+
+  // 3) Default
+  return { live: false, ended: false, start: null, info: "", shifts: [] };
+}
+
+/* ---------- GET ---------- */
+export async function GET() {
+  const cfg = await loadCfg();
+  return NextResponse.json(cfg, { headers: { "Cache-Control": "no-store" } });
 }
 
 /* ---------- POST ---------- */
 export async function POST(req: Request) {
-  // Session prüfen (Cookie von /api/login)
+  // Session prüfen
   const cookie = req.headers.get("cookie") || "";
   const ok = /(^|;\s*)admin_session=ok(;|$)/.test(cookie);
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const body = (await req.json()) as Partial<Cfg>;
+    const body = await req.json();
     const cfg = sanitizeInput(body);
-    const payload = toHashPayload(cfg);
 
+    // JSON-Blob speichern (V2)
+    await kv.set(KEY_V2, JSON.stringify(cfg));
+
+    // Optional: V1 Hash für Kompatibilität mit alter Startseite mitschreiben
     try {
-      await kv.hset(KEY, payload);
+      await kv.hset(KEY_V1, {
+        live: boolToHash(cfg.live),
+        ended: boolToHash(cfg.ended),
+        start: cfg.start ?? "",
+        info: cfg.info ?? "",
+        shifts: JSON.stringify(cfg.shifts ?? []),
+      });
     } catch (err: any) {
-      // Falls KEY vorher als String existierte (Legacy), löschen & neu anlegen
+      // Falls KEY_V1 zuvor falschen Typ hat, neu anlegen
       if (String(err?.message || "").includes("WRONGTYPE")) {
-        await kv.del(KEY);
-        await kv.hset(KEY, payload);
-      } else {
-        throw err;
+        await kv.del(KEY_V1);
+        await kv.hset(KEY_V1, {
+          live: boolToHash(cfg.live),
+          ended: boolToHash(cfg.ended),
+          start: cfg.start ?? "",
+          info: cfg.info ?? "",
+          shifts: JSON.stringify(cfg.shifts ?? []),
+        });
       }
     }
 
-    // WICHTIG: nach dem Speichern direkt den tatsächlich gespeicherten Zustand zurückgeben
-    const saved = await kv.hgetall<Record<string, string>>(KEY);
-    return NextResponse.json(toCfgFromHash(saved), { headers: { "Cache-Control": "no-store" } });
+    // direkt den gespeicherten Zustand zurückgeben
+    const savedRaw = await kv.get<string>(KEY_V2);
+    const saved = maybeParseJson<Cfg>(savedRaw) ?? cfg;
+
+    return NextResponse.json(saved, { headers: { "Cache-Control": "no-store" } });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Ungültiger Request" }, { status: 400 });
   }
