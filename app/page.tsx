@@ -117,7 +117,7 @@ export default function HomePage() {
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten"; // Findet statt
     return {
-      width: 260,          // unverändert kompakt
+      width: 260,          // kompakt lassen
       padding: 18,
       borderRadius: 14,
       background: ok ? "#16a34a" : "#dc2626", // grün / rot
@@ -128,11 +128,10 @@ export default function HomePage() {
     };
   };
 
-  // Alle drei gleich groß
+  // Alle drei gleich groß & gleich fett
   const equalSize = 26;
-  const shiftTitle: CSSProperties  = { fontSize: equalSize, fontWeight: 800, marginBottom: 6 };
-  const shiftDate: CSSProperties   = { fontSize: equalSize, fontWeight: 700, marginBottom: 6 };
-  const shiftStatus: CSSProperties = { fontSize: equalSize, fontWeight: 800 };
+  const equalWeight = 800;
+  const rowStyle: CSSProperties = { fontSize: equalSize, fontWeight: equalWeight, marginBottom: 6 };
 
   /* ---------- UI ---------- */
   return (
@@ -163,19 +162,20 @@ export default function HomePage() {
           {/* Überschrift ohne Emoji, schwarz */}
           <div style={liveTitle}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Boxen */}
+          {/* Schicht-Kacheln */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
-                const text = ok ? "Findet statt" : "Findet nicht statt";
+                const statusText = ok ? "Findet statt" : "Findet nicht statt";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    <div style={shiftTitle}>{s.type}schicht</div>
-                    <div style={shiftDate}>
+                    {/* Reihenfolge: Datum → Schicht → Status (alle gleich groß & fett) */}
+                    <div style={rowStyle}>
                       {new Date(s.date).toLocaleDateString("de-DE")}
                     </div>
-                    <div style={shiftStatus}>{text}</div>
+                    <div style={rowStyle}>{s.type}schicht</div>
+                    <div style={{ ...rowStyle, marginBottom: 0 }}>{statusText}</div>
                   </div>
                 );
               })}
