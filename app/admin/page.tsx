@@ -36,9 +36,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     if (!iso) return "";
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-      d.getHours()
-    )}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+      d.getDate()
+    )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
   const toIso = (local?: string) => {
     if (!local) return "";
@@ -53,20 +53,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         const r = await fetch("/api/config", { cache: "no-store" });
         const cfg = (await r.json()) as Cfg;
 
-        const live0 = !!cfg.live;
-        const ended0 = !!cfg.ended;
-
-        if (ended0) {
-          setEnded(true);
-          setLive(false);
-        } else if (live0) {
-          setLive(true);
-          setEnded(false);
-        } else {
-          setLive(false);
-          setEnded(false);
-        }
-
+        setLive(!!cfg.live);
+        setEnded(!!cfg.ended);
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
         setShifts(cfg.shifts || []);
@@ -85,7 +73,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       setEnded(false);
     } else {
       setLive(false);
-      setShifts([]); // bei Deaktivierung alles löschen
+      setShifts([]);
     }
   }
 
@@ -104,7 +92,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     if (shifts.length >= 3) return;
     setShifts([
       ...shifts,
-      { type: "Früh", date: new Date().toISOString().split("T")[0], status: "Muss arbeiten" },
+      {
+        type: "Früh",
+        date: new Date().toISOString().split("T")[0],
+        status: "Muss arbeiten",
+      },
     ]);
   }
 
@@ -131,23 +123,29 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         shifts: live ? shifts : [],
       };
 
+      // 👇 Debug-Ausgabe im Browser
+      console.log("SAVE BODY:", JSON.stringify(body, null, 2));
+
       const r = await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
+      const result = await r.json().catch(() => ({}));
+      console.log("API RESPONSE:", result);
+
       if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j?.error || "Speichern fehlgeschlagen");
+        throw new Error(result?.error || "Speichern fehlgeschlagen");
       }
 
       setMsg("✅ Gespeichert");
     } catch (e: any) {
+      console.error("SAVE ERROR:", e);
       setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
     } finally {
       setSaving(false);
-      setTimeout(() => setMsg(""), 2500);
+      setTimeout(() => setMsg(""), 3000);
     }
   }
 
@@ -295,7 +293,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
-      {/* Schichtboxen - nur wenn live */}
+      {/* Schichtboxen */}
       {live && (
         <div style={{ marginTop: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
@@ -415,16 +413,15 @@ export default function AdminPage() {
   const card: CSSProperties = {
     width: "100%",
     maxWidth: 480,
-    background: "rgba(255, 255, 255, 0.75)",
+    background: "rgba(255,255,255,0.75)",
     backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
     border: "1px solid #e5e7eb",
     borderRadius: 18,
     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
     padding: 24,
     transition: "opacity 0.35s ease, transform 0.35s ease",
     opacity: fadeIn ? 1 : 0,
-    transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
+    transform: fadeIn ? "translateY(0)" : "translateY(12px)",
   };
   const h1: CSSProperties = {
     fontSize: 22,
@@ -432,111 +429,29 @@ export default function AdminPage() {
     margin: "16px 0 20px",
     textAlign: "center",
   };
-  const inputWrap: CSSProperties = { marginBottom: 14 };
-  const label: CSSProperties = {
-    display: "block",
-    textAlign: "left",
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#374151",
-    marginBottom: 6,
-  };
-  const input: CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #d1d5db",
-    borderRadius: 10,
-    fontSize: 14,
-    boxSizing: "border-box",
-    outline: "none",
-  };
-  const button: CSSProperties = {
-    width: "100%",
-    padding: "12px 16px",
-    borderRadius: 12,
-    border: "none",
-    cursor: "pointer",
-    fontWeight: 700,
-    background: "#d70080",
-    color: "#fff",
-    boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-    transition: "background 0.2s ease, transform 0.15s ease",
-  };
-  const buttonHover: CSSProperties = {
-    background: "#b00068",
-    transform: "translateY(-1px)",
-  };
 
   if (!loggedIn) {
     return (
       <main style={page}>
         <div style={{ ...card, maxWidth: 420 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Image
-              src="/tst-logo.png"
-              alt="TST Logo"
-              width={200}
-              height={200}
-              priority
-              style={{
-                width: "200px",
-                height: "auto",
-                objectFit: "contain",
-                opacity: 0.95,
-              }}
-            />
-          </div>
-
+          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
           <h1 style={h1}>Admin Login</h1>
-
-          <form onSubmit={handleLogin} style={{ textAlign: "left" }}>
-            <div style={inputWrap}>
-              <label style={label}>Benutzername</label>
-              <input
-                type="text"
-                style={input}
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                autoComplete="username"
-              />
-            </div>
-
-            <div style={inputWrap}>
-              <label style={label}>Passwort</label>
-              <input
-                type="password"
-                style={input}
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                autoComplete="current-password"
-              />
-              {error && (
-                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4 }}>
-                  {error}
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              style={hover ? { ...button, ...buttonHover } : button}
-              onMouseEnter={() => setHover(true)}
-              onMouseLeave={() => setHover(false)}
-            >
-              Login
-            </button>
+          <form onSubmit={handleLogin}>
+            <input
+              type="text"
+              placeholder="Benutzername"
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Passwort"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+            />
+            <button type="submit">Login</button>
+            {error && <div style={{ color: "#dc2626" }}>{error}</div>}
           </form>
-
-          <div
-            style={{
-              marginTop: 10,
-              fontSize: 12,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
-            Zugriff nur für autorisierte Mitarbeiter.
-          </div>
         </div>
       </main>
     );
@@ -545,22 +460,7 @@ export default function AdminPage() {
   return (
     <main style={page}>
       <div style={card}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image
-            src="/tst-logo.png"
-            alt="TST Logo"
-            width={200}
-            height={200}
-            priority
-            style={{
-              width: "200px",
-              height: "auto",
-              objectFit: "contain",
-              opacity: 0.95,
-            }}
-          />
-        </div>
-
+        <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
         <h2 style={{ ...h1, marginTop: 8 }}>Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
       </div>
