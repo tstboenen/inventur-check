@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
+  shifts?: Shift[];
 };
 
 export default function HomePage() {
@@ -99,10 +99,10 @@ export default function HomePage() {
     color: "#111827",
   };
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
-  const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
+  const sub: CSSProperties = { marginTop: 30, fontSize: 28, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
-  const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, color: "#111" }; // schwarz
+  const ended: CSSProperties = { marginTop: 20, fontSize: 40, color: "#16a34a" };
   const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
   const shiftGrid: CSSProperties = {
@@ -113,14 +113,14 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kachel-Design wie vorher (kompakt), nur Farben grün/rot
+  // Kachel-Design wie vorher (kompakt), Farben grün/rot
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten"; // Findet statt
     return {
-      width: 260,          // kompakt lassen
+      width: 260,
       padding: 18,
       borderRadius: 14,
-      background: ok ? "#16a34a" : "#dc2626", // grün / rot
+      background: ok ? "#16a34a" : "#dc2626",
       color: "#fff",
       boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
@@ -128,10 +128,9 @@ export default function HomePage() {
     };
   };
 
-  // Alle drei gleich groß & gleich fett
+  // Alle drei gleich groß, NICHT fett
   const equalSize = 26;
-  const equalWeight = 800;
-  const rowStyle: CSSProperties = { fontSize: equalSize, fontWeight: equalWeight, marginBottom: 6 };
+  const rowStyle: CSSProperties = { fontSize: equalSize, fontWeight: 400, marginBottom: 6 };
 
   /* ---------- UI ---------- */
   return (
@@ -170,10 +169,8 @@ export default function HomePage() {
                 const statusText = ok ? "Findet statt" : "Findet nicht statt";
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    {/* Reihenfolge: Datum → Schicht → Status (alle gleich groß & fett) */}
-                    <div style={rowStyle}>
-                      {new Date(s.date).toLocaleDateString("de-DE")}
-                    </div>
+                    {/* Reihenfolge: Datum → Schicht → Status (alle gleich groß, nicht fett) */}
+                    <div style={rowStyle}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
                     <div style={rowStyle}>{s.type}schicht</div>
                     <div style={{ ...rowStyle, marginBottom: 0 }}>{statusText}</div>
                   </div>
