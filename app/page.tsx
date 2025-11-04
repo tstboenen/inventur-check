@@ -87,6 +87,7 @@ export default function HomePage() {
   /* ---------- Styles ---------- */
   const page: CSSProperties = {
     minHeight: "100vh",
+    overflowY: "hidden", // ✅ verhindert unnötigen Scrollbalken
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -112,7 +113,7 @@ export default function HomePage() {
     marginTop: 30,
   };
 
-  // Kacheln wie vorher – grün/rot
+  // Kacheln (grün/rot)
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten";
     return {
@@ -158,7 +159,7 @@ export default function HomePage() {
         <>
           <div style={liveTitle}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Kacheln (Schicht → Datum → Status) */}
+          {/* Schicht-Kacheln */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
