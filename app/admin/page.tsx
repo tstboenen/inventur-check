@@ -321,7 +321,7 @@ export default function AdminPage() {
   };
   const card: CSSProperties = {
     width: "100%",
-    maxWidth: 640,
+    maxWidth: 480,
     background: "rgba(255, 255, 255, 0.75)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
