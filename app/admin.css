@@ -33,7 +33,7 @@
   box-sizing: border-box;
 }
 
-/* Anim */
+/* ===== Animationen ===== */
 .fade-in {
   animation: fadeIn 300ms ease-out both;
 }
@@ -48,14 +48,14 @@
   }
 }
 
-/* ===== Typo / Form ===== */
+/* ===== Allgemeine Elemente ===== */
 .admin-logo {
   display: grid;
   place-items: center;
   margin-bottom: 10px;
 }
 .admin-logo img {
-  width: 200px;
+  width: 200px; /* 🔹 fix auf 200 px */
   height: auto;
 }
 
@@ -116,7 +116,6 @@
   background: var(--pink);
   color: #fff;
   transition: transform 0.05s ease, filter 0.15s ease;
-  margin-top: 4px;
   text-align: center;
   box-sizing: border-box;
 }
@@ -139,9 +138,7 @@
   padding: 12px 0;
 }
 
-/* ===== LOGIN (exakt mittig, symmetrisch) ===== */
-
-/* Quadratische Box */
+/* ===== LOGIN-BEREICH (500x500, perfekt mittig) ===== */
 .login-box {
   position: relative;
   width: 500px;
@@ -154,12 +151,12 @@
   overflow: hidden;
 }
 
-/* Absolut zentrierter Innen-Wrapper mit fixer Breite */
+/* Absolut zentrierter Innen-Wrapper */
 .login-center {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 360px; /* breiter für Balance */
+  width: 360px; /* Innenbreite */
   transform: translate(-50%, -50%);
   display: grid;
   gap: 14px;
@@ -196,9 +193,10 @@
 }
 .login-button {
   width: 100%;
+  margin-top: 16px; /* 🔹 weiter nach unten */
 }
 
-/* Sanfter Fade-In mit Scale */
+/* Sanfter Fade-In */
 .login-box.fade-in {
   animation: fadeInScale 400ms ease-out both;
 }
@@ -213,7 +211,7 @@
   }
 }
 
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 480px) {
   .login-box {
     width: 360px;
