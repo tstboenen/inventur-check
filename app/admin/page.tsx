@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 
 /* ---------- Typen ---------- */
 type Cfg = {
@@ -12,6 +13,7 @@ type Cfg = {
 
 /* ---------- Admin Panel ---------- */
 function ConfigForm({ onLogout }: { onLogout: () => void }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -132,7 +134,16 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     boxSizing: "border-box",
   };
   const textarea: CSSProperties = { ...input, height: 72, resize: "vertical" as const };
-  const bar: CSSProperties = { display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 };
+  const barContainer: CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+  };
+  const barRight: CSSProperties = {
+    display: "flex",
+    gap: 10,
+  };
   const btn: CSSProperties = {
     padding: "10px 14px",
     borderRadius: 10,
@@ -256,13 +267,20 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
-      <div style={bar}>
-        <button onClick={onLogout} style={btn}>
-          Logout
+      {/* Buttons unten */}
+      <div style={barContainer}>
+        <button onClick={() => router.push("/")} style={btn}>
+          Zur Hauptseite
         </button>
-        <button onClick={save} style={primary} disabled={saving}>
-          {saving ? "Speichert…" : "Speichern"}
-        </button>
+
+        <div style={barRight}>
+          <button onClick={onLogout} style={btn}>
+            Logout
+          </button>
+          <button onClick={save} style={primary} disabled={saving}>
+            {saving ? "Speichert…" : "Speichern"}
+          </button>
+        </div>
       </div>
 
       {msg && <p style={{ marginTop: 10 }}>{msg}</p>}
