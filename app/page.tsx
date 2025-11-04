@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
+  shifts?: Shift[];
 };
 
 export default function HomePage() {
@@ -96,43 +96,56 @@ export default function HomePage() {
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     textAlign: "center",
   };
+
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
   const live: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
-  const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
+  const info: CSSProperties = {
+    marginTop: 24,
+    fontSize: 20,
+    color: "#374151",
+    whiteSpace: "pre-wrap",
+    maxWidth: 900,
+  };
 
   const shiftGrid: CSSProperties = {
     display: "flex",
     flexWrap: "wrap",
-    gap: 20,
+    gap: 24,
     justifyContent: "center",
-    marginTop: 30,
+    marginTop: 40,
   };
 
-  // gleiche Kachelgröße + Stil wie Magenta, nur Farbcode angepasst:
+  // Kachel-Design: Magenta-Stil, aber grün/rot angepasst
   const shiftCard = (status: string): CSSProperties => {
     const ok = status === "Muss arbeiten"; // Findet statt
     return {
-      width: 260,
-      padding: 18,
-      borderRadius: 14,
+      width: 280,
+      height: 180,
+      padding: 20,
+      borderRadius: 16,
       background: ok ? "#16a34a" : "#dc2626", // grün / rot
       color: "#fff",
-      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
       textAlign: "center",
-      transition: "transform 0.2s ease",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
     };
   };
 
-  const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
-  const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
-  const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
+  const shiftTitle: CSSProperties = { fontSize: 26, fontWeight: 800, marginBottom: 10 };
+  const shiftDate: CSSProperties = { fontSize: 20, fontWeight: 600, marginBottom: 8 };
+  const shiftStatus: CSSProperties = { fontSize: 22, fontWeight: 700, letterSpacing: 0.5 };
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
+      {/* Logo */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -157,8 +170,8 @@ export default function HomePage() {
         <>
           <div style={live}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Boxen */}
-          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
+          {/* Schicht-Kacheln */}
+          {cfg.shifts && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
@@ -166,7 +179,9 @@ export default function HomePage() {
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
                     <div style={shiftTitle}>{s.type}schicht</div>
-                    <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
+                    <div style={shiftDate}>
+                      {new Date(s.date).toLocaleDateString("de-DE")}
+                    </div>
                     <div style={shiftStatus}>{text}</div>
                   </div>
                 );
@@ -181,7 +196,9 @@ export default function HomePage() {
       ) : (
         <>
           <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
-          {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
+          {cfg.start ? (
+            <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div>
+          ) : null}
         </>
       )}
 
