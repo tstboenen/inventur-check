@@ -14,7 +14,7 @@ type Cfg = {
   ended: boolean;
   start: string | null;
   info: string;
-  shifts?: Shift[];
+  shifts?: Shift[]; // kann von der API auch als JSON-String kommen -> wird unten geparst
 };
 
 export default function HomePage() {
@@ -29,7 +29,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Config laden
+  // Config laden (shifts robust parsen)
   useEffect(() => {
     (async () => {
       try {
@@ -65,13 +65,14 @@ export default function HomePage() {
     })();
   }, []);
 
-  // Countdown
+  // Countdown-Ticker
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
 
   const startMs = useMemo(() => (cfg.start ? new Date(cfg.start).getTime() : null), [cfg.start]);
+
   const formatDiff = (diffMs: number | null) => {
     if (diffMs === null || diffMs <= 0) return "00:00:00";
     const totalSec = Math.floor(diffMs / 1000);
@@ -95,57 +96,48 @@ export default function HomePage() {
     padding: "32px 24px",
     fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     textAlign: "center",
+    color: "#111827",
   };
-
   const title: CSSProperties = { marginTop: 30, fontSize: 36, fontWeight: 800, letterSpacing: 0.8 };
   const sub: CSSProperties = { marginTop: 30, fontSize: 28, fontWeight: 600, color: "#111" };
   const countdown: CSSProperties = { marginTop: 10, fontSize: 64, fontWeight: 800, letterSpacing: 1.2 };
-  const live: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
+  const liveTitle: CSSProperties = { marginTop: 20, fontSize: 44, fontWeight: 800, color: "#111" }; // schwarz
   const ended: CSSProperties = { marginTop: 20, fontSize: 40, fontWeight: 700, color: "#16a34a" };
-  const info: CSSProperties = {
-    marginTop: 24,
-    fontSize: 20,
-    color: "#374151",
-    whiteSpace: "pre-wrap",
-    maxWidth: 900,
-  };
+  const info: CSSProperties = { marginTop: 24, fontSize: 20, color: "#374151", whiteSpace: "pre-wrap", maxWidth: 900 };
 
   const shiftGrid: CSSProperties = {
     display: "flex",
     flexWrap: "wrap",
-    gap: 24,
+    gap: 20,
     justifyContent: "center",
-    marginTop: 40,
+    marginTop: 30,
   };
 
-  // Kachel-Design: Magenta-Stil, aber grün/rot angepasst
-  const shiftCard = (status: string): CSSProperties => {
+  // Kachel-Design wie vorher (kompakt), nur Farben grün/rot
+  const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten"; // Findet statt
     return {
-      width: 280,
-      height: 180,
-      padding: 20,
-      borderRadius: 16,
+      width: 260,          // unverändert kompakt
+      padding: 18,
+      borderRadius: 14,
       background: ok ? "#16a34a" : "#dc2626", // grün / rot
       color: "#fff",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
       textAlign: "center",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      transition: "transform 0.2s ease",
     };
   };
 
-  const shiftTitle: CSSProperties = { fontSize: 26, fontWeight: 800, marginBottom: 10 };
-  const shiftDate: CSSProperties = { fontSize: 20, fontWeight: 600, marginBottom: 8 };
-  const shiftStatus: CSSProperties = { fontSize: 22, fontWeight: 700, letterSpacing: 0.5 };
+  // Alle drei gleich groß
+  const equalSize = 26;
+  const shiftTitle: CSSProperties  = { fontSize: equalSize, fontWeight: 800, marginBottom: 6 };
+  const shiftDate: CSSProperties   = { fontSize: equalSize, fontWeight: 700, marginBottom: 6 };
+  const shiftStatus: CSSProperties = { fontSize: equalSize, fontWeight: 800 };
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      {/* Logo */}
+      {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -168,10 +160,11 @@ export default function HomePage() {
         <div style={ended}>✅ Die Inventur ist beendet.</div>
       ) : cfg.live ? (
         <>
-          <div style={live}>Die Inventur ist gestartet.</div>
+          {/* Überschrift ohne Emoji, schwarz */}
+          <div style={liveTitle}>Die Inventur ist gestartet.</div>
 
-          {/* Schicht-Kacheln */}
-          {cfg.shifts && cfg.shifts.length > 0 ? (
+          {/* Schicht-Boxen */}
+          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
                 const ok = s.status === "Muss arbeiten";
@@ -196,9 +189,7 @@ export default function HomePage() {
       ) : (
         <>
           <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
-          {cfg.start ? (
-            <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div>
-          ) : null}
+          {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
 
