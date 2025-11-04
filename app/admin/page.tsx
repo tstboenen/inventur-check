@@ -46,7 +46,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     return d.toISOString();
   };
   const toDateInput = (maybeIso: string) => {
-    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(maybeIso)) return maybeIso;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(maybeIso)) return maybeIso;
     const d = new Date(maybeIso);
     if (isNaN(d.getTime())) return "";
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -143,7 +143,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     try {
       const normalizedShifts: Shift[] = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\\d{4}-\\d{2}-\\d{2}$/.test(s.date)
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
           ? fromDateInputToIso(s.date)
           : new Date(s.date).toISOString(),
       }));
@@ -207,6 +207,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     border: "1px solid #e5e7eb",
     background: "#fff",
     cursor: "pointer",
+    fontWeight: 600,
   };
   const primary: CSSProperties = {
     ...btn,
@@ -214,7 +215,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     color: "#fff",
     border: "none",
     boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-    fontWeight: 600,
   };
   const shiftCard: CSSProperties = {
     border: "1px solid #e5e7eb",
@@ -228,6 +228,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
+      {/* Termin */}
       <div style={{ ...gridRow, display: live || ended ? "none" : "grid" }}>
         <label style={lbl}>Termin (Start)</label>
         <input
@@ -238,74 +239,53 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
+      {/* Live */}
       <div style={gridRow}>
         <label style={lbl}>Live</label>
         <div
-          style={{ position: "relative", width: 50, height: 28, cursor: "pointer" }}
+          style={{ position: "relative", width: 56, height: 32, cursor: "pointer", borderRadius: 999, border: `1px solid ${live ? "#d70080" : "#d1d5db"}`, background: live ? "#d70080" : "#f3f4f6", transition: "all .25s" }}
           onClick={() => onToggleLive(!live)}
         >
           <span
             style={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: live ? "#d70080" : "#d1d5db",
-              transition: "0.3s",
-              borderRadius: 34,
-            }}
-          ></span>
-          <span
-            style={{
-              position: "absolute",
-              height: 22,
-              width: 22,
-              left: live ? 26 : 4,
-              bottom: 3,
+              top: 3,
+              left: live ? 29 : 3,
+              width: 26,
+              height: 26,
               backgroundColor: "#fff",
-              transition: "0.3s",
               borderRadius: "50%",
               boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              transition: "left .25s",
             }}
-          ></span>
+          />
         </div>
       </div>
 
+      {/* Ende */}
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
         <div
-          style={{ position: "relative", width: 50, height: 28, cursor: "pointer" }}
+          style={{ position: "relative", width: 56, height: 32, cursor: "pointer", borderRadius: 999, border: `1px solid ${ended ? "#d70080" : "#d1d5db"}`, background: ended ? "#d70080" : "#f3f4f6", transition: "all .25s" }}
           onClick={() => onToggleEnded(!ended)}
         >
           <span
             style={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: ended ? "#d70080" : "#d1d5db",
-              transition: "0.3s",
-              borderRadius: 34,
-            }}
-          ></span>
-          <span
-            style={{
-              position: "absolute",
-              height: 22,
-              width: 22,
-              left: ended ? 26 : 4,
-              bottom: 3,
+              top: 3,
+              left: ended ? 29 : 3,
+              width: 26,
+              height: 26,
               backgroundColor: "#fff",
-              transition: "0.3s",
               borderRadius: "50%",
               boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              transition: "left .25s",
             }}
-          ></span>
+          />
         </div>
       </div>
 
+      {/* Info */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
         <textarea
@@ -316,9 +296,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
+      {/* Schichtboxen */}
       {live && (
         <div style={{ marginTop: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
+
           {shifts.map((shift, i) => (
             <div key={i} style={shiftCard}>
               <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
@@ -338,6 +320,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   style={{ ...input, flex: 1 }}
                 />
               </div>
+
               <div style={{ display: "flex", gap: 10 }}>
                 <select
                   value={shift.status}
@@ -347,12 +330,14 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
+
                 <button onClick={() => removeShift(i)} style={{ ...btn, color: "#dc2626" }}>
                   ❌ Löschen
                 </button>
               </div>
             </div>
           ))}
+
           {shifts.length < 3 && (
             <button onClick={addShift} style={{ ...btn, marginTop: 10 }}>
               ➕ Schicht hinzufügen
@@ -361,10 +346,12 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
+      {/* Buttons unten */}
       <div style={barContainer}>
         <button onClick={() => router.push("/")} style={btn}>
           Zur Hauptseite
         </button>
+
         <div style={barRight}>
           <button onClick={onLogout} style={btn}>
             Logout
@@ -412,6 +399,7 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
+  // ---------- LOGIN VIEW ----------
   if (!loggedIn) {
     return (
       <main
@@ -438,6 +426,7 @@ export default function AdminPage() {
             alignItems: "center",
           }}
         >
+          {/* Logo */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
             <Image
               src="/tst-logo.png"
@@ -449,6 +438,7 @@ export default function AdminPage() {
             />
           </div>
 
+          {/* Titel */}
           <h1
             style={{
               fontSize: 22,
@@ -461,6 +451,7 @@ export default function AdminPage() {
             Admin Login
           </h1>
 
+          {/* Formular */}
           <form
             onSubmit={handleLogin}
             style={{
@@ -555,6 +546,7 @@ export default function AdminPage() {
             </button>
           </form>
 
+          {/* Footer Hinweis */}
           <div
             style={{
               marginTop: 20,
@@ -570,9 +562,39 @@ export default function AdminPage() {
     );
   }
 
+  // ---------- ADMIN VIEW ----------
   return (
     <main
       style={{
         minHeight: "100vh",
-        display: "flex",
-        justify
+        display: "grid",
+        placeItems: "center",
+        background: "#ffffff",
+        padding: 24,
+        fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 720,
+          background: "#fff",
+          borderRadius: 18,
+          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+          padding: 24,
+          border: "1px solid #e5e7eb",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+        </div>
+
+        <h2 style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 20px", textAlign: "center" }}>
+          Inventur-Einstellungen
+        </h2>
+
+        <ConfigForm onLogout={handleLogout} />
+      </div>
+    </main>
+  );
+}
