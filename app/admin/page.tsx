@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import "./admin.css";
 
 /* ---------- Typen ---------- */
 type Shift = {
@@ -31,7 +32,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [info, setInfo] = useState("");
   const [shifts, setShifts] = useState<Shift[]>([]);
 
-  /* ---------- Helpers ---------- */
+  // Helpers
   const toLocalInput = (iso?: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -52,11 +53,10 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
-  const fromDateInputToIso = (dateOnly: string) => {
-    return new Date(dateOnly + "T00:00:00Z").toISOString();
-  };
+  const fromDateInputToIso = (dateOnly: string) =>
+    new Date(dateOnly + "T00:00:00Z").toISOString();
 
-  /* ---------- Config laden ---------- */
+  // Config laden
   useEffect(() => {
     (async () => {
       try {
@@ -77,13 +77,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
 
-        const hydratedShifts =
-          (cfg.shifts || []).map((s) => ({
-            ...s,
-            date: toDateInput(s.date),
-          })) as Shift[];
-
-        setShifts(hydratedShifts);
+        const hydrated =
+          (cfg.shifts || []).map((s) => ({ ...s, date: toDateInput(s.date) })) as Shift[];
+        setShifts(hydrated);
       } catch {
         setMsg("Fehler beim Laden der Konfiguration.");
       } finally {
@@ -92,7 +88,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  /* ---------- Logik ---------- */
+  // Toggles
   function onToggleLive(next: boolean) {
     if (next) {
       setLive(true);
@@ -102,7 +98,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       setShifts([]);
     }
   }
-
   function onToggleEnded(next: boolean) {
     if (next) {
       setEnded(true);
@@ -113,39 +108,31 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  /* ---------- Schichtboxen ---------- */
+  // Schichten
   function addShift() {
     if (shifts.length >= 3) return;
     setShifts([
       ...shifts,
-      {
-        type: "Früh",
-        date: toDateInput(new Date().toISOString()),
-        status: "Muss arbeiten",
-      },
+      { type: "Früh", date: toDateInput(new Date().toISOString()), status: "Muss arbeiten" },
     ]);
   }
-
-  function updateShift(index: number, field: keyof Shift, value: any) {
+  function updateShift(i: number, field: keyof Shift, value: any) {
     const copy = [...shifts];
-    copy[index] = { ...copy[index], [field]: value };
+    copy[i] = { ...copy[i], [field]: value };
     setShifts(copy);
   }
-
-  function removeShift(index: number) {
-    setShifts(shifts.filter((_, i) => i !== index));
+  function removeShift(i: number) {
+    setShifts(shifts.filter((_, idx) => idx !== i));
   }
 
-  /* ---------- Speichern ---------- */
+  // Speichern
   async function save() {
     setSaving(true);
     setMsg("");
     try {
-      const normalizedShifts: Shift[] = (live ? shifts : []).map((s) => ({
+      const normalized: Shift[] = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date)
-          ? fromDateInputToIso(s.date)
-          : new Date(s.date).toISOString(),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
       }));
 
       const body: Partial<Cfg> = {
@@ -153,7 +140,7 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         ended,
         start: !live && !ended && startLocal ? toIso(startLocal) : null,
         info,
-        shifts: live ? normalizedShifts : [],
+        shifts: live ? normalized : [],
       };
 
       const r = await fetch("/api/config", {
@@ -162,12 +149,10 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         credentials: "include",
         body: JSON.stringify(body),
       });
-
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
         throw new Error((j as any)?.error || "Speichern fehlgeschlagen");
       }
-
       setMsg("✅ Gespeichert");
     } catch (e: any) {
       setMsg("❌ " + (e?.message || "Fehler beim Speichern"));
@@ -177,83 +162,41 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  /* ---------- Styles ---------- */
-  const gridRow: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "160px 1fr",
-    gap: 12,
-    alignItems: "center",
-    marginBottom: 12,
-  };
-  const lbl: CSSProperties = { fontSize: 13, fontWeight: 600, color: "#374151" };
-  const input: CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid #d1d5db",
-    borderRadius: 10,
-    fontSize: 14,
-  };
-  const textarea: CSSProperties = { ...input, height: 72, resize: "vertical" as const };
-  const barContainer: CSSProperties = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 18,
-  };
-  const barRight: CSSProperties = { display: "flex", gap: 10 };
-  const btn: CSSProperties = {
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  };
-  const primary: CSSProperties = {
-    ...btn,
-    background: "#d70080",
-    color: "#fff",
-    border: "none",
-    boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-  };
-  const shiftCard: CSSProperties = {
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    background: "#f9fafb",
-  };
-
-  if (loading) return <p>…lädt</p>;
+  if (loading) return <p className="admin-loading">…lädt</p>;
 
   return (
     <>
       {/* Termin */}
-      <div style={{ ...gridRow, display: live || ended ? "none" : "grid" }}>
-        <label style={lbl}>Termin (Start)</label>
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label" style={{ display: live || ended ? "none" : "grid" }}>
+          Termin (Start)
+        </label>
         <input
           type="datetime-local"
           value={startLocal}
           onChange={(e) => setStartLocal(e.target.value)}
-          style={input}
+          className="admin-input"
+          style={{ display: live || ended ? "none" : "block" }}
         />
       </div>
 
       {/* Live */}
-      <div style={gridRow}>
-        <label style={lbl}>Live</label>
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Live</label>
         <div
+          role="switch"
+          aria-checked={live}
+          onClick={() => onToggleLive(!live)}
           style={{
             position: "relative",
             width: 56,
             height: 32,
             cursor: "pointer",
             borderRadius: 999,
-            border: `1px solid ${live ? "#d70080" : "#d1d5db"}`,
-            background: live ? "#d70080" : "#f3f4f6",
+            border: `1px solid ${live ? "var(--pink)" : "var(--border)"}`,
+            background: live ? "var(--pink)" : "#f3f4f6",
             transition: "all .25s",
           }}
-          onClick={() => onToggleLive(!live)}
         >
           <span
             style={{
@@ -272,20 +215,22 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       </div>
 
       {/* Ende */}
-      <div style={gridRow}>
-        <label style={lbl}>Ende</label>
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Ende</label>
         <div
+          role="switch"
+          aria-checked={ended}
+          onClick={() => onToggleEnded(!ended)}
           style={{
             position: "relative",
             width: 56,
             height: 32,
             cursor: "pointer",
             borderRadius: 999,
-            border: `1px solid ${ended ? "#d70080" : "#d1d5db"}`,
-            background: ended ? "#d70080" : "#f3f4f6",
+            border: `1px solid ${ended ? "var(--pink)" : "var(--border)"}`,
+            background: ended ? "var(--pink)" : "#f3f4f6",
             transition: "all .25s",
           }}
-          onClick={() => onToggleEnded(!ended)}
         >
           <span
             style={{
@@ -304,28 +249,28 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       </div>
 
       {/* Info */}
-      <div style={gridRow}>
-        <label style={lbl}>Info</label>
+      <div className="admin-form" style={{ gridTemplateColumns: "160px 1fr" }}>
+        <label className="admin-label">Info</label>
         <textarea
           value={info}
           onChange={(e) => setInfo(e.target.value)}
-          style={textarea}
+          className="admin-textarea"
           placeholder="Hinweise an die Mitarbeiter (optional)"
         />
       </div>
 
-      {/* Schichtboxen */}
+      {/* Schichten */}
       {live && (
         <div style={{ marginTop: 16 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
-
-          {shifts.map((shift, i) => (
-            <div key={i} style={shiftCard}>
+          <h3 className="admin-title" style={{ fontSize: "1rem", marginBottom: 10 }}>Schichtübersicht</h3>
+          {(shifts || []).map((shift, i) => (
+            <div key={i} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 12, marginBottom: 10, background: "#f9fafb" }}>
               <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
                 <select
                   value={shift.type}
                   onChange={(e) => updateShift(i, "type", e.target.value as Shift["type"])}
-                  style={{ ...input, flex: 1 }}
+                  className="admin-input"
+                  style={{ flex: 1 }}
                 >
                   <option value="Früh">Frühschicht</option>
                   <option value="Spät">Spätschicht</option>
@@ -335,52 +280,50 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   type="date"
                   value={shift.date}
                   onChange={(e) => updateShift(i, "date", e.target.value)}
-                  style={{ ...input, flex: 1 }}
+                  className="admin-input"
+                  style={{ flex: 1 }}
                 />
               </div>
-
               <div style={{ display: "flex", gap: 10 }}>
                 <select
                   value={shift.status}
                   onChange={(e) => updateShift(i, "status", e.target.value as Shift["status"])}
-                  style={{ ...input, flex: 1 }}
+                  className="admin-input"
+                  style={{ flex: 1 }}
                 >
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
-
-                <button onClick={() => removeShift(i)} style={{ ...btn, color: "#dc2626" }}>
+                <button onClick={() => removeShift(i)} className="admin-button" style={{ background: "#fff", color: "#dc2626", border: "1px solid var(--border)" }}>
                   ❌ Löschen
                 </button>
               </div>
             </div>
           ))}
-
           {shifts.length < 3 && (
-            <button onClick={addShift} style={{ ...btn, marginTop: 8 }}>
+            <button onClick={addShift} className="admin-button" style={{ marginTop: 8 }}>
               ➕ Schicht hinzufügen
             </button>
           )}
         </div>
       )}
 
-      {/* Buttons unten */}
-      <div style={barContainer}>
-        <button onClick={() => router.push("/")} style={btn}>
+      {/* Bottom Bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
+        <button onClick={() => router.push("/")} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
           Zur Hauptseite
         </button>
-
-        <div style={barRight}>
-          <button onClick={onLogout} style={btn}>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onLogout} className="admin-button" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--border)" }}>
             Logout
           </button>
-          <button onClick={save} style={primary} disabled={saving}>
+          <button onClick={save} disabled={saving} className="admin-button">
             {saving ? "Speichert…" : "Speichern"}
           </button>
         </div>
       </div>
 
-      {msg && <p style={{ marginTop: 10 }}>{msg}</p>}
+      {msg && <p className="admin-status">{msg}</p>}
     </>
   );
 }
@@ -420,164 +363,61 @@ export default function AdminPage() {
   // ---------- LOGIN VIEW ----------
   if (!loggedIn) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          display: "grid",
-          placeItems: "center",
-          background: "#f9fafb",
-          fontFamily:
-            "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-          padding: 16,
-        }}
-      >
-        {/* Quadratische Box */}
+      <main className="admin-wrap">
+        {/* Quadratische Login-Box: nutzt .admin-card + exakte Maße/Centering via Inline, CSS bleibt unverändert */}
         <div
+          className="admin-card fade-in"
           style={{
             width: 420,
-            height: 420, // exakt quadratisch
-            background: "#fff",
-            borderRadius: 16,
-            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-            // EXAKTE Zentrierung des Inhalts in der Box:
+            height: 420,
+            padding: 16,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
+            gap: 10,
           }}
         >
-          {/* Inhalt-Wrapper (keine feste Höhe, nur Breite für Felder) */}
-          <div
+          <div className="admin-logo" style={{ marginBottom: 6 }}>
+            <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+          </div>
+
+          <h1 className="admin-title" style={{ marginBottom: 10, fontSize: "1.1rem" }}>
+            Admin Login
+          </h1>
+
+          <form
+            onSubmit={handleLogin}
             style={{
-              width: 320,              // Inputs & Button: 300px, plus Spielraum
-              maxWidth: "90%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",   // mittig in der Breite
-              justifyContent: "center",
+              width: 300, // schmale, exakt zentrierte Inputs
+              display: "grid",
               gap: 10,
-              textAlign: "center",
             }}
           >
-            {/* Logo */}
-            <Image
-              src="/tst-logo.png"
-              alt="TST Logo"
-              width={200}
-              height={200}
-              priority
-              style={{ objectFit: "contain" }}
-            />
+            <label className="admin-label">
+              Benutzername
+              <input
+                type="text"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                className="admin-input"
+              />
+            </label>
 
-            {/* Titel */}
-            <h1
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: "#111827",
-                margin: 0,
-              }}
-            >
-              Admin Login
-            </h1>
+            <label className="admin-label">
+              Passwort
+              <input
+                type="password"
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                className="admin-input"
+              />
+            </label>
 
-            {/* Formular (300px breit, exakt mittig) */}
-            <form
-              onSubmit={handleLogin}
-              style={{
-                width: 300,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <div style={{ width: "100%" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "#374151",
-                    textAlign: "left",
-                  }}
-                >
-                  Benutzername
-                </label>
-                <input
-                  type="text"
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: 10,
-                    fontSize: 14.5,
-                  }}
-                  placeholder="Dein Benutzername"
-                />
-              </div>
+            {error && <div className="admin-hint" style={{ color: "#dc2626" }}>{error}</div>}
 
-              <div style={{ width: "100%" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: 6,
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "#374151",
-                    textAlign: "left",
-                  }}
-                >
-                  Passwort
-                </label>
-                <input
-                  type="password"
-                  value={pass}
-                  onChange={(e) => setPass(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: 10,
-                    fontSize: 14.5,
-                  }}
-                  placeholder="••••••••"
-                />
-                {error && (
-                  <div
-                    style={{
-                      color: "#dc2626",
-                      fontSize: 12.5,
-                      marginTop: 6,
-                      textAlign: "left",
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  padding: "11px 14px",
-                  borderRadius: 12,
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: 15,
-                  background: "#d70080",
-                  color: "#fff",
-                  boxShadow: "0 3px 10px rgba(215,0,128,0.22)",
-                }}
-              >
-                Login
-              </button>
-            </form>
-          </div>
+            <button type="submit" className="admin-button">Login</button>
+          </form>
         </div>
       </main>
     );
@@ -585,35 +425,12 @@ export default function AdminPage() {
 
   // ---------- ADMIN VIEW ----------
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        background: "#ffffff",
-        padding: 20,
-        fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 720,
-          background: "#fff",
-          borderRadius: 16,
-          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-          padding: 20,
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "center" }}>
+    <main className="admin-wrap">
+      <div className="admin-card fade-in">
+        <div className="admin-logo">
           <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
         </div>
-
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: "6px 0 16px", textAlign: "center" }}>
-          Inventur-Einstellungen
-        </h2>
-
+        <h2 className="admin-title">Inventur-Einstellungen</h2>
         <ConfigForm onLogout={handleLogout} />
       </div>
     </main>
