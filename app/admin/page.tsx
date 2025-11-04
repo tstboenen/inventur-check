@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 /* ---------- Typen ---------- */
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
-  date: string; // im UI "YYYY-MM-DD", zum Server ISO
+  date: string; // UI: YYYY-MM-DD, Server: ISO
   status: "Muss arbeiten" | "Hat frei";
 };
 
@@ -40,24 +40,19 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       d.getHours()
     )}:${pad(d.getMinutes())}`;
   };
-
   const toIso = (local?: string) => {
     if (!local) return "";
     const d = new Date(local);
     return d.toISOString();
   };
-
   const toDateInput = (maybeIso: string) => {
-    // akzeptiert sowohl "YYYY-MM-DD" als auch ISO
-    if (/^\d{4}-\d{2}-\d{2}$/.test(maybeIso)) return maybeIso;
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(maybeIso)) return maybeIso;
     const d = new Date(maybeIso);
-    if (isNaN(d.getTime())) return ""; // falls unlesbar
+    if (isNaN(d.getTime())) return "";
     const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
-
   const fromDateInputToIso = (dateOnly: string) => {
-    // "YYYY-MM-DD" → ISO Mitternacht UTC
     return new Date(dateOnly + "T00:00:00Z").toISOString();
   };
 
@@ -68,13 +63,10 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         const r = await fetch("/api/config", { cache: "no-store", credentials: "include" });
         const cfg = (await r.json()) as Cfg;
 
-        const live0 = !!cfg.live;
-        const ended0 = !!cfg.ended;
-
-        if (ended0) {
+        if (cfg.ended) {
           setEnded(true);
           setLive(false);
-        } else if (live0) {
+        } else if (cfg.live) {
           setLive(true);
           setEnded(false);
         } else {
@@ -85,7 +77,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         setStartLocal(toLocalInput(cfg.start));
         setInfo(cfg.info || "");
 
-        // WICHTIG: für <input type="date"> brauchen wir "YYYY-MM-DD"
         const hydratedShifts =
           (cfg.shifts || []).map((s) => ({
             ...s,
@@ -150,10 +141,11 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     setSaving(true);
     setMsg("");
     try {
-      // Datum von "YYYY-MM-DD" → echte ISO, sonst wird’s serverseitig oft verworfen
       const normalizedShifts: Shift[] = (live ? shifts : []).map((s) => ({
         ...s,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? fromDateInputToIso(s.date) : new Date(s.date).toISOString(),
+        date: /^\\d{4}-\\d{2}-\\d{2}$/.test(s.date)
+          ? fromDateInputToIso(s.date)
+          : new Date(s.date).toISOString(),
       }));
 
       const body: Partial<Cfg> = {
@@ -234,10 +226,8 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
 
   if (loading) return <p>…lädt</p>;
 
-  /* ---------- UI ---------- */
   return (
     <>
-      {/* Termin */}
       <div style={{ ...gridRow, display: live || ended ? "none" : "grid" }}>
         <label style={lbl}>Termin (Start)</label>
         <input
@@ -248,7 +238,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
-      {/* Live */}
       <div style={gridRow}>
         <label style={lbl}>Live</label>
         <div
@@ -283,7 +272,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {/* Ende */}
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
         <div
@@ -318,7 +306,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {/* Info */}
       <div style={gridRow}>
         <label style={lbl}>Info</label>
         <textarea
@@ -329,11 +316,9 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         />
       </div>
 
-      {/* Schichtboxen */}
       {live && (
         <div style={{ marginTop: 20 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>Schichtübersicht</h3>
-
           {shifts.map((shift, i) => (
             <div key={i} style={shiftCard}>
               <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
@@ -353,7 +338,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   style={{ ...input, flex: 1 }}
                 />
               </div>
-
               <div style={{ display: "flex", gap: 10 }}>
                 <select
                   value={shift.status}
@@ -363,14 +347,12 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
                   <option value="Muss arbeiten">Muss arbeiten</option>
                   <option value="Hat frei">Hat frei</option>
                 </select>
-
                 <button onClick={() => removeShift(i)} style={{ ...btn, color: "#dc2626" }}>
                   ❌ Löschen
                 </button>
               </div>
             </div>
           ))}
-
           {shifts.length < 3 && (
             <button onClick={addShift} style={{ ...btn, marginTop: 10 }}>
               ➕ Schicht hinzufügen
@@ -379,12 +361,10 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         </div>
       )}
 
-      {/* Buttons unten */}
       <div style={barContainer}>
         <button onClick={() => router.push("/")} style={btn}>
           Zur Hauptseite
         </button>
-
         <div style={barRight}>
           <button onClick={onLogout} style={btn}>
             Logout
@@ -406,12 +386,6 @@ export default function AdminPage() {
   const [pass, setPass] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [error, setError] = useState("");
-  const [fadeIn, setFadeIn] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setFadeIn(true), 80);
-    return () => clearTimeout(t);
-  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -438,59 +412,72 @@ export default function AdminPage() {
     setLoggedIn(false);
   }
 
-  const page: CSSProperties = {
-    minHeight: "100vh",
-    background: "#ffffff",
-    display: "grid",
-    placeItems: "center",
-    padding: "24px",
-    fontSize: 16,
-    fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  };
-  const card: CSSProperties = {
-    width: "100%",
-    maxWidth: 480,
-    background: "rgba(255, 255, 255, 0.75)",
-    backdropFilter: "blur(20px)",
-    border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-    padding: 24,
-    transition: "opacity 0.35s ease, transform 0.35s ease",
-    opacity: fadeIn ? 1 : 0,
-    transform: fadeIn ? "translateY(0px)" : "translateY(12px)",
-  };
-  const h1: CSSProperties = { fontSize: 22, fontWeight: 600, margin: "16px 0 20px", textAlign: "center" };
-
   if (!loggedIn) {
     return (
-      <main style={page}>
-        <div style={{ ...card, maxWidth: 420 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "#f9fafb",
+          fontFamily:
+            "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            background: "#fff",
+            borderRadius: 18,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+            padding: "32px 28px 36px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+            <Image
+              src="/tst-logo.png"
+              alt="TST Logo"
+              width={200}
+              height={200}
+              priority
+              style={{ objectFit: "contain" }}
+            />
           </div>
 
-          <h1 style={h1}>Admin Login</h1>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#111827",
+              marginBottom: 24,
+              textAlign: "center",
+            }}
+          >
+            Admin Login
+          </h1>
 
           <form
             onSubmit={handleLogin}
             style={{
-              textAlign: "center",
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
+              width: "100%",
+              gap: "16px",
             }}
           >
-            <div style={{ width: "90%" }}>
+            <div>
               <label
                 style={{
                   display: "block",
-                  textAlign: "left",
+                  marginBottom: 6,
                   fontSize: 13,
                   fontWeight: 500,
                   color: "#374151",
-                  marginBottom: 6,
                 }}
               >
                 Benutzername
@@ -504,19 +491,20 @@ export default function AdminPage() {
                   padding: "10px 12px",
                   border: "1px solid #d1d5db",
                   borderRadius: 10,
+                  fontSize: 15,
                 }}
+                placeholder="Dein Benutzername"
               />
             </div>
 
-            <div style={{ width: "90%" }}>
+            <div>
               <label
                 style={{
                   display: "block",
-                  textAlign: "left",
+                  marginBottom: 6,
                   fontSize: 13,
                   fontWeight: 500,
                   color: "#374151",
-                  marginBottom: 6,
                 }}
               >
                 Passwort
@@ -530,10 +518,19 @@ export default function AdminPage() {
                   padding: "10px 12px",
                   border: "1px solid #d1d5db",
                   borderRadius: 10,
+                  fontSize: 15,
                 }}
+                placeholder="••••••••"
               />
               {error && (
-                <div style={{ color: "#dc2626", fontSize: 13, marginTop: 4, textAlign: "left", width: "100%" }}>
+                <div
+                  style={{
+                    color: "#dc2626",
+                    fontSize: 13,
+                    marginTop: 6,
+                    textAlign: "left",
+                  }}
+                >
                   {error}
                 </div>
               )}
@@ -542,23 +539,30 @@ export default function AdminPage() {
             <button
               type="submit"
               style={{
-                width: "90%",
+                marginTop: 8,
                 padding: "12px 16px",
                 borderRadius: 12,
                 border: "none",
                 cursor: "pointer",
                 fontWeight: 700,
+                fontSize: 15,
                 background: "#d70080",
                 color: "#fff",
-                boxShadow: "0 4px 12px rgba(215,0,128,0.25)",
-                marginTop: "4px",
+                boxShadow: "0 4px 14px rgba(215,0,128,0.3)",
               }}
             >
               Login
             </button>
           </form>
 
-          <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
+          <div
+            style={{
+              marginTop: 20,
+              fontSize: 12,
+              color: "#6b7280",
+              textAlign: "center",
+            }}
+          >
             Zugriff nur für autorisierte Mitarbeiter.
           </div>
         </div>
@@ -567,15 +571,8 @@ export default function AdminPage() {
   }
 
   return (
-    <main style={page}>
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image src="/tst-logo.png" alt="TST Logo" width={200} height={200} priority />
-        </div>
-
-        <h2 style={{ ...h1, marginTop: 8 }}>Inventur-Einstellungen</h2>
-        <ConfigForm onLogout={handleLogout} />
-      </div>
-    </main>
-  );
-}
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justify
