@@ -21,7 +21,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
   const [startLocal, setStartLocal] = useState<string>("");
   const [info, setInfo] = useState("");
 
-  // helpers: ISO <-> datetime-local
   const toLocalInput = (iso?: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -36,7 +35,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     return d.toISOString();
   };
 
-  // Laden der Config
   useEffect(() => {
     (async () => {
       try {
@@ -46,7 +44,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
         const live0 = !!cfg.live;
         const ended0 = !!cfg.ended;
 
-        // Nur ein Zustand aktiv
         if (ended0) {
           setEnded(true);
           setLive(false);
@@ -68,7 +65,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  // Logik: gegenseitig ausschließen
   function onToggleLive(next: boolean) {
     if (next) {
       setLive(true);
@@ -87,7 +83,6 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  // Speichern
   async function save() {
     setSaving(true);
     setMsg("");
@@ -173,17 +168,18 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       {/* 2️⃣ Live */}
       <div style={gridRow}>
         <label style={lbl}>Live</label>
-        <div style={{ position: "relative", width: 50, height: 28 }}>
-          <input
-            type="checkbox"
-            checked={live}
-            onChange={(e) => onToggleLive(e.target.checked)}
-            style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-          />
+        <div
+          style={{
+            position: "relative",
+            width: 50,
+            height: 28,
+            cursor: "pointer",
+          }}
+          onClick={() => onToggleLive(!live)}
+        >
           <span
             style={{
               position: "absolute",
-              cursor: "pointer",
               top: 0,
               left: 0,
               right: 0,
@@ -212,17 +208,18 @@ function ConfigForm({ onLogout }: { onLogout: () => void }) {
       {/* 3️⃣ Ende */}
       <div style={gridRow}>
         <label style={lbl}>Ende</label>
-        <div style={{ position: "relative", width: 50, height: 28 }}>
-          <input
-            type="checkbox"
-            checked={ended}
-            onChange={(e) => onToggleEnded(e.target.checked)}
-            style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-          />
+        <div
+          style={{
+            position: "relative",
+            width: 50,
+            height: 28,
+            cursor: "pointer",
+          }}
+          onClick={() => onToggleEnded(!ended)}
+        >
           <span
             style={{
               position: "absolute",
-              cursor: "pointer",
               top: 0,
               left: 0,
               right: 0,
