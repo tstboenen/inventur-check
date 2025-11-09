@@ -110,8 +110,15 @@ export default function HomePage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("lang") as Lang | null;
-      if (saved && ["de", "en", "pl", "ru"].includes(saved)) setLang(saved);
-    } catch {}
+      if (saved && ["de", "en", "pl", "ru"].includes(saved)) {
+        setLang(saved);
+      } else {
+        setLang("de"); // 💡 Standard immer Deutsch
+        localStorage.setItem("lang", "de");
+      }
+    } catch {
+      setLang("de");
+    }
   }, []);
   const onLangChange = (v: Lang) => {
     setLang(v);
@@ -138,15 +145,13 @@ export default function HomePage() {
           }
         }
 
-        const nextCfg: Cfg = {
+        setCfg({
           live: !!raw.live,
           ended: !!raw.ended,
           start: typeof raw.start === "string" ? raw.start : null,
           info: typeof raw.info === "string" ? raw.info : "",
           shifts: parsedShifts,
-        };
-
-        setCfg(nextCfg);
+        });
       } catch {
         setErr("Konfiguration konnte nicht geladen werden.");
       } finally {
@@ -174,7 +179,7 @@ export default function HomePage() {
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  /* ---------- Styles (Scrollbar-Fix beibehalten) ---------- */
+  /* ---------- Styles ---------- */
   const page: CSSProperties = {
     height: "100dvh",
     boxSizing: "border-box",
@@ -203,8 +208,6 @@ export default function HomePage() {
     justifyContent: "center",
     marginTop: 30,
   };
-
-  // Kacheln (grün/rot)
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten";
     return {
@@ -218,12 +221,11 @@ export default function HomePage() {
       transition: "transform 0.2s ease",
     };
   };
-
   const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
   const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
   const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
-  /* ---------- Flaggen-Dropdown (fix oben rechts) ---------- */
+  /* ---------- Flaggen Dropdown ---------- */
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -270,7 +272,6 @@ export default function HomePage() {
     display: "grid",
     placeItems: "center",
   };
-
   const FLAG_SRC: Record<Lang, string> = {
     de: "/flags/de.svg",
     en: "/flags/en.svg",
@@ -278,17 +279,10 @@ export default function HomePage() {
     ru: "/flags/ru.svg",
   };
 
-  /* ---------- Helpers je Sprache ---------- */
-  const dateFmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(LOCALE_BY_LANG[lang] || "de-DE");
-
-  const shiftTypeLabel = (t: Shift["type"]) => {
-    if (t === "Früh") return tr("shift_morning", lang);
-    if (t === "Spät") return tr("shift_late", lang);
-    return tr("shift_night", lang);
-  };
-  const statusText = (s: Shift["status"]) =>
-    s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang);
+  const dateFmt = (iso: string) => new Date(iso).toLocaleDateString(LOCALE_BY_LANG[lang]);
+  const shiftTypeLabel = (t: Shift["type"]) =>
+    t === "Früh" ? tr("shift_morning", lang) : t === "Spät" ? tr("shift_late", lang) : tr("shift_night", lang);
+  const statusText = (s: Shift["status"]) => (s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang));
 
   /* ---------- UI ---------- */
   return (
@@ -299,7 +293,6 @@ export default function HomePage() {
           aria-label="Sprache auswählen"
           style={flagBtn}
           onClick={() => setOpen((v) => !v)}
-          title="Sprache auswählen"
         >
           <Image src={FLAG_SRC[lang]} alt={lang} width={28} height={18} />
         </button>
@@ -320,7 +313,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Logo oben */}
+      {/* Logo & Titel */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -331,7 +324,6 @@ export default function HomePage() {
           style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
         />
       </div>
-
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
       {loading ? (
@@ -345,25 +337,18 @@ export default function HomePage() {
       ) : cfg.live ? (
         <>
           <div style={liveTitle}>{tr("heading_live", lang)}</div>
-
-          {/* Schicht-Kacheln */}
-          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
+          {cfg.shifts && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
-              {cfg.shifts.map((s, i) => {
-                const text = statusText(s.status);
-                return (
-                  <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
-                    <div style={shiftDate}>{dateFmt(s.date)}</div>
-                    <div style={shiftStatus}>{text}</div>
-                  </div>
-                );
-              })}
+              {cfg.shifts.map((s, i) => (
+                <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
+                  <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
+                  <div style={shiftDate}>{dateFmt(s.date)}</div>
+                  <div style={shiftStatus}>{statusText(s.status)}</div>
+                </div>
+              ))}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
-              {tr("no_shifts", lang)}
-            </p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>{tr("no_shifts", lang)}</p>
           )}
         </>
       ) : (
@@ -374,7 +359,6 @@ export default function HomePage() {
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
-
       {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
