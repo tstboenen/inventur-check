@@ -105,7 +105,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // Sprache (persist)
+  // Sprache (persist), Standard sicher DE
   const [lang, setLang] = useState<Lang>("de");
   useEffect(() => {
     try {
@@ -113,7 +113,7 @@ export default function HomePage() {
       if (saved && ["de", "en", "pl", "ru"].includes(saved)) {
         setLang(saved);
       } else {
-        setLang("de"); // 💡 Standard immer Deutsch
+        setLang("de");
         localStorage.setItem("lang", "de");
       }
     } catch {
@@ -208,6 +208,8 @@ export default function HomePage() {
     justifyContent: "center",
     marginTop: 30,
   };
+
+  // Kacheln (grün/rot)
   const shiftCard = (status: "Muss arbeiten" | "Hat frei"): CSSProperties => {
     const ok = status === "Muss arbeiten";
     return {
@@ -221,11 +223,12 @@ export default function HomePage() {
       transition: "transform 0.2s ease",
     };
   };
+
   const shiftTitle: CSSProperties = { fontSize: 22, fontWeight: 700, marginBottom: 6 };
   const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
   const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
-  /* ---------- Flaggen Dropdown ---------- */
+  /* ---------- Flaggen Dropdown (fixiert, ohne Verschieben) ---------- */
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -237,10 +240,23 @@ export default function HomePage() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
-  const flagFab: CSSProperties = { position: "fixed", top: 16, right: 16, zIndex: 50 };
-  const flagBtn: CSSProperties = {
-    width: 44,
+  // Wrapper mit fester Breite: 44px; Menü absolut positioniert -> Button bleibt genau stehen
+  const flagFab: CSSProperties = {
+    position: "fixed",
+    top: 16,
+    right: 16,
+    zIndex: 50,
+    width: 44,            // 🔒 fixiert die Breite des Containers
     height: 44,
+  };
+  const flagInner: CSSProperties = {
+    position: "relative", // Anker für absolut positioniertes Menü
+    width: "100%",
+    height: "100%",
+  };
+  const flagBtn: CSSProperties = {
+    width: "100%",
+    height: "100%",
     borderRadius: 999,
     border: "1px solid #e5e7eb",
     background: "#fff",
@@ -251,7 +267,9 @@ export default function HomePage() {
     padding: 0,
   };
   const flagMenu: CSSProperties = {
-    marginTop: 8,
+    position: "absolute", // ⬅️ beeinflusst Layout nicht
+    top: 52,              // 44 (Button) + 8 (Abstand)
+    right: 0,
     border: "1px solid #e5e7eb",
     background: "#fff",
     borderRadius: 12,
@@ -279,41 +297,48 @@ export default function HomePage() {
     ru: "/flags/ru.svg",
   };
 
-  const dateFmt = (iso: string) => new Date(iso).toLocaleDateString(LOCALE_BY_LANG[lang]);
+  const dateFmt = (iso: string) =>
+    new Date(iso).toLocaleDateString(LOCALE_BY_LANG[lang]);
+
   const shiftTypeLabel = (t: Shift["type"]) =>
     t === "Früh" ? tr("shift_morning", lang) : t === "Spät" ? tr("shift_late", lang) : tr("shift_night", lang);
-  const statusText = (s: Shift["status"]) => (s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang));
+
+  const statusText = (s: Shift["status"]) =>
+    s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang);
 
   /* ---------- UI ---------- */
   return (
     <main style={page}>
-      {/* Flaggen-Auswahl */}
+      {/* Flaggen-Auswahl (fix, kein Springen) */}
       <div style={flagFab} ref={dropdownRef}>
-        <button
-          aria-label="Sprache auswählen"
-          style={flagBtn}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <Image src={FLAG_SRC[lang]} alt={lang} width={28} height={18} />
-        </button>
-        {open && (
-          <div style={flagMenu}>
-            {(["de", "en", "pl", "ru"] as Lang[]).map((l) => (
-              <button
-                key={l}
-                aria-label={l}
-                style={flagItem}
-                onClick={() => onLangChange(l)}
-                title={l.toUpperCase()}
-              >
-                <Image src={FLAG_SRC[l]} alt={l} width={44} height={30} />
-              </button>
-            ))}
-          </div>
-        )}
+        <div style={flagInner}>
+          <button
+            aria-label="Sprache auswählen"
+            style={flagBtn}
+            onClick={() => setOpen((v) => !v)}
+            title="Sprache auswählen"
+          >
+            <Image src={FLAG_SRC[lang]} alt={lang} width={28} height={18} />
+          </button>
+          {open && (
+            <div style={flagMenu}>
+              {(["de", "en", "pl", "ru"] as Lang[]).map((l) => (
+                <button
+                  key={l}
+                  aria-label={l}
+                  style={flagItem}
+                  onClick={() => onLangChange(l)}
+                  title={l.toUpperCase()}
+                >
+                  <Image src={FLAG_SRC[l]} alt={l} width={44} height={30} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Logo & Titel */}
+      {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
           src="/tst-logo.png"
@@ -324,6 +349,7 @@ export default function HomePage() {
           style={{ width: "400px", height: "auto", objectFit: "contain", opacity: 0.98 }}
         />
       </div>
+
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
       {loading ? (
@@ -337,7 +363,9 @@ export default function HomePage() {
       ) : cfg.live ? (
         <>
           <div style={liveTitle}>{tr("heading_live", lang)}</div>
-          {cfg.shifts && cfg.shifts.length > 0 ? (
+
+          {/* Schicht-Kacheln */}
+          {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => (
                 <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
@@ -348,7 +376,9 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>{tr("no_shifts", lang)}</p>
+            <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
+              {tr("no_shifts", lang)}
+            </p>
           )}
         </>
       ) : (
@@ -359,6 +389,7 @@ export default function HomePage() {
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
+
       {cfg.info ? <div style={info}>{cfg.info}</div> : null}
     </main>
   );
