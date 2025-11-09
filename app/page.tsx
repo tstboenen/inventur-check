@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 type Shift = {
   type: "Früh" | "Spät" | "Nacht";
@@ -17,6 +17,82 @@ type Cfg = {
   shifts?: Shift[];
 };
 
+/* ---------- Sprache ---------- */
+type Lang = "de" | "en" | "pl" | "ru";
+
+const LOCALE_BY_LANG: Record<Lang, string> = {
+  de: "de-DE",
+  en: "en-GB",
+  pl: "pl-PL",
+  ru: "ru-RU",
+};
+
+const T = {
+  heading_live: {
+    de: "Die Inventur ist gestartet.",
+    en: "The inventory has started.",
+    pl: "Inwentaryzacja została rozpoczęta.",
+    ru: "Инвентаризация началась.",
+  },
+  heading_before_label: {
+    de: "Die Inventur startet in:",
+    en: "The inventory starts in:",
+    pl: "Inwentaryzacja rozpocznie się za:",
+    ru: "Инвентаризация начнётся через:",
+  },
+  heading_before_nostart: {
+    de: "Startzeit folgt.",
+    en: "Start time to be announced.",
+    pl: "Czas rozpoczęcia wkrótce.",
+    ru: "Время начала будет объявлено.",
+  },
+  heading_ended: {
+    de: "✅ Die Inventur ist beendet.",
+    en: "✅ The inventory has ended.",
+    pl: "✅ Inwentaryzacja zakończona.",
+    ru: "✅ Инвентаризация завершена.",
+  },
+  no_shifts: {
+    de: "Keine Schichtinformationen verfügbar.",
+    en: "No shift information available.",
+    pl: "Brak informacji o zmianach.",
+    ru: "Нет информации о сменах.",
+  },
+  shift_morning: {
+    de: "Frühschicht",
+    en: "Morning shift",
+    pl: "Zmiana poranna",
+    ru: "Утренняя смена",
+  },
+  shift_late: {
+    de: "Spätschicht",
+    en: "Late shift",
+    pl: "Zmiana wieczorna",
+    ru: "Вечерняя смена",
+  },
+  shift_night: {
+    de: "Nachtschicht",
+    en: "Night shift",
+    pl: "Zmiana nocna",
+    ru: "Ночная смена",
+  },
+  status_yes: {
+    de: "Findet statt",
+    en: "Takes place",
+    pl: "Odbywa się",
+    ru: "Состоится",
+  },
+  status_no: {
+    de: "Findet nicht statt",
+    en: "Does not take place",
+    pl: "Nie odbywa się",
+    ru: "Не состоится",
+  },
+};
+function tr<K extends keyof typeof T>(key: K, lang: Lang) {
+  return T[key][lang];
+}
+
 export default function HomePage() {
   const [cfg, setCfg] = useState<Cfg>({
     live: false,
@@ -28,6 +104,20 @@ export default function HomePage() {
   const [now, setNow] = useState<number>(Date.now());
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  // Sprache (persist)
+  const [lang, setLang] = useState<Lang>("de");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lang") as Lang | null;
+      if (saved && ["de", "en", "pl", "ru"].includes(saved)) setLang(saved);
+    } catch {}
+  }, []);
+  const onLangChange = (v: Lang) => {
+    setLang(v);
+    try { localStorage.setItem("lang", v); } catch {}
+    setOpen(false);
+  };
 
   // Config laden
   useEffect(() => {
@@ -84,11 +174,11 @@ export default function HomePage() {
       : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  /* ---------- Styles (Scrollbar-Fix) ---------- */
+  /* ---------- Styles (Scrollbar-Fix beibehalten) ---------- */
   const page: CSSProperties = {
-    height: "100dvh",        // ✅ statt minHeight: 100vh
-    boxSizing: "border-box", // ✅ Padding zählt zur Höhe
-    overflowY: "hidden",     // ✅ kein vert. Scrollen
+    height: "100dvh",
+    boxSizing: "border-box",
+    overflowY: "hidden",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -133,9 +223,103 @@ export default function HomePage() {
   const shiftDate: CSSProperties = { fontSize: 16, fontWeight: 500, marginBottom: 6 };
   const shiftStatus: CSSProperties = { fontSize: 18, fontWeight: 600 };
 
+  /* ---------- Flaggen-Dropdown (fix oben rechts) ---------- */
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const flagFab: CSSProperties = { position: "fixed", top: 16, right: 16, zIndex: 50 };
+  const flagBtn: CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.10)",
+    cursor: "pointer",
+    display: "grid",
+    placeItems: "center",
+    padding: 0,
+  };
+  const flagMenu: CSSProperties = {
+    marginTop: 8,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    borderRadius: 12,
+    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+    padding: 6,
+    display: "grid",
+    gap: 6,
+  };
+  const flagItem: CSSProperties = {
+    width: 44,
+    height: 30,
+    borderRadius: 8,
+    overflow: "hidden",
+    border: "1px solid #f3f4f6",
+    background: "#fff",
+    cursor: "pointer",
+    padding: 0,
+    display: "grid",
+    placeItems: "center",
+  };
+
+  const FLAG_SRC: Record<Lang, string> = {
+    de: "/flags/de.svg",
+    en: "/flags/en.svg",
+    pl: "/flags/pl.svg",
+    ru: "/flags/ru.svg",
+  };
+
+  /* ---------- Helpers je Sprache ---------- */
+  const dateFmt = (iso: string) =>
+    new Date(iso).toLocaleDateString(LOCALE_BY_LANG[lang] || "de-DE");
+
+  const shiftTypeLabel = (t: Shift["type"]) => {
+    if (t === "Früh") return tr("shift_morning", lang);
+    if (t === "Spät") return tr("shift_late", lang);
+    return tr("shift_night", lang);
+  };
+  const statusText = (s: Shift["status"]) =>
+    s === "Muss arbeiten" ? tr("status_yes", lang) : tr("status_no", lang);
+
   /* ---------- UI ---------- */
   return (
     <main style={page}>
+      {/* Flaggen-Auswahl */}
+      <div style={flagFab} ref={dropdownRef}>
+        <button
+          aria-label="Sprache auswählen"
+          style={flagBtn}
+          onClick={() => setOpen((v) => !v)}
+          title="Sprache auswählen"
+        >
+          <Image src={FLAG_SRC[lang]} alt={lang} width={28} height={18} />
+        </button>
+        {open && (
+          <div style={flagMenu}>
+            {(["de", "en", "pl", "ru"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                aria-label={l}
+                style={flagItem}
+                onClick={() => onLangChange(l)}
+                title={l.toUpperCase()}
+              >
+                <Image src={FLAG_SRC[l]} alt={l} width={44} height={30} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Logo oben */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
         <Image
@@ -151,25 +335,26 @@ export default function HomePage() {
       <h1 style={title}>TST BÖNEN INVENTUR 2025</h1>
 
       {loading ? (
-        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>…lädt</p>
+        <p style={{ marginTop: 20, color: "#6b7280", fontSize: 20 }}>
+          {lang === "de" ? "…lädt" : lang === "en" ? "…loading" : lang === "pl" ? "…ładowanie" : "…загрузка"}
+        </p>
       ) : err ? (
         <p style={{ marginTop: 20, color: "#dc2626", fontSize: 20 }}>{err}</p>
       ) : cfg.ended ? (
-        <div style={ended}>✅ Die Inventur ist beendet.</div>
+        <div style={ended}>{tr("heading_ended", lang)}</div>
       ) : cfg.live ? (
         <>
-          <div style={liveTitle}>Die Inventur ist gestartet.</div>
+          <div style={liveTitle}>{tr("heading_live", lang)}</div>
 
           {/* Schicht-Kacheln */}
           {cfg.shifts && Array.isArray(cfg.shifts) && cfg.shifts.length > 0 ? (
             <div style={shiftGrid}>
               {cfg.shifts.map((s, i) => {
-                const ok = s.status === "Muss arbeiten";
-                const text = ok ? "Findet statt" : "Findet nicht statt";
+                const text = statusText(s.status);
                 return (
                   <div key={`${s.type}-${s.date}-${i}`} style={shiftCard(s.status)}>
-                    <div style={shiftTitle}>{s.type}schicht</div>
-                    <div style={shiftDate}>{new Date(s.date).toLocaleDateString("de-DE")}</div>
+                    <div style={shiftTitle}>{shiftTypeLabel(s.type)}</div>
+                    <div style={shiftDate}>{dateFmt(s.date)}</div>
                     <div style={shiftStatus}>{text}</div>
                   </div>
                 );
@@ -177,13 +362,15 @@ export default function HomePage() {
             </div>
           ) : (
             <p style={{ marginTop: 20, color: "#6b7280", fontSize: 18 }}>
-              Keine Schichtinformationen verfügbar.
+              {tr("no_shifts", lang)}
             </p>
           )}
         </>
       ) : (
         <>
-          <p style={sub}>{cfg.start ? "Die Inventur startet in:" : "Startzeit folgt."}</p>
+          <p style={sub}>
+            {cfg.start ? tr("heading_before_label", lang) : tr("heading_before_nostart", lang)}
+          </p>
           {cfg.start ? <div style={countdown}>{formatDiff((startMs ?? 0) - now)}</div> : null}
         </>
       )}
